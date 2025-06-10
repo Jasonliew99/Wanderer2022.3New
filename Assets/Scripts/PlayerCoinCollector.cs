@@ -9,6 +9,8 @@ public class PlayerCoinCollector : MonoBehaviour
     public void AddCoins(int amount)
     {
         totalCoins += amount;
+
+        //this shows up in the console
         Debug.Log("Coins: " + totalCoins);
     }
 }

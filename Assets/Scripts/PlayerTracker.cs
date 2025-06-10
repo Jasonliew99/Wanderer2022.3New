@@ -15,26 +15,28 @@ public class PlayerTracker : MonoBehaviour
     [Header("Movement Speeds")]
     public float patrolSpeed = 3.5f;
     public float chaseSpeed = 6f;
+    public float searchSpeed = 4f;
 
     [Header("Detection Settings")]
     public float sightRange = 10f;
-    public float searchTime = 3f;
+
+    [Header("Search Settings")]
+    public bool SmartSearchMode = true;
+    public float searchRadius = 6f;
+    public float searchDuration = 5f;
+    public float idleTime = 1f;
 
     [Header("Patrol Settings")]
     public Transform[] patrolPoints;
     public bool patrolRandom = false;
-    public float idleTime = 1f;
 
     private int patrolIndex = 0;
     private bool isWaiting = false;
 
-    private List<Transform> searchTargets = new List<Transform>();
-    private int searchIndex = 0;
-    private bool isSearchingNearby = false;
-
     private bool playerInSight;
-    private float lastSeenTime;
     private Vector3 lastKnownPosition;
+    private float searchTimer = 0f;
+    private Vector3 currentSearchPoint;
 
     void Start()
     {
@@ -51,21 +53,18 @@ public class PlayerTracker : MonoBehaviour
 
         switch (currentState)
         {
-                //patrol
             case State.Patrol:
                 agent.speed = patrolSpeed;
                 Patrol();
                 break;
 
-                //chase
             case State.Chase:
                 agent.speed = chaseSpeed;
                 Chase();
                 break;
 
-                //Search
             case State.Search:
-                agent.speed = patrolSpeed;
+                agent.speed = searchSpeed;
                 Search();
                 break;
         }
@@ -84,16 +83,16 @@ public class PlayerTracker : MonoBehaviour
             {
                 playerInSight = true;
                 lastKnownPosition = player.position;
-                lastSeenTime = Time.time;
                 currentState = State.Chase;
                 isWaiting = false;
-                isSearchingNearby = false;
             }
         }
 
         if (!playerInSight && currentState == State.Chase)
         {
             currentState = State.Search;
+            searchTimer = 0f;
+            agent.SetDestination(lastKnownPosition);
         }
     }
 
@@ -101,20 +100,9 @@ public class PlayerTracker : MonoBehaviour
     {
         if (patrolPoints.Length == 0 || isWaiting) return;
 
-        if (!agent.hasPath || agent.remainingDistance <= agent.stoppingDistance)
+        if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
         {
-            if (!isWaiting)
-            {
-                agent.ResetPath();
-                StartCoroutine(IdleThenNextPatrol());
-            }
-        }
-        else
-        {
-            if (!agent.hasPath)
-            {
-                agent.SetDestination(patrolPoints[patrolIndex].position);
-            }
+            StartCoroutine(IdleThenNextPatrol());
         }
     }
 
@@ -125,121 +113,57 @@ public class PlayerTracker : MonoBehaviour
         yield return new WaitForSeconds(idleTime);
         isWaiting = false;
 
-        if (patrolRandom)
-            patrolIndex = Random.Range(0, patrolPoints.Length);
-        else
-            patrolIndex = (patrolIndex + 1) % patrolPoints.Length;
-
+        patrolIndex = patrolRandom ? Random.Range(0, patrolPoints.Length) : (patrolIndex + 1) % patrolPoints.Length;
         agent.SetDestination(patrolPoints[patrolIndex].position);
     }
 
     void Chase()
     {
-        float directDistance = Vector3.Distance(transform.position, player.position);
-
-        // Find patrol points near the player within 7 units
-        List<Transform> nearbyPoints = new List<Transform>();
-        foreach (Transform point in patrolPoints)
-        {
-            if (Vector3.Distance(player.position, point.position) < 7f)
-                nearbyPoints.Add(point);
-        }
-
-        if (nearbyPoints.Count > 0)
-        {
-            // Find closest flank point to enemy
-            Transform flankPoint = nearbyPoints[0];
-            float flankDistance = Vector3.Distance(transform.position, flankPoint.position);
-
-            foreach (var p in nearbyPoints)
-            {
-                float dist = Vector3.Distance(transform.position, p.position);
-                if (dist < flankDistance)
-                {
-                    flankDistance = dist;
-                    flankPoint = p;
-                }
-            }
-
-            float margin = 1.0f; //aggressiveness
-
-            if (directDistance <= flankDistance + margin)
-            {
-                // Chase player directly
-                agent.SetDestination(player.position);
-            }
-            else
-            {
-                // Go to flank point
-                agent.SetDestination(flankPoint.position);
-            }
-        }
-        else
-        {
-            // No flank points nearby, just chase directly
-            agent.SetDestination(player.position);
-        }
+        agent.SetDestination(player.position);
     }
 
     void Search()
     {
-        if (!isSearchingNearby)
+        // Only active if toggle is enabled
+        if (!SmartSearchMode)
         {
-            agent.SetDestination(lastKnownPosition);
-
-            if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
-            {
-                searchTargets.Clear();
-                foreach (Transform point in patrolPoints)
-                {
-                    if (Vector3.Distance(lastKnownPosition, point.position) < 7f)
-                    {
-                        searchTargets.Add(point);
-                    }
-                }
-
-                if (searchTargets.Count == 0)
-                {
-                    currentState = State.Patrol;
-                    patrolIndex = GetClosestPatrolIndex();
-                    agent.SetDestination(patrolPoints[patrolIndex].position);
-                    return;
-                }
-
-                isSearchingNearby = true;
-                searchIndex = 0;
-                StartCoroutine(IdleThenNextSearch());
-            }
+            currentState = State.Patrol;
+            return;
         }
-        else
+
+        searchTimer += Time.deltaTime;
+
+        // If reached last known position, start random search
+        if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
         {
-            if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance && !isWaiting)
+            if (searchTimer >= searchDuration)
             {
-                StartCoroutine(IdleThenNextSearch());
+                currentState = State.Patrol;
+                patrolIndex = GetClosestPatrolIndex();
+                agent.SetDestination(patrolPoints[patrolIndex].position);
+                return;
             }
+
+            currentSearchPoint = GetRandomPointNear(lastKnownPosition, searchRadius);
+            agent.SetDestination(currentSearchPoint);
+
+            // OPTIONAL: show visual feedback like a ? mark or change material/color
+            // e.g. Instantiate(searchEffectPrefab, transform.position, Quaternion.identity);
         }
     }
 
-    IEnumerator IdleThenNextSearch()
+    Vector3 GetRandomPointNear(Vector3 origin, float radius)
     {
-        isWaiting = true;
-        if (searchIndex < searchTargets.Count)
+        Vector3 randomDir = Random.insideUnitSphere * radius;
+        randomDir.y = 0f;
+        Vector3 target = origin + randomDir;
+
+        if (NavMesh.SamplePosition(target, out NavMeshHit hit, radius, NavMesh.AllAreas))
         {
-            RotateToward(searchTargets[searchIndex].position);
-            yield return new WaitForSeconds(idleTime);
-            agent.SetDestination(searchTargets[searchIndex].position);
-            searchIndex++;
-            isWaiting = false;
+            return hit.position;
         }
-        else
-        {
-            yield return new WaitForSeconds(idleTime);
-            isSearchingNearby = false;
-            isWaiting = false;
-            currentState = State.Patrol;
-            patrolIndex = GetClosestPatrolIndex();
-            agent.SetDestination(patrolPoints[patrolIndex].position);
-        }
+
+        return origin;
     }
 
     void RotateToward(Vector3 targetPos)
@@ -254,20 +178,18 @@ public class PlayerTracker : MonoBehaviour
 
     int GetClosestPatrolIndex()
     {
-        float minDistance = Mathf.Infinity;
-        int closestIndex = 0;
-
+        float minDist = Mathf.Infinity;
+        int closest = 0;
         for (int i = 0; i < patrolPoints.Length; i++)
         {
             float dist = Vector3.Distance(transform.position, patrolPoints[i].position);
-            if (dist < minDistance)
+            if (dist < minDist)
             {
-                minDistance = dist;
-                closestIndex = i;
+                minDist = dist;
+                closest = i;
             }
         }
-
-        return closestIndex;
+        return closest;
     }
 
     void OnDrawGizmosSelected()
@@ -276,7 +198,7 @@ public class PlayerTracker : MonoBehaviour
         Gizmos.DrawWireSphere(transform.position, sightRange);
 
         Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(lastKnownPosition, 0.5f);
+        Gizmos.DrawWireSphere(lastKnownPosition, searchRadius);
 
         if (patrolPoints != null)
         {

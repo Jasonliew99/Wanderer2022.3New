@@ -5,6 +5,7 @@ using UnityEngine;
 public class CoinCollect : MonoBehaviour
 {
     public int value = 1;
+    public LevelController levelController;
 
     private void OnTriggerEnter(Collider other)
     {
@@ -16,7 +17,11 @@ public class CoinCollect : MonoBehaviour
                 coinCollector.AddCoins(value);
             }
 
-            Destroy(gameObject); // Remove coin
+            // Disable the coin first
+            gameObject.SetActive(false);
+
+            // notify level controller
+            levelController?.CoinCollected();
         }
     }
 }
