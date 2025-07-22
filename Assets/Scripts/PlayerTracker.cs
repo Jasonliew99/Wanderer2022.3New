@@ -18,7 +18,15 @@ public class PlayerTracker : MonoBehaviour
     public float searchSpeed = 4f;
 
     [Header("Detection Settings")]
-    public float sightRange = 10f;
+    public float visionRadius = 10f;
+    public float visionConeRange = 8f;
+    [Range(0f, 360f)]
+    public float visionConeAngle = 90f;
+
+    [Header("Sneak Detection Reduction")]
+    public float sneakRadiusMultiplier = 0.5f;
+    public float sneakConeRangeMultiplier = 0.5f;
+    public float sneakConeAngleMultiplier = 0.75f;
 
     [Header("Search Settings")]
     public bool SmartSearchMode = true;
@@ -38,6 +46,8 @@ public class PlayerTracker : MonoBehaviour
     private float searchTimer = 0f;
     private Vector3 currentSearchPoint;
 
+    private PlayerMovement playerMovement;
+
     void Start()
     {
         currentState = State.Patrol;
@@ -45,6 +55,8 @@ public class PlayerTracker : MonoBehaviour
         {
             agent.SetDestination(patrolPoints[patrolIndex].position);
         }
+
+        playerMovement = player.GetComponent<PlayerMovement>();
     }
 
     void Update()
@@ -57,12 +69,10 @@ public class PlayerTracker : MonoBehaviour
                 agent.speed = patrolSpeed;
                 Patrol();
                 break;
-
             case State.Chase:
                 agent.speed = chaseSpeed;
                 Chase();
                 break;
-
             case State.Search:
                 agent.speed = searchSpeed;
                 Search();
@@ -74,21 +84,35 @@ public class PlayerTracker : MonoBehaviour
     {
         playerInSight = false;
 
+        Vector3 dirToPlayer = (player.position - transform.position).normalized;
         float distance = Vector3.Distance(transform.position, player.position);
-        if (distance <= sightRange)
-        {
-            Vector3 dirToPlayer = (player.position - transform.position).normalized;
 
-            if (!Physics.Raycast(transform.position + Vector3.up, dirToPlayer, distance, obstructionMask))
-            {
-                playerInSight = true;
-                lastKnownPosition = player.position;
-                currentState = State.Chase;
-                isWaiting = false;
-            }
+        // Adjust detection if player is sneaking
+        float radius = visionRadius;
+        float coneRange = visionConeRange;
+        float coneAngle = visionConeAngle;
+
+        if (playerMovement != null && playerMovement.IsSneaking)
+        {
+            radius *= sneakRadiusMultiplier;
+            coneRange *= sneakConeRangeMultiplier;
+            coneAngle *= sneakConeAngleMultiplier;
         }
 
-        if (!playerInSight && currentState == State.Chase)
+        bool inRadius = distance <= radius;
+        bool inCone = distance <= coneRange &&
+                      Vector3.Angle(transform.forward, dirToPlayer) <= coneAngle * 0.5f;
+
+        bool hasLOS = !Physics.Raycast(transform.position + Vector3.up, dirToPlayer, distance, obstructionMask);
+
+        if ((inRadius || inCone) && hasLOS)
+        {
+            playerInSight = true;
+            lastKnownPosition = player.position;
+            currentState = State.Chase;
+            isWaiting = false;
+        }
+        else if (!playerInSight && currentState == State.Chase)
         {
             currentState = State.Search;
             searchTimer = 0f;
@@ -194,15 +218,50 @@ public class PlayerTracker : MonoBehaviour
 
     void OnDrawGizmosSelected()
     {
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, sightRange);
+        Vector3 origin = transform.position + Vector3.up * 0.5f;
+        Vector3 forward = transform.forward;
 
+        // Check if we're in Play Mode and have player reference
+        bool isSneaking = false;
+#if UNITY_EDITOR
+    if (Application.isPlaying && player != null)
+    {
+        PlayerMovement pm = player.GetComponent<PlayerMovement>();
+        if (pm != null && pm.IsSneaking)
+        {
+            isSneaking = true;
+        }
+    }
+#endif
+
+        // Set values based on sneak state
+        float coneRange = isSneaking ? visionConeRange * sneakConeRangeMultiplier : visionConeRange;
+        float coneAngle = isSneaking ? visionConeAngle * sneakConeAngleMultiplier : visionConeAngle;
+        float radius = isSneaking ? visionRadius * sneakRadiusMultiplier : visionRadius;
+
+        // Draw detection radius
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position, radius);
+
+        // Draw vision cone
+        Gizmos.color = isSneaking ? new Color(0f, 1f, 0f, 1f) : Color.green; // green = normal, lime = sneak
+        float halfAngle = coneAngle * 0.5f;
+
+        Vector3 leftDir = Quaternion.Euler(0f, -halfAngle, 0f) * forward * coneRange;
+        Vector3 rightDir = Quaternion.Euler(0f, halfAngle, 0f) * forward * coneRange;
+
+        Gizmos.DrawRay(origin, leftDir);
+        Gizmos.DrawRay(origin, rightDir);
+        Gizmos.DrawLine(origin + leftDir, origin + rightDir);
+
+        // Search zone
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(lastKnownPosition, searchRadius);
 
+        // Patrol points
+        Gizmos.color = Color.blue;
         if (patrolPoints != null)
         {
-            Gizmos.color = Color.blue;
             foreach (Transform point in patrolPoints)
             {
                 if (point != null)
@@ -210,6 +269,7 @@ public class PlayerTracker : MonoBehaviour
             }
         }
 
+        // Line of sight to player
         if (player != null)
         {
             Gizmos.color = playerInSight ? Color.cyan : Color.gray;

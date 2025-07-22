@@ -54,6 +54,9 @@ public class PlayerMovement : MonoBehaviour
     private MovementMode currentMode = MovementMode.Normal;
     private KeyCode lastPressedKey = KeyCode.None;
 
+    // 🔹 Public property to let other scripts know if player is sneaking
+    public bool IsSneaking => isSneaking;
+
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -224,10 +227,8 @@ public class PlayerMovement : MonoBehaviour
         group.alpha = endAlpha;
     }
 
-    //for visual represnation
     void OnDrawGizmosSelected()
     {
-        //this is more the detetcion zone for deplete stamina when enemy is nearby
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, mediumDangerRadius);
     }
