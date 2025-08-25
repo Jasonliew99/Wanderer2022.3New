@@ -41,6 +41,15 @@ public class PlayerMovement : MonoBehaviour
     public float fadeOutDelay = 1.5f;
     public float fadeDuration = 0.5f;
 
+    [Header("Ground Check")]
+    public Transform groundCheck;
+    public float groundDistance = 0.3f;
+    public LayerMask groundMask;
+    private bool isGrounded;
+
+    [Header("Gravity")]
+    public float gravityMultiplier = 2.5f; // makes falling heavier
+
     private float sprintTimer = 0f;
     private bool isSprinting = false;
     private bool isSneaking = false;
@@ -54,13 +63,13 @@ public class PlayerMovement : MonoBehaviour
     private MovementMode currentMode = MovementMode.Normal;
     private KeyCode lastPressedKey = KeyCode.None;
 
-    // 🔹 Public property to let other scripts know if player is sneaking
     public bool IsSneaking => isSneaking;
 
     void Start()
     {
         rb = GetComponent<Rigidbody>();
         rb.freezeRotation = true;
+        rb.useGravity = true; // keep Unity gravity
         sprintTimer = sprintDuration;
 
         if (sprintBarGroup != null)
@@ -71,6 +80,9 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
+        // Ground check
+        isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
+
         HandleInput();
         HandleSprintSneakLogic();
         UpdateCameraZoom();
@@ -91,7 +103,15 @@ public class PlayerMovement : MonoBehaviour
                 break;
         }
 
-        rb.velocity = input * currentSpeed;
+        // Preserve gravity by not touching Y
+        Vector3 horizontalVelocity = new Vector3(input.x * currentSpeed, 0f, input.z * currentSpeed);
+        rb.velocity = new Vector3(horizontalVelocity.x, rb.velocity.y, horizontalVelocity.z);
+
+        // Add stronger gravity when in air
+        if (!isGrounded)
+        {
+            rb.AddForce(Physics.gravity * (gravityMultiplier - 1f), ForceMode.Acceleration);
+        }
     }
 
     void HandleInput()
@@ -111,7 +131,6 @@ public class PlayerMovement : MonoBehaviour
             transform.forward = input;
         }
 
-        // Track last pressed between sprint and sneak
         if (Input.GetKeyDown(sprintKey)) lastPressedKey = sprintKey;
         if (Input.GetKeyDown(sneakKey)) lastPressedKey = sneakKey;
     }
@@ -123,7 +142,6 @@ public class PlayerMovement : MonoBehaviour
         bool isPhysicallyMoving = rb.velocity.magnitude > 0.05f;
         float drainMultiplier = GetSprintDrainMultiplier();
 
-        // Decide mode based on key priority
         if (holdingSprint && (!holdingSneak || lastPressedKey == sprintKey) && sprintTimer > 0f && isPhysicallyMoving)
         {
             currentMode = MovementMode.Sprinting;
@@ -139,7 +157,6 @@ public class PlayerMovement : MonoBehaviour
             currentMode = MovementMode.Normal;
         }
 
-        // Stamina refill logic only when not sprinting
         if (currentMode != MovementMode.Sprinting)
         {
             sprintTimer += Time.deltaTime * (sprintDuration / sprintCooldown);
@@ -231,5 +248,11 @@ public class PlayerMovement : MonoBehaviour
     {
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, mediumDangerRadius);
+
+        if (groundCheck != null)
+        {
+            Gizmos.color = Color.green;
+            Gizmos.DrawWireSphere(groundCheck.position, groundDistance);
+        }
     }
 }
