@@ -135,6 +135,7 @@ public class PlayerMovement : MonoBehaviour
         if (Input.GetKeyDown(sneakKey)) lastPressedKey = sneakKey;
     }
 
+    //sprint sneak logic
     void HandleSprintSneakLogic()
     {
         bool holdingSprint = Input.GetKey(sprintKey);
@@ -167,6 +168,7 @@ public class PlayerMovement : MonoBehaviour
         isSneaking = (currentMode == MovementMode.Sneaking);
     }
 
+    //camera zoom
     void UpdateCameraZoom()
     {
         if (mainCamera == null) return;
@@ -175,6 +177,7 @@ public class PlayerMovement : MonoBehaviour
         mainCamera.orthographicSize = Mathf.Lerp(mainCamera.orthographicSize, targetSize, Time.deltaTime * zoomSpeed);
     }
 
+    //sprint ui
     void UpdateSprintUI()
     {
         float percent = Mathf.Clamp01(sprintTimer / sprintDuration);
@@ -212,6 +215,7 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    //spritn drain
     float GetSprintDrainMultiplier()
     {
         float highestMultiplier = 1f;
@@ -232,6 +236,7 @@ public class PlayerMovement : MonoBehaviour
         return highestMultiplier;
     }
 
+    //fade ui sprint bar
     IEnumerator FadeCanvasGroup(CanvasGroup group, float startAlpha, float endAlpha, float duration)
     {
         float time = 0f;
@@ -244,6 +249,7 @@ public class PlayerMovement : MonoBehaviour
         group.alpha = endAlpha;
     }
 
+    //gizmo for enemy proximity and ground check
     void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;
