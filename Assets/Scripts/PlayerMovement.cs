@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+
 public class PlayerMovement : MonoBehaviour
 {
     [Header("Movement Speeds")]
@@ -50,6 +51,14 @@ public class PlayerMovement : MonoBehaviour
     [Header("Gravity")]
     public float gravityMultiplier = 2.5f; // makes falling heavier
 
+    [Header("Tripping Settings")]
+    [Range(0f, 1f)] public float stumbleChancePerSecond = 0.05f; // slider
+    public float stumbleForwardForce = 2f; // lower for more natural stumble
+    public float stumbleDuration = 1f;
+    public float stumbleCooldown = 3f;
+    private bool isStumbling = false;
+    private float stumbleCooldownTimer = 0f;
+
     private float sprintTimer = 0f;
     private bool isSprinting = false;
     private bool isSneaking = false;
@@ -83,14 +92,30 @@ public class PlayerMovement : MonoBehaviour
         // Ground check
         isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
 
+        // Update stumble cooldown
+        if (stumbleCooldownTimer > 0f)
+            stumbleCooldownTimer -= Time.deltaTime;
+
         HandleInput();
         HandleSprintSneakLogic();
         UpdateCameraZoom();
         UpdateSprintUI();
+
+        // Random stumble when sprinting
+        if (isSprinting && !isStumbling && stumbleCooldownTimer <= 0f)
+        {
+            if (Random.value < stumbleChancePerSecond * Time.deltaTime)
+            {
+                StartCoroutine(DoStumble());
+                stumbleCooldownTimer = stumbleCooldown; // reset cooldown
+            }
+        }
     }
 
     void FixedUpdate()
     {
+        if (isStumbling) return; // freeze normal movement during stumble
+
         float currentSpeed = moveSpeed;
 
         switch (currentMode)
@@ -116,6 +141,8 @@ public class PlayerMovement : MonoBehaviour
 
     void HandleInput()
     {
+        if (isStumbling) return; // disable input during stumble
+
         float x = 0f;
         float z = 0f;
 
@@ -135,9 +162,11 @@ public class PlayerMovement : MonoBehaviour
         if (Input.GetKeyDown(sneakKey)) lastPressedKey = sneakKey;
     }
 
-    //sprint sneak logic
+    // sprint sneak logic
     void HandleSprintSneakLogic()
     {
+        if (isStumbling) return; // lock sprint/sneak state during stumble
+
         bool holdingSprint = Input.GetKey(sprintKey);
         bool holdingSneak = Input.GetKey(sneakKey);
         bool isPhysicallyMoving = rb.velocity.magnitude > 0.05f;
@@ -168,7 +197,7 @@ public class PlayerMovement : MonoBehaviour
         isSneaking = (currentMode == MovementMode.Sneaking);
     }
 
-    //camera zoom
+    // camera zoom
     void UpdateCameraZoom()
     {
         if (mainCamera == null) return;
@@ -177,7 +206,7 @@ public class PlayerMovement : MonoBehaviour
         mainCamera.orthographicSize = Mathf.Lerp(mainCamera.orthographicSize, targetSize, Time.deltaTime * zoomSpeed);
     }
 
-    //sprint ui
+    // sprint ui
     void UpdateSprintUI()
     {
         float percent = Mathf.Clamp01(sprintTimer / sprintDuration);
@@ -215,7 +244,7 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    //spritn drain
+    // sprint drain
     float GetSprintDrainMultiplier()
     {
         float highestMultiplier = 1f;
@@ -236,7 +265,7 @@ public class PlayerMovement : MonoBehaviour
         return highestMultiplier;
     }
 
-    //fade ui sprint bar
+    // fade ui sprint bar
     IEnumerator FadeCanvasGroup(CanvasGroup group, float startAlpha, float endAlpha, float duration)
     {
         float time = 0f;
@@ -249,7 +278,23 @@ public class PlayerMovement : MonoBehaviour
         group.alpha = endAlpha;
     }
 
-    //gizmo for enemy proximity and ground check
+    // stumble logic
+    IEnumerator DoStumble()
+    {
+        isStumbling = true;
+
+        // stop normal movement
+        rb.velocity = Vector3.zero;
+
+        // short forward stumble impulse
+        rb.AddForce(transform.forward * stumbleForwardForce, ForceMode.Impulse);
+
+        yield return new WaitForSeconds(stumbleDuration);
+
+        isStumbling = false;
+    }
+
+    // gizmo for enemy proximity and ground check
     void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;
