@@ -5,41 +5,37 @@ using UnityEngine;
 public class XrayRaycaster : MonoBehaviour
 {
     public Transform player;
-    public LayerMask obstructionMask;
-    public FadeObsticle faderScript;
+    public LayerMask obstacleMask;
+
+    private List<FadeObsticle> currentFadedObjects = new List<FadeObsticle>();
 
     void Update()
     {
-        if (player == null || faderScript == null) return;
+        HandleObstacles();
+    }
+
+    void HandleObstacles()
+    {
+        // Restore previously faded objects
+        foreach (var fader in currentFadedObjects)
+            fader.SetFaded(false);
+        currentFadedObjects.Clear();
 
         // Cast ray from camera to player
-        Vector3 dir = player.position - transform.position;
-        float distance = dir.magnitude;
+        Vector3 direction = player.position - transform.position;
+        float distance = Vector3.Distance(player.position, transform.position);
 
-        // Collect all objects currently blocking view  
-        RaycastHit[] hits = Physics.RaycastAll(transform.position, dir.normalized, distance, obstructionMask);
-        List<Renderer> hitRenderers = new List<Renderer>();
+        RaycastHit[] hits = Physics.RaycastAll(transform.position, direction, distance, obstacleMask);
 
         foreach (var hit in hits)
         {
-            Renderer rend = hit.collider.GetComponent<Renderer>();
-            if (rend != null)
-                hitRenderers.Add(rend);
-        }
-
-        faderScript.HandleObstructions(hitRenderers);
-    }
-
-    //a line to player from camera visible
-    void OnDrawGizmos()
-    {
-        if (player != null)
-        {
-            Gizmos.color = Color.red;
-            Gizmos.DrawLine(transform.position, player.position);
-
-            Gizmos.color = Color.yellow;
-            Gizmos.DrawSphere(player.position, 0.1f);
+            FadeObsticle fader = hit.collider.GetComponentInParent<FadeObsticle>();
+            if (fader != null)
+            {
+                fader.SetFaded(true);
+                if (!currentFadedObjects.Contains(fader))
+                    currentFadedObjects.Add(fader);
+            }
         }
     }
 }

@@ -4,92 +4,41 @@ using UnityEngine;
 
 public class FadeObsticle : MonoBehaviour
 {
-    public Material xrayMaterialTemplate;
-    public float fadeDuration = 0.2f;
-    public float targetAlpha = 0.3f;
+    [Header("Material Settings")]
+    public Material xrayMaterial;
 
-    private class FadingObject
+    private Renderer[] renderers;
+    private Material[] originalMaterials;
+    private bool isFaded = false;
+
+    void Awake()
     {
-        public Renderer renderer;
-        public Material originalMaterial;
-        public Material xrayMaterial;
-        public Coroutine currentCoroutine;
-    }
-
-    private Dictionary<Renderer, FadingObject> tracked = new Dictionary<Renderer, FadingObject>();
-
-    public void HandleObstructions(List<Renderer> obstructingRenderers)
-    {
-        HashSet<Renderer> currentHits = new HashSet<Renderer>(obstructingRenderers);
-
-        foreach (Renderer rend in currentHits)
+        renderers = GetComponentsInChildren<Renderer>();
+        if (renderers.Length > 0)
         {
-
-            // hit = apply xray material and start fade out
-            if (!tracked.ContainsKey(rend))
+            originalMaterials = new Material[renderers.Length];
+            for (int i = 0; i < renderers.Length; i++)
             {
-                Material original = rend.material;
-                Material xray = new Material(xrayMaterialTemplate);
-                xray.color = new Color(xray.color.r, xray.color.g, xray.color.b, 1f);
-                rend.material = xray;
-
-                FadingObject fading = new FadingObject
-                {
-                    renderer = rend,
-                    originalMaterial = original,
-                    xrayMaterial = xray,
-                    currentCoroutine = StartCoroutine(FadeMaterial(xray, 1f, targetAlpha))
-                };
-
-                tracked[rend] = fading;
+                originalMaterials[i] = renderers[i].material;
             }
         }
-
-        // Revert objects when no longer blocking
-        List<Renderer> toRemove = new List<Renderer>();
-        foreach (var kvp in tracked)
-        {
-            if (!currentHits.Contains(kvp.Key))
-            {
-                if (kvp.Value.currentCoroutine != null)
-                    StopCoroutine(kvp.Value.currentCoroutine);
-
-                kvp.Value.currentCoroutine = StartCoroutine(RestoreMaterial(kvp.Value));
-                toRemove.Add(kvp.Key);
-            }
-        }
-
-        // Cleanup
-        foreach (Renderer r in toRemove)
-        {
-            tracked.Remove(r);
-        }
     }
 
-    // Fades the object's material alpha from start to end
-    private IEnumerator FadeMaterial(Material mat, float startAlpha, float endAlpha)
+    public void SetFaded(bool faded)
     {
-        float elapsed = 0f;
-        Color color = mat.color;
-
-        while (elapsed < fadeDuration)
+        if (faded && !isFaded)
         {
-            float a = Mathf.Lerp(startAlpha, endAlpha, elapsed / fadeDuration);
-            mat.color = new Color(color.r, color.g, color.b, a);
-            elapsed += Time.deltaTime;
-            yield return null;
+            // Switch to X-Ray material
+            foreach (var r in renderers)
+                r.material = xrayMaterial;
+            isFaded = true;
         }
-
-        mat.color = new Color(color.r, color.g, color.b, endAlpha);
-    }
-
-    // Restores the material by fading back and swapping original
-    private IEnumerator RestoreMaterial(FadingObject fading)
-    {
-        Material mat = fading.xrayMaterial;
-        float currentAlpha = mat.color.a;
-
-        yield return FadeMaterial(mat, currentAlpha, 1f);
-        fading.renderer.material = fading.originalMaterial;
+        else if (!faded && isFaded)
+        {
+            // Restore original material
+            for (int i = 0; i < renderers.Length; i++)
+                renderers[i].material = originalMaterials[i];
+            isFaded = false;
+        }
     }
 }
