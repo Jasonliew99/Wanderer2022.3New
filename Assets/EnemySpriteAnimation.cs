@@ -1,78 +1,52 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 
 public class EnemySpriteAnimation : MonoBehaviour
 {
     [Header("References")]
-    public Transform enemyBody; // The cube / main body
-    public Camera mainCamera;
-    public SpriteRenderer spriteRenderer;
+    public NavMeshAgent agent;
+    public Animator animator;
 
-    [Header("Sprites for Directions")]
-    public Sprite front;
-    public Sprite back;
-    public Sprite left;
-    public Sprite right;
-    public Sprite frontLeft;
-    public Sprite frontRight;
-    public Sprite backLeft;
-    public Sprite backRight;
+    [Header("Animation Clips (Drag & Drop)")]
+    public AnimationClip frontRightClip; // SE
+    public AnimationClip frontLeftClip;  // SW
+    public AnimationClip backRightClip;  // NE
+    public AnimationClip backLeftClip;   // NW
 
-    private Vector3 lastDirection;
+    private string currentClipName = "";
 
-    void Start()
+    void Update()
     {
-        if (mainCamera == null)
-            mainCamera = Camera.main;
+        Vector3 velocity = agent.velocity;
+        velocity.y = 0f;
 
-        // Hide cube mesh if it has one
-        MeshRenderer mesh = enemyBody.GetComponent<MeshRenderer>();
-        if (mesh != null)
-            mesh.enabled = false;
+        if (velocity.sqrMagnitude > 0.01f)
+        {
+            PlayMovementAnimation(velocity.normalized);
+        }
     }
 
-    void LateUpdate()
+    void PlayMovementAnimation(Vector3 dir)
     {
-        // === 1. Billboard (full face to camera, including tilt) ===
-        transform.rotation = Quaternion.LookRotation(mainCamera.transform.forward);
-
-        // === 2. Get cube’s facing direction (movement direction) ===
-        Vector3 dir = enemyBody.forward;
-        dir.y = 0; // ignore vertical
-        dir.Normalize();
-
-        // === 3. Use last known direction if not moving ===
-        if (dir.magnitude > 0.1f)
-            lastDirection = dir;
-
-        // === 4. Update sprite based on direction ===
-        UpdateSpriteDirection(lastDirection);
-    }
-
-    void UpdateSpriteDirection(Vector3 dir)
-    {
-        if (dir == Vector3.zero) return;
-
-        // Calculate angle based on cube forward
         float angle = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg;
-        if (angle < 0) angle += 360;
 
-        if (angle >= 337.5f || angle < 22.5f)
-            spriteRenderer.sprite = front;
-        else if (angle < 67.5f)
-            spriteRenderer.sprite = frontRight;
-        else if (angle < 112.5f)
-            spriteRenderer.sprite = right;
-        else if (angle < 157.5f)
-            spriteRenderer.sprite = backRight;
-        else if (angle < 202.5f)
-            spriteRenderer.sprite = back;
-        else if (angle < 247.5f)
-            spriteRenderer.sprite = backLeft;
-        else if (angle < 292.5f)
-            spriteRenderer.sprite = left;
+        AnimationClip clipToPlay;
+
+        if (angle >= -45f && angle < 45f)
+            clipToPlay = frontRightClip; // SE
+        else if (angle >= 45f && angle < 135f)
+            clipToPlay = backRightClip;  // NE
+        else if (angle >= 135f || angle < -135f)
+            clipToPlay = backLeftClip;   // NW
         else
-            spriteRenderer.sprite = frontLeft;
+            clipToPlay = frontLeftClip;  // SW
+
+        if (clipToPlay != null && clipToPlay.name != currentClipName)
+        {
+            animator.Play(clipToPlay.name);
+            currentClipName = clipToPlay.name;
+        }
     }
 }

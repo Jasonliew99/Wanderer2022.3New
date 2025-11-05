@@ -571,6 +571,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cargo (Pink) (2)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 229bce790f2685947aa4dcd168b366e5, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -1279,6 +1283,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cargo (Blue) (12)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 40b7537d12fdc074ea926e72d751e3f9, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -1360,6 +1368,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cargo (Red) (3)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 229bce790f2685947aa4dcd168b366e5, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -1435,6 +1447,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 76ccd7c4f8b888a438a24e2e44b79fa6, type: 3}
       propertyPath: m_Name
       value: Cargo Back (Green) (1)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 76ccd7c4f8b888a438a24e2e44b79fa6, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -2795,6 +2811,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cargo Back (Green) (3)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 76ccd7c4f8b888a438a24e2e44b79fa6, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -2875,6 +2895,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 229bce790f2685947aa4dcd168b366e5, type: 3}
       propertyPath: m_Name
       value: Cargo (Red) (1)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 229bce790f2685947aa4dcd168b366e5, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -3227,6 +3251,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 229bce790f2685947aa4dcd168b366e5, type: 3}
       propertyPath: m_Name
       value: Cargo (Red) (2)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 229bce790f2685947aa4dcd168b366e5, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -3782,6 +3810,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cargo Back (Pink) (5)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 76ccd7c4f8b888a438a24e2e44b79fa6, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -3862,6 +3894,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 229bce790f2685947aa4dcd168b366e5, type: 3}
       propertyPath: m_Name
       value: Cargo (Red) (11)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 229bce790f2685947aa4dcd168b366e5, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -3969,6 +4005,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 40b7537d12fdc074ea926e72d751e3f9, type: 3}
       propertyPath: m_Name
       value: Cargo (Green) (4)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 40b7537d12fdc074ea926e72d751e3f9, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -4424,6 +4464,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cargo Back (Green) (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 76ccd7c4f8b888a438a24e2e44b79fa6, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -4874,6 +4918,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cargo (Pink) (3)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 229bce790f2685947aa4dcd168b366e5, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -5211,6 +5259,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 229bce790f2685947aa4dcd168b366e5, type: 3}
       propertyPath: m_Name
       value: Cargo (Pink) (3)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 229bce790f2685947aa4dcd168b366e5, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -6039,6 +6091,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cargo (Green) (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 40b7537d12fdc074ea926e72d751e3f9, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -6294,6 +6350,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 40b7537d12fdc074ea926e72d751e3f9, type: 3}
       propertyPath: m_Name
       value: Cargo (Green) (6)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 40b7537d12fdc074ea926e72d751e3f9, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -7160,6 +7220,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 40b7537d12fdc074ea926e72d751e3f9, type: 3}
       propertyPath: m_Name
       value: Cargo (Green) (1)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 40b7537d12fdc074ea926e72d751e3f9, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -8388,6 +8452,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cargo (Purple) (6)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 229bce790f2685947aa4dcd168b366e5, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -9229,6 +9297,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cargo (Green) (3)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 40b7537d12fdc074ea926e72d751e3f9, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -9644,6 +9716,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 229bce790f2685947aa4dcd168b366e5, type: 3}
       propertyPath: m_Name
       value: Cargo (Purple) (4)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 229bce790f2685947aa4dcd168b366e5, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -10785,10 +10861,17 @@ PrefabInstance:
       propertyPath: m_Name
       value: warehouse (3)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 6755063e259903349929d51527ec0884, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 6755063e259903349929d51527ec0884, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2040671878}
   m_SourcePrefab: {fileID: 100100000, guid: 6755063e259903349929d51527ec0884, type: 3}
 --- !u!1 &502275926
 GameObject:
@@ -11657,6 +11740,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cargo (Blue) (7)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 40b7537d12fdc074ea926e72d751e3f9, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -12061,6 +12148,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 76ccd7c4f8b888a438a24e2e44b79fa6, type: 3}
       propertyPath: m_Name
       value: Cargo Back (Green) (5)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 76ccd7c4f8b888a438a24e2e44b79fa6, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -12857,6 +12948,32 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 564314649}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &567688612 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 6755063e259903349929d51527ec0884, type: 3}
+  m_PrefabInstance: {fileID: 854556255}
+  m_PrefabAsset: {fileID: 0}
+--- !u!65 &567688615
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 567688612}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 4.427737, y: 1.5867449, z: 2.8960881}
+  m_Center: {x: -0.079861045, y: 0.08014513, z: 0.09186}
 --- !u!1001 &572465698
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -13471,6 +13588,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cargo Back (Blue) (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 76ccd7c4f8b888a438a24e2e44b79fa6, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -13546,6 +13667,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 229bce790f2685947aa4dcd168b366e5, type: 3}
       propertyPath: m_Name
       value: Cargo (Red) (9)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 229bce790f2685947aa4dcd168b366e5, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -13906,6 +14031,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 229bce790f2685947aa4dcd168b366e5, type: 3}
       propertyPath: m_Name
       value: Cargo (Purple) (1)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 229bce790f2685947aa4dcd168b366e5, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -14622,6 +14751,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cargo Back (Pink) (13)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 76ccd7c4f8b888a438a24e2e44b79fa6, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -14729,10 +14862,17 @@ PrefabInstance:
       propertyPath: m_Name
       value: warehouse
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 6755063e259903349929d51527ec0884, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 6755063e259903349929d51527ec0884, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1250748856}
   m_SourcePrefab: {fileID: 100100000, guid: 6755063e259903349929d51527ec0884, type: 3}
 --- !u!1001 &645145693
 PrefabInstance:
@@ -14801,6 +14941,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 76ccd7c4f8b888a438a24e2e44b79fa6, type: 3}
       propertyPath: m_Name
       value: Cargo Back (Pink) (2)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 76ccd7c4f8b888a438a24e2e44b79fa6, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -15084,8 +15228,9 @@ GameObject:
   - component: {fileID: 660512189}
   - component: {fileID: 660512188}
   - component: {fileID: 660512194}
+  - component: {fileID: 660512195}
   m_Layer: 0
-  m_Name: Enemy (1)
+  m_Name: Enemy (Statue)
   m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -15286,7 +15431,7 @@ Animator:
   m_GameObject: {fileID: 660512186}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: d57cf61021ad8774fb68a0d7be28cdef, type: 2}
+  m_Controller: {fileID: 9100000, guid: 6e052842e4d82854bb089781e7ce4443, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -15297,6 +15442,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!111 &660512195
+Animation:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 660512186}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Animation: {fileID: 0}
+  m_Animations: []
+  m_WrapMode: 0
+  m_PlayAutomatically: 1
+  m_AnimatePhysics: 0
+  m_CullingType: 0
 --- !u!1 &671900186
 GameObject:
   m_ObjectHideFlags: 0
@@ -16464,6 +16624,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cargo (Red) (6)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 229bce790f2685947aa4dcd168b366e5, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -16956,6 +17120,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cargo (Red) (10)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 229bce790f2685947aa4dcd168b366e5, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -17031,6 +17199,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 76ccd7c4f8b888a438a24e2e44b79fa6, type: 3}
       propertyPath: m_Name
       value: Cargo Back(Purple) (1)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 76ccd7c4f8b888a438a24e2e44b79fa6, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -17475,10 +17647,17 @@ PrefabInstance:
       propertyPath: m_Name
       value: warehouse (4)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 6755063e259903349929d51527ec0884, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 6755063e259903349929d51527ec0884, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1241583203}
   m_SourcePrefab: {fileID: 100100000, guid: 6755063e259903349929d51527ec0884, type: 3}
 --- !u!4 &744381075 stripped
 Transform:
@@ -17676,6 +17855,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 40b7537d12fdc074ea926e72d751e3f9, type: 3}
       propertyPath: m_Name
       value: Cargo (Blue) (8)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 40b7537d12fdc074ea926e72d751e3f9, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -18085,6 +18268,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cargo Back(Purple) (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 76ccd7c4f8b888a438a24e2e44b79fa6, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -18367,6 +18554,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 229bce790f2685947aa4dcd168b366e5, type: 3}
       propertyPath: m_Name
       value: Cargo (Pink) (4)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 229bce790f2685947aa4dcd168b366e5, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -18676,6 +18867,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 76ccd7c4f8b888a438a24e2e44b79fa6, type: 3}
       propertyPath: m_Name
       value: Cargo Back (Pink) (9)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 76ccd7c4f8b888a438a24e2e44b79fa6, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -19832,6 +20027,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cargo (Blue) (9)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 40b7537d12fdc074ea926e72d751e3f9, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -19913,10 +20112,17 @@ PrefabInstance:
       propertyPath: m_Name
       value: warehouse (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 6755063e259903349929d51527ec0884, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 6755063e259903349929d51527ec0884, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1165065953}
   m_SourcePrefab: {fileID: 100100000, guid: 6755063e259903349929d51527ec0884, type: 3}
 --- !u!4 &846432174 stripped
 Transform:
@@ -20179,10 +20385,17 @@ PrefabInstance:
       propertyPath: m_Name
       value: warehouse (2)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 6755063e259903349929d51527ec0884, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 6755063e259903349929d51527ec0884, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 567688615}
   m_SourcePrefab: {fileID: 100100000, guid: 6755063e259903349929d51527ec0884, type: 3}
 --- !u!1 &856283955
 GameObject:
@@ -20312,10 +20525,10 @@ GameObject:
   - component: {fileID: 867241702}
   - component: {fileID: 867241708}
   - component: {fileID: 867241707}
+  - component: {fileID: 867241711}
   - component: {fileID: 867241710}
-  - component: {fileID: 867241709}
   m_Layer: 0
-  m_Name: Enemy
+  m_Name: Enemy(Fish)
   m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -20506,22 +20719,6 @@ NavMeshAgent:
   m_BaseOffset: 0.5
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
---- !u!111 &867241709
-Animation:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 867241701}
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Animation: {fileID: 7400000, guid: cd50abebfbdf0b942b955e0930e7f313, type: 2}
-  m_Animations:
-  - {fileID: 7400000, guid: cd50abebfbdf0b942b955e0930e7f313, type: 2}
-  m_WrapMode: 0
-  m_PlayAutomatically: 1
-  m_AnimatePhysics: 0
-  m_CullingType: 0
 --- !u!95 &867241710
 Animator:
   serializedVersion: 5
@@ -20532,7 +20729,7 @@ Animator:
   m_GameObject: {fileID: 867241701}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: f50d632b82da616469cd3975b459ecd0, type: 2}
+  m_Controller: {fileID: 9100000, guid: 7904ce50bfcc90a4ba0a1deadbe490f9, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -20543,6 +20740,24 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &867241711
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 867241701}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: af250434f3494be4eb3b42f089546e39, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  agent: {fileID: 867241708}
+  animator: {fileID: 867241710}
+  frontRightClip: {fileID: 7400000, guid: cd50abebfbdf0b942b955e0930e7f313, type: 2}
+  frontLeftClip: {fileID: 7400000, guid: 2408b9607a9b22d4ba1a8fb9e16e4e75, type: 2}
+  backRightClip: {fileID: 7400000, guid: f33b2061b29224a408792a65b0ac3d01, type: 2}
+  backLeftClip: {fileID: 7400000, guid: 17ca48744004f744bb65758a67be0d4a, type: 2}
 --- !u!1001 &870446391
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -21183,6 +21398,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cargo (Green) (9)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 40b7537d12fdc074ea926e72d751e3f9, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -21363,6 +21582,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 229bce790f2685947aa4dcd168b366e5, type: 3}
       propertyPath: m_Name
       value: Cargo (Pink) (1)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 229bce790f2685947aa4dcd168b366e5, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -21608,6 +21831,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cargo Back(Purple) (3)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 76ccd7c4f8b888a438a24e2e44b79fa6, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -21694,6 +21921,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 76ccd7c4f8b888a438a24e2e44b79fa6, type: 3}
+--- !u!1 &918266202 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 6755063e259903349929d51527ec0884, type: 3}
+  m_PrefabInstance: {fileID: 490233066}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &919812004
 GameObject:
   m_ObjectHideFlags: 0
@@ -21910,6 +22142,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 40b7537d12fdc074ea926e72d751e3f9, type: 3}
       propertyPath: m_Name
       value: Cargo (Blue) (1)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 40b7537d12fdc074ea926e72d751e3f9, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -22290,6 +22526,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 40b7537d12fdc074ea926e72d751e3f9, type: 3}
       propertyPath: m_Name
       value: Cargo (Blue) (2)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 40b7537d12fdc074ea926e72d751e3f9, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -22897,6 +23137,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cargo (Purple) (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 229bce790f2685947aa4dcd168b366e5, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -23300,7 +23544,7 @@ Transform:
   m_GameObject: {fileID: 963194225}
   serializedVersion: 2
   m_LocalRotation: {x: 0.28206345, y: -0.36139238, z: 0.11568261, w: 0.8811659}
-  m_LocalPosition: {x: -594, y: 62, z: -387}
+  m_LocalPosition: {x: -93.7, y: 33.2, z: -300.6}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -23363,8 +23607,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   target: {fileID: 1000885597}
-  offset: {x: 0, y: 16, z: -14.12}
+  offset: {x: 11.53, y: 16, z: -14.12}
   followSpeed: 4
+  leadDistance: 10
+  leadSmooth: 5
 --- !u!1 &966442998 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 76ccd7c4f8b888a438a24e2e44b79fa6, type: 3}
@@ -24406,6 +24652,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cargo (Purple) (3)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 229bce790f2685947aa4dcd168b366e5, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -25145,6 +25395,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cargo Back (Green) (6)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 76ccd7c4f8b888a438a24e2e44b79fa6, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -25768,6 +26022,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cargo (Green) (5)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 40b7537d12fdc074ea926e72d751e3f9, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -26165,6 +26423,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cargo Back (Pink) (8)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 76ccd7c4f8b888a438a24e2e44b79fa6, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -26311,6 +26573,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 40b7537d12fdc074ea926e72d751e3f9, type: 3}
       propertyPath: m_Name
       value: Cargo (Green) (11)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 40b7537d12fdc074ea926e72d751e3f9, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -27851,6 +28117,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cargo (Green) (7)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 40b7537d12fdc074ea926e72d751e3f9, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -27990,6 +28260,32 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1163729598}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &1165065950 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 6755063e259903349929d51527ec0884, type: 3}
+  m_PrefabInstance: {fileID: 846432173}
+  m_PrefabAsset: {fileID: 0}
+--- !u!65 &1165065953
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1165065950}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 4.427737, y: 1.5867449, z: 2.8960881}
+  m_Center: {x: -0.07986295, y: 0.08014513, z: 0.09185618}
 --- !u!1001 &1165169666
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -28057,6 +28353,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 76ccd7c4f8b888a438a24e2e44b79fa6, type: 3}
       propertyPath: m_Name
       value: Cargo Back (Green) (2)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 76ccd7c4f8b888a438a24e2e44b79fa6, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -29650,6 +29950,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cargo (Blue) (5)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 40b7537d12fdc074ea926e72d751e3f9, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -29751,6 +30055,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 76ccd7c4f8b888a438a24e2e44b79fa6, type: 3}
       propertyPath: m_Name
       value: Cargo Back (Pink) (7)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 76ccd7c4f8b888a438a24e2e44b79fa6, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -30273,6 +30581,32 @@ Transform:
   m_Children: []
   m_Father: {fileID: 826669257}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1241583200 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 6755063e259903349929d51527ec0884, type: 3}
+  m_PrefabInstance: {fileID: 744381074}
+  m_PrefabAsset: {fileID: 0}
+--- !u!65 &1241583203
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1241583200}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 4.427737, y: 1.5867449, z: 2.8960881}
+  m_Center: {x: -0.07986057, y: 0.08014513, z: 0.091867626}
 --- !u!1001 &1242550206
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -30620,6 +30954,32 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1c0fa8b06bf46704882e15eb2e0fd9ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1 &1250748853 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 6755063e259903349929d51527ec0884, type: 3}
+  m_PrefabInstance: {fileID: 639618042}
+  m_PrefabAsset: {fileID: 0}
+--- !u!65 &1250748856
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1250748853}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 4.427737, y: 1.5867449, z: 2.8960881}
+  m_Center: {x: -0.07986295, y: 0.08014513, z: 0.09185618}
 --- !u!1001 &1251355914
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -30836,6 +31196,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 229bce790f2685947aa4dcd168b366e5, type: 3}
       propertyPath: m_Name
       value: Cargo (Pink) (6)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 229bce790f2685947aa4dcd168b366e5, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -31094,6 +31458,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 76ccd7c4f8b888a438a24e2e44b79fa6, type: 3}
       propertyPath: m_Name
       value: Cargo Back (Blue) (2)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 76ccd7c4f8b888a438a24e2e44b79fa6, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -32144,7 +32512,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a4f92bfc58f08ac40bb52e574af1e682, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  xrayMaterial: {fileID: 0}
+  xrayMaterial: {fileID: 2100000, guid: b00da340df62c2847a0e5b4161538b44, type: 2}
 --- !u!114 &1318416542
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -32160,7 +32528,7 @@ MonoBehaviour:
   player: {fileID: 1000885597}
   obstacleMask:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 64
 --- !u!4 &1325282333 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 229bce790f2685947aa4dcd168b366e5, type: 3}
@@ -32730,6 +33098,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 229bce790f2685947aa4dcd168b366e5, type: 3}
       propertyPath: m_Name
       value: Cargo (Pink) (5)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 229bce790f2685947aa4dcd168b366e5, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -33383,6 +33755,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cargo (Green) (12)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 40b7537d12fdc074ea926e72d751e3f9, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -33881,6 +34257,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cargo Back (Pink) (10)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 76ccd7c4f8b888a438a24e2e44b79fa6, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -34350,6 +34730,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 76ccd7c4f8b888a438a24e2e44b79fa6, type: 3}
       propertyPath: m_Name
       value: Cargo Back(Purple) (2)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 76ccd7c4f8b888a438a24e2e44b79fa6, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -35040,6 +35424,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cargo (Green) (10)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 40b7537d12fdc074ea926e72d751e3f9, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -35146,6 +35534,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 76ccd7c4f8b888a438a24e2e44b79fa6, type: 3}
       propertyPath: m_Name
       value: Cargo Back (Pink) (6)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 76ccd7c4f8b888a438a24e2e44b79fa6, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -35635,6 +36027,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cargo (Purple) (5)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 229bce790f2685947aa4dcd168b366e5, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -36076,6 +36472,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 40b7537d12fdc074ea926e72d751e3f9, type: 3}
       propertyPath: m_Name
       value: Cargo (Blue) (14)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 40b7537d12fdc074ea926e72d751e3f9, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -36803,6 +37203,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cargo (Pink) (8)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 229bce790f2685947aa4dcd168b366e5, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -37104,6 +37508,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cargo Back (Pink) (3)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 76ccd7c4f8b888a438a24e2e44b79fa6, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -37289,6 +37697,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 76ccd7c4f8b888a438a24e2e44b79fa6, type: 3}
       propertyPath: m_Name
       value: Cargo Back (Pink) (4)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 76ccd7c4f8b888a438a24e2e44b79fa6, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -37693,6 +38105,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 229bce790f2685947aa4dcd168b366e5, type: 3}
       propertyPath: m_Name
       value: Cargo (Pink) (1)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 229bce790f2685947aa4dcd168b366e5, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -38899,6 +39315,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cargo (Green) (8)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 40b7537d12fdc074ea926e72d751e3f9, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -39921,6 +40341,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 40b7537d12fdc074ea926e72d751e3f9, type: 3}
       propertyPath: m_Name
       value: Cargo (Blue) (15)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 40b7537d12fdc074ea926e72d751e3f9, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -41764,6 +42188,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cargo Back (Pink) (14)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 76ccd7c4f8b888a438a24e2e44b79fa6, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -41914,6 +42342,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 229bce790f2685947aa4dcd168b366e5, type: 3}
       propertyPath: m_Name
       value: Cargo (Pink) (7)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 229bce790f2685947aa4dcd168b366e5, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -43026,6 +43458,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cargo Back (Pink) (2)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 76ccd7c4f8b888a438a24e2e44b79fa6, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -43597,6 +44033,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cargo (Blue) (11)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 40b7537d12fdc074ea926e72d751e3f9, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -43732,6 +44172,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 76ccd7c4f8b888a438a24e2e44b79fa6, type: 3}
       propertyPath: m_Name
       value: Cargo Back (Pink) (12)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 76ccd7c4f8b888a438a24e2e44b79fa6, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -44399,6 +44843,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 76ccd7c4f8b888a438a24e2e44b79fa6, type: 3}
       propertyPath: m_Name
       value: Cargo Back(Purple) (4)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 76ccd7c4f8b888a438a24e2e44b79fa6, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -45235,6 +45683,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cargo (Red) (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 229bce790f2685947aa4dcd168b366e5, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -45336,6 +45788,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 40b7537d12fdc074ea926e72d751e3f9, type: 3}
       propertyPath: m_Name
       value: Cargo (Blue) (10)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 40b7537d12fdc074ea926e72d751e3f9, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -45622,6 +46078,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cargo (Blue) (6)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 40b7537d12fdc074ea926e72d751e3f9, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -45723,6 +46183,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 76ccd7c4f8b888a438a24e2e44b79fa6, type: 3}
       propertyPath: m_Name
       value: Cargo Back (Pink) (11)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 76ccd7c4f8b888a438a24e2e44b79fa6, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -45913,6 +46377,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 40b7537d12fdc074ea926e72d751e3f9, type: 3}
       propertyPath: m_Name
       value: Cargo (Blue) (3)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 40b7537d12fdc074ea926e72d751e3f9, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -47525,6 +47993,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cargo Back (Pink) (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 76ccd7c4f8b888a438a24e2e44b79fa6, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -48499,6 +48971,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cargo Back (Green) (4)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 76ccd7c4f8b888a438a24e2e44b79fa6, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -48851,6 +49327,27 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 6755063e259903349929d51527ec0884, type: 3}
   m_PrefabInstance: {fileID: 490233066}
   m_PrefabAsset: {fileID: 0}
+--- !u!65 &2040671878
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 918266202}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 4.427737, y: 1.5867449, z: 2.8960881}
+  m_Center: {x: -0.079861045, y: 0.08014513, z: 0.09186}
 --- !u!1 &2041335520
 GameObject:
   m_ObjectHideFlags: 0
@@ -49055,6 +49552,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cargo (Blue) (13)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 40b7537d12fdc074ea926e72d751e3f9, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -49116,7 +49617,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 587f7215759aefa4bb89da630c73a610, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -99.24753
+      value: -271.7
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 587f7215759aefa4bb89da630c73a610, type: 3}
       propertyPath: m_LocalPosition.y
@@ -49124,7 +49625,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 587f7215759aefa4bb89da630c73a610, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -269.85947
+      value: -393.7
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 587f7215759aefa4bb89da630c73a610, type: 3}
       propertyPath: m_LocalRotation.w
@@ -50290,6 +50791,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cargo Back (Pink) (15)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 76ccd7c4f8b888a438a24e2e44b79fa6, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -50396,6 +50901,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 40b7537d12fdc074ea926e72d751e3f9, type: 3}
       propertyPath: m_Name
       value: Cargo (Blue) (1)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 40b7537d12fdc074ea926e72d751e3f9, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
