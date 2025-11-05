@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+//The universal script that makes the sprite look at the camera
 public class SpriteBillboard : MonoBehaviour
 {
     public Transform cameraTransform; // Assign main camera manually or leave blank

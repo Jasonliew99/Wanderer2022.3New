@@ -5,48 +5,69 @@ using UnityEngine.AI;
 
 public class EnemySpriteAnimation : MonoBehaviour
 {
-    [Header("References")]
-    public NavMeshAgent agent;
-    public Animator animator;
-
-    [Header("Animation Clips (Drag & Drop)")]
-    public AnimationClip frontRightClip; // SE
-    public AnimationClip frontLeftClip;  // SW
-    public AnimationClip backRightClip;  // NE
-    public AnimationClip backLeftClip;   // NW
-
-    private string currentClipName = "";
-
-    void Update()
+    [RequireComponent(typeof(Animator))]
+    [RequireComponent(typeof(SpriteRenderer))]
+    public class EnemyAnimationController_Flip : MonoBehaviour
     {
-        Vector3 velocity = agent.velocity;
-        velocity.y = 0f;
+        [Header("References")]
+        public NavMeshAgent agent;
+        public Animator animator;
+        public SpriteRenderer spriteRenderer;
 
-        if (velocity.sqrMagnitude > 0.01f)
+        [Header("Animation Clips (Drag & Drop)")]
+        public AnimationClip frontRightClip; // SE
+        public AnimationClip backRightClip;  // NE
+
+        private string currentClipName = "";
+
+        void Update()
         {
-            PlayMovementAnimation(velocity.normalized);
+            Vector3 velocity = agent.velocity;
+            velocity.y = 0f;
+
+            if (velocity.sqrMagnitude > 0.01f)
+            {
+                PlayMovementAnimation(velocity.normalized);
+            }
         }
-    }
 
-    void PlayMovementAnimation(Vector3 dir)
-    {
-        float angle = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg;
-
-        AnimationClip clipToPlay;
-
-        if (angle >= -45f && angle < 45f)
-            clipToPlay = frontRightClip; // SE
-        else if (angle >= 45f && angle < 135f)
-            clipToPlay = backRightClip;  // NE
-        else if (angle >= 135f || angle < -135f)
-            clipToPlay = backLeftClip;   // NW
-        else
-            clipToPlay = frontLeftClip;  // SW
-
-        if (clipToPlay != null && clipToPlay.name != currentClipName)
+        void PlayMovementAnimation(Vector3 dir)
         {
-            animator.Play(clipToPlay.name);
-            currentClipName = clipToPlay.name;
+            float angle = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg;
+
+            AnimationClip clipToPlay = null;
+            bool flipX = false;
+
+            if (angle >= -45f && angle < 45f)
+            {
+                clipToPlay = frontRightClip; // SE
+                flipX = false;
+            }
+            else if (angle >= 45f && angle < 135f)
+            {
+                clipToPlay = backRightClip;  // NE
+                flipX = false;
+            }
+            else if (angle >= 135f || angle < -135f)
+            {
+                clipToPlay = backRightClip;  // NW
+                flipX = true;
+            }
+            else // -135 to -45
+            {
+                clipToPlay = frontRightClip; // SW
+                flipX = true;
+            }
+
+            // Apply flip
+            spriteRenderer.flipX = flipX;
+
+            // Play animation if different
+            if (clipToPlay != null && clipToPlay.name != currentClipName)
+            {
+                animator.Play(clipToPlay.name);
+                currentClipName = clipToPlay.name;
+            }
         }
     }
 }
