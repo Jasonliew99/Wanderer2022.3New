@@ -21861,9 +21861,11 @@ MonoBehaviour:
   agent: {fileID: 867241708}
   animator: {fileID: 867241710}
   spriteRenderer: {fileID: 380431282}
+  mainCamera: {fileID: 963194227}
   frontRightClip: {fileID: 7400000, guid: cd50abebfbdf0b942b955e0930e7f313, type: 2}
   backRightClip: {fileID: 7400000, guid: f33b2061b29224a408792a65b0ac3d01, type: 2}
   directionBuffer: 10
+  debugArrowLength: 1.5
 --- !u!1001 &870446391
 PrefabInstance:
   m_ObjectHideFlags: 0
