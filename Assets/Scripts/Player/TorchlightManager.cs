@@ -455,6 +455,14 @@ public class TorchlightManager : MonoBehaviour
         }
     }
 
+    public Vector3 GetFacingDirection()
+    {
+        // Returns the torch’s current facing direction (normalized)
+        if (lastFlashlightDir.sqrMagnitude < 0.0001f)
+            return transform.forward;
+        return lastFlashlightDir.normalized;
+    }
+
     void SetupBatteryImage()
     {
         if (batteryFillImage == null) return;

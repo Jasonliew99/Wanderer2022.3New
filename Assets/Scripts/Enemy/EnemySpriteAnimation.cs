@@ -9,58 +9,59 @@ using UnityEngine.AI;
 public class EnemySpriteAnimation : MonoBehaviour
 {
     [Header("References")]
-    public NavMeshAgent agent;
     public Animator animator;
     public SpriteRenderer spriteRenderer;
+    public Transform meshTransform; // reference to the actual mesh
 
     [Header("Animation Clips")]
-    public AnimationClip frontRightClip; // used for SE (front)
-    public AnimationClip backRightClip;  // used for NE (back)
+    public AnimationClip frontRightClip; // SE (front)
+    public AnimationClip backRightClip;  // NE (back)
 
     private string currentClipName = "";
 
-    void Update()
+    void Start()
     {
-        // Play animation only when moving
-        if (agent.velocity.sqrMagnitude > 0.01f)
-        {
-            PlayMovementAnimation();
-        }
+        if (meshTransform == null)
+            meshTransform = transform; // default to player object
     }
 
-    void PlayMovementAnimation()
+    void Update()
     {
-        // Get the cube’s current facing angle (0 = top-right)
-        float angle = transform.eulerAngles.y;
+        PlayFacingAnimation();
+    }
 
-        // Normalize to 0–360 for clarity
+    void PlayFacingAnimation()
+    {
+        float angle = meshTransform.eulerAngles.y;
+
+        // Normalize angle to -180 -> 180
         if (angle > 180f) angle -= 360f;
 
         AnimationClip clipToPlay = null;
         bool flipX = false;
 
-        // --- Mapping based on your cube’s facing angles ---
+        // --- Use same mapping as enemy ---
         if (angle >= -45f && angle < 45f)
         {
-            // Facing top-right
+            // Top-right
             clipToPlay = backRightClip;
             flipX = false;
         }
         else if (angle >= 45f && angle < 135f)
         {
-            // Facing bottom-right
+            // Bottom-right
             clipToPlay = frontRightClip;
             flipX = false;
         }
         else if (angle >= 135f || angle < -135f)
         {
-            // Facing bottom-left
+            // Bottom-left
             clipToPlay = frontRightClip;
             flipX = true;
         }
         else // angle between -135 and -45
         {
-            // Facing top-left
+            // Top-left
             clipToPlay = backRightClip;
             flipX = true;
         }

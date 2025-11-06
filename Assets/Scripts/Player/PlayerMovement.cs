@@ -49,11 +49,11 @@ public class PlayerMovement : MonoBehaviour
     private bool isGrounded;
 
     [Header("Gravity")]
-    public float gravityMultiplier = 2.5f; // makes falling heavier
+    public float gravityMultiplier = 2.5f;
 
     [Header("Tripping Settings")]
-    [Range(0f, 1f)] public float stumbleChancePerSecond = 0.05f; // slider
-    public float stumbleForwardForce = 2f; // lower for more natural stumble
+    [Range(0f, 1f)] public float stumbleChancePerSecond = 0.05f;
+    public float stumbleForwardForce = 2f;
     public float stumbleDuration = 1f;
     public float stumbleCooldown = 3f;
     private bool isStumbling = false;
@@ -74,23 +74,23 @@ public class PlayerMovement : MonoBehaviour
 
     public bool IsSneaking => isSneaking;
 
-    // --- NEW: Facing / backward logic ---
     [Header("Facing / Backward Settings")]
-    [Tooltip("Multiplier applied to speed when moving backwards / sideways relative to facing.")]
-    [Range(0f, 1f)] public float backwardMultiplier = 0.6f; // adjustable in inspector
+    [Range(0f, 1f)] public float backwardMultiplier = 0.6f;
+    [Range(0f, 180f)] public float forwardAngleForSprint = 45f;
 
-    [Tooltip("Max angle (deg) from facing considered 'forward' for sprinting. If movement angle > this, sprint disabled.")]
-    [Range(0f, 180f)] public float forwardAngleForSprint = 45f; // adjustable in inspector
-
-    // current facing (set by TorchlightManager). default to forward.
     private Vector3 facingDirection = Vector3.forward;
-    public Vector3 FacingDirection => facingDirection; // read-only for others
+    public Vector3 FacingDirection => facingDirection;
+
+    // --- ADDED FOR ANIMATION ---
+    private Vector2 lastMoveDir = Vector2.zero;
+    public Vector2 GetLastMoveDirection() => lastMoveDir;
+    // ----------------------------
 
     void Start()
     {
         rb = GetComponent<Rigidbody>();
         rb.freezeRotation = true;
-        rb.useGravity = true; // keep Unity gravity
+        rb.useGravity = true;
         sprintTimer = sprintDuration;
 
         if (sprintBarGroup != null)
@@ -98,16 +98,13 @@ public class PlayerMovement : MonoBehaviour
             sprintBarGroup.alpha = 1f;
         }
 
-        // initialize facing to current transform forward
         facingDirection = transform.forward;
     }
 
     void Update()
     {
-        // Ground check
         isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
 
-        // Update stumble cooldown
         if (stumbleCooldownTimer > 0f)
             stumbleCooldownTimer -= Time.deltaTime;
 
@@ -116,22 +113,20 @@ public class PlayerMovement : MonoBehaviour
         UpdateCameraZoom();
         UpdateSprintUI();
 
-        // Random stumble when sprinting
         if (isSprinting && !isStumbling && stumbleCooldownTimer <= 0f)
         {
             if (Random.value < stumbleChancePerSecond * Time.deltaTime)
             {
                 StartCoroutine(DoStumble());
-                stumbleCooldownTimer = stumbleCooldown; // reset cooldown
+                stumbleCooldownTimer = stumbleCooldown;
             }
         }
     }
 
     void FixedUpdate()
     {
-        if (isStumbling) return; // freeze normal movement during stumble
+        if (isStumbling) return;
 
-        // Determine base speed from mode
         float currentSpeed = moveSpeed;
         switch (currentMode)
         {
@@ -143,21 +138,18 @@ public class PlayerMovement : MonoBehaviour
                 break;
         }
 
-        // --- NEW: adjust speed when moving mostly away from facing ---
         if (input.sqrMagnitude > 0.001f)
         {
-            float angle = Vector3.Angle(facingDirection, input); // 0 = forward, 180 = backward
-            if (angle > forwardAngleForSprint) // backward/sideways (configurable)
+            float angle = Vector3.Angle(facingDirection, input);
+            if (angle > forwardAngleForSprint)
             {
                 currentSpeed *= backwardMultiplier;
             }
         }
 
-        // Preserve gravity by not touching Y
         Vector3 horizontalVelocity = new Vector3(input.x * currentSpeed, 0f, input.z * currentSpeed);
         rb.velocity = new Vector3(horizontalVelocity.x, rb.velocity.y, horizontalVelocity.z);
 
-        // Add stronger gravity when in air
         if (!isGrounded)
         {
             rb.AddForce(Physics.gravity * (gravityMultiplier - 1f), ForceMode.Acceleration);
@@ -166,7 +158,7 @@ public class PlayerMovement : MonoBehaviour
 
     void HandleInput()
     {
-        if (isStumbling) return; // disable input during stumble
+        if (isStumbling) return;
 
         float x = 0f;
         float z = 0f;
@@ -178,31 +170,24 @@ public class PlayerMovement : MonoBehaviour
 
         input = new Vector3(x, 0f, z).normalized;
 
-        // NOTE: original code forced the transform.forward to input.
-        // We intentionally stop forcing facing here because torchlight controls facing.
-        // (We keep the old behavior commented for reference.)
-        /*
+        // --- ADDED FOR ANIMATION ---
         if (input != Vector3.zero)
-        {
-            transform.forward = input;
-        }
-        */
+            lastMoveDir = new Vector2(input.x, input.z).normalized;
+        // ----------------------------
 
         if (Input.GetKeyDown(sprintKey)) lastPressedKey = sprintKey;
         if (Input.GetKeyDown(sneakKey)) lastPressedKey = sneakKey;
     }
 
-    // sprint sneak logic
     void HandleSprintSneakLogic()
     {
-        if (isStumbling) return; // lock sprint/sneak state during stumble
+        if (isStumbling) return;
 
         bool holdingSprint = Input.GetKey(sprintKey);
         bool holdingSneak = Input.GetKey(sneakKey);
         bool isPhysicallyMoving = rb.velocity.magnitude > 0.05f;
         float drainMultiplier = GetSprintDrainMultiplier();
 
-        // --- NEW: disallow sprinting if moving away from facing ---
         bool movementBlocksSprint = false;
         if (input.sqrMagnitude > 0.001f)
         {
@@ -236,7 +221,6 @@ public class PlayerMovement : MonoBehaviour
         isSneaking = (currentMode == MovementMode.Sneaking);
     }
 
-    // camera zoom
     void UpdateCameraZoom()
     {
         if (mainCamera == null) return;
@@ -245,7 +229,6 @@ public class PlayerMovement : MonoBehaviour
         mainCamera.orthographicSize = Mathf.Lerp(mainCamera.orthographicSize, targetSize, Time.deltaTime * zoomSpeed);
     }
 
-    // sprint ui
     void UpdateSprintUI()
     {
         float percent = Mathf.Clamp01(sprintTimer / sprintDuration);
@@ -283,7 +266,6 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    // sprint drain
     float GetSprintDrainMultiplier()
     {
         float highestMultiplier = 1f;
@@ -304,7 +286,6 @@ public class PlayerMovement : MonoBehaviour
         return highestMultiplier;
     }
 
-    // fade ui sprint bar
     IEnumerator FadeCanvasGroup(CanvasGroup group, float startAlpha, float endAlpha, float duration)
     {
         float time = 0f;
@@ -317,35 +298,24 @@ public class PlayerMovement : MonoBehaviour
         group.alpha = endAlpha;
     }
 
-    // stumble logic
     IEnumerator DoStumble()
     {
         isStumbling = true;
-
-        // stop normal movement
         rb.velocity = Vector3.zero;
-
-        // short forward stumble impulse
         rb.AddForce(transform.forward * stumbleForwardForce, ForceMode.Impulse);
-
         yield return new WaitForSeconds(stumbleDuration);
-
         isStumbling = false;
     }
 
-    // --- NEW: called by TorchlightManager to set facing instantly ---
     public void SetFacingDirection(Vector3 newFacing)
     {
-        if (isSneaking) return; // Prevent facing updates while sneaking
+        if (isSneaking) return;
         if (newFacing.sqrMagnitude <= 0.001f) return;
         newFacing.y = 0f;
         facingDirection = newFacing.normalized;
-
-        // instantly snap transform.forward so other systems that rely on transform.forward (stumble etc.) use it
         transform.forward = facingDirection;
     }
 
-    // gizmo for enemy proximity and ground check
     void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;
