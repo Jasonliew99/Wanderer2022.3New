@@ -11,10 +11,14 @@ public class EnemySpriteAnimation : MonoBehaviour
     public SpriteRenderer spriteRenderer;
 
     [Header("Animation Clips (Drag & Drop)")]
-    public AnimationClip frontRightClip; // SE
-    public AnimationClip backRightClip;  // NE
+    public AnimationClip frontRightClip; // SE (facing player)
+    public AnimationClip backRightClip;  // NE (back facing)
+
+    [Header("Settings")]
+    public float directionBuffer = 10f; // prevents jitter near boundaries
 
     private string currentClipName = "";
+    private float lastAngle = 0f;
 
     void Update()
     {
@@ -29,36 +33,49 @@ public class EnemySpriteAnimation : MonoBehaviour
 
     void PlayMovementAnimation(Vector3 dir)
     {
+        // Get angle in 360° range
         float angle = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg;
+        if (angle < 0) angle += 360f;
+
+        // Only update if direction changed significantly
+        if (Mathf.Abs(Mathf.DeltaAngle(lastAngle, angle)) < directionBuffer)
+            return;
+
+        lastAngle = angle;
 
         AnimationClip clipToPlay = null;
         bool flipX = false;
 
-        if (angle >= -45f && angle < 45f)
+        // --- Direction Zones ---
+        // SE: 0°–90°
+        if (angle >= 0f && angle < 90f)
         {
-            clipToPlay = frontRightClip; // SE
+            clipToPlay = frontRightClip;
             flipX = false;
         }
-        else if (angle >= 45f && angle < 135f)
+        // SW: 90°–180°
+        else if (angle >= 90f && angle < 180f)
         {
-            clipToPlay = backRightClip;  // NE
+            clipToPlay = frontRightClip;
+            flipX = true;
+        }
+        // NW: 180°–270°
+        else if (angle >= 180f && angle < 270f)
+        {
+            clipToPlay = backRightClip;
+            flipX = true;
+        }
+        // NE: 270°–360°
+        else if (angle >= 270f && angle < 360f)
+        {
+            clipToPlay = backRightClip;
             flipX = false;
-        }
-        else if (angle >= 135f || angle < -135f)
-        {
-            clipToPlay = backRightClip;  // NW
-            flipX = true;
-        }
-        else // -135 to -45
-        {
-            clipToPlay = frontRightClip; // SW
-            flipX = true;
         }
 
         // Apply flip
         spriteRenderer.flipX = flipX;
 
-        // Play animation if different
+        // Play only if changed
         if (clipToPlay != null && clipToPlay.name != currentClipName)
         {
             animator.Play(clipToPlay.name);
