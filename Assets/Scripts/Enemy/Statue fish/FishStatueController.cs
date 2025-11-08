@@ -10,17 +10,17 @@ public class FishStatueController : MonoBehaviour
     [Header("References")]
     public Transform player;
     public Light flashlight;
-    public LayerMask torchlightLayer; // Layer your statue is on for detection
-    public Volume postProcessingVolume; // Vignette
-    public List<Transform> teleportPoints; // mesh sphere spawn points
-    public NavMeshAgent agent; // NavMeshAgent attached to statue
+    public LayerMask torchlightLayer;
+    public Volume postProcessingVolume;
+    public List<Transform> teleportPoints;
+    public NavMeshAgent agent;
 
     [Header("Chase Zone Reference")]
-    public ChaseZoneStatueFish chaseZone; // drag & drop your chase zone
+    public ChaseZoneStatueFish chaseZone;
 
-    [Header("Settings")]
+    [Header("Activation & Timing Settings")]
     public float activationRadius = 5f;
-    public float despawnDelay = 0.5f; // after leaving screen view
+    public float despawnDelay = 0.5f;
     public float vibrationDuration = 1f;
     public float chargeSpeed = 10f;
     public float flickerDuration = 0.5f;
@@ -34,6 +34,10 @@ public class FishStatueController : MonoBehaviour
 
     [Header("Vibration Settings")]
     public float vibrationIntensity = 0.05f;
+
+    [Header("Torchlight Detection Settings")]
+    public float flashlightAngle = 25f;
+    public float flashlightRange = 20f;
 
     private Vector3 originalPosition;
     private Vector3 spriteOriginalPos;
@@ -68,14 +72,11 @@ public class FishStatueController : MonoBehaviour
 
     void Update()
     {
-        // Check if player is inside chase zone
         bool playerInGround = chaseZone != null && chaseZone.IsInside(player.position);
 
-        // Check if statue is visible on screen
         Vector3 screenPoint = Camera.main.WorldToViewportPoint(transform.position);
         isPlayerInView = screenPoint.x >= 0 && screenPoint.x <= 1 && screenPoint.y >= 0 && screenPoint.y <= 1 && screenPoint.z > 0;
 
-        // Update vignette center to follow player
         UpdateVignetteCenter();
 
         switch (state)
@@ -100,14 +101,14 @@ public class FishStatueController : MonoBehaviour
                 }
                 else
                 {
-                    despawnTimer = 0f; // reset if player looks again
+                    despawnTimer = 0f;
                 }
                 break;
 
             case StatueState.Teleport:
-                TeleportToRandomPoint();   // immediately teleport
+                TeleportToRandomPoint();
                 timer = 0f;
-                state = StatueState.Vibrating; // start vibration + vignette build-up
+                state = StatueState.Vibrating;
                 agent.isStopped = true;
                 break;
 
@@ -115,17 +116,15 @@ public class FishStatueController : MonoBehaviour
                 timer += Time.deltaTime;
                 VibrateSprite();
 
-                // Increase vignette intensity while vibrating
                 vignette.intensity.value = Mathf.MoveTowards(vignette.intensity.value, maxVignetteIntensity, Time.deltaTime * vignetteSpeed);
 
                 if (FlashlightHitsStatue())
                 {
                     torchlightTimer += Time.deltaTime;
                     FlickerVignette();
+
                     if (torchlightTimer >= torchlightInterruptTime)
-                    {
                         DespawnAndCooldown();
-                    }
                 }
                 else
                 {
@@ -172,6 +171,7 @@ public class FishStatueController : MonoBehaviour
             case StatueState.Cooldown:
                 cooldownTimer += Time.deltaTime;
                 vignette.intensity.value = Mathf.MoveTowards(vignette.intensity.value, baselineIntensity, Time.deltaTime * vignetteSpeed);
+
                 if (cooldownTimer >= cooldownAfterInterrupt)
                 {
                     cooldownTimer = 0f;
@@ -202,7 +202,6 @@ public class FishStatueController : MonoBehaviour
         {
             Transform point = teleportPoints[Random.Range(0, teleportPoints.Count)];
 
-            // Avoid staying at current position
             if (teleportPoints.Count > 1)
             {
                 int attempts = 0;
@@ -230,9 +229,7 @@ public class FishStatueController : MonoBehaviour
     void FlickerVignette()
     {
         if (vignette != null)
-        {
             vignette.intensity.value = Random.Range(baselineIntensity, maxVignetteIntensity);
-        }
     }
 
     void DespawnAndCooldown()
@@ -249,12 +246,19 @@ public class FishStatueController : MonoBehaviour
     {
         if (flashlight == null) return false;
 
-        RaycastHit hit;
-        if (Physics.Raycast(flashlight.transform.position, flashlight.transform.forward, out hit, 20f, torchlightLayer))
+        Vector3 dirToStatue = (transform.position - flashlight.transform.position).normalized;
+        float angle = Vector3.Angle(flashlight.transform.forward, dirToStatue);
+        float distance = Vector3.Distance(flashlight.transform.position, transform.position);
+
+        if (angle <= flashlightAngle && distance <= flashlightRange)
         {
-            if (hit.collider == GetComponent<Collider>())
-                return true;
+            if (Physics.Raycast(flashlight.transform.position, dirToStatue, out RaycastHit hit, flashlightRange, torchlightLayer))
+            {
+                if (hit.collider != null && hit.collider.gameObject == gameObject)
+                    return true;
+            }
         }
+
         return false;
     }
 
@@ -271,14 +275,11 @@ public class FishStatueController : MonoBehaviour
         agent.isStopped = true;
     }
 
-    // ------------------ GIZMOS ------------------
     void OnDrawGizmosSelected()
     {
-        // Activation radius
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, activationRadius);
 
-        // Teleport points
         if (teleportPoints != null)
         {
             Gizmos.color = Color.cyan;
@@ -292,7 +293,6 @@ public class FishStatueController : MonoBehaviour
             }
         }
 
-        // NavMesh destination
         if (agent != null && agent.hasPath)
         {
             Gizmos.color = Color.green;
