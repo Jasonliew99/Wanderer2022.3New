@@ -268,28 +268,53 @@ public class PlayerTracker : MonoBehaviour
         }
     }
 
-    // --- TEMPORARY DEATH LOGIC ---
+    // --- PLAYER CATCH LOGIC (uses respawn manager) ---
     private void OnCollisionEnter(Collision collision)
     {
-        if (!hasKilledPlayer && collision.transform == player)
+        if (collision.transform == player)
         {
-            hasKilledPlayer = true;
-            ReloadLevel();
+            RespawnController respawnController = FindObjectOfType<RespawnController>();
+            if (respawnController != null)
+            {
+                respawnController.HandlePlayerDeath();
+            }
         }
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (!hasKilledPlayer && other.transform == player)
+        if (other.transform == player)
         {
-            hasKilledPlayer = true;
-            ReloadLevel();
+            RespawnController respawnController = FindObjectOfType<RespawnController>();
+            if (respawnController != null)
+            {
+                respawnController.HandlePlayerDeath();
+            }
         }
     }
 
-    private void ReloadLevel()
-    {
-        Scene currentScene = SceneManager.GetActiveScene();
-        SceneManager.LoadScene(currentScene.name);
-    }
+    // --- TEMPORARY DEATH LOGIC ---
+    //private void OnCollisionEnter(Collision collision)
+    //{
+    //    if (!hasKilledPlayer && collision.transform == player)
+    //    {
+    //        hasKilledPlayer = true;
+    //        ReloadLevel();
+    //    }
+    //}
+
+    //private void OnTriggerEnter(Collider other)
+    //{
+    //    if (!hasKilledPlayer && other.transform == player)
+    //    {
+    //        hasKilledPlayer = true;
+    //        ReloadLevel();
+    //    }
+    //}
+
+    //private void ReloadLevel()
+    //{
+    //    Scene currentScene = SceneManager.GetActiveScene();
+    //    SceneManager.LoadScene(currentScene.name);
+    //}
 }
