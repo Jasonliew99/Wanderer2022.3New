@@ -8,91 +8,45 @@ public class PlayerSpriteAnimation : MonoBehaviour
 {
     [Header("References")]
     public Animator animator;
-    public SpriteRenderer spriteRenderer;
-    public Transform meshTransform; // actual mesh to read facing direction
-
-    [Header("Animation Clips")]
-    public AnimationClip frontClip; // front walking animation
-    public AnimationClip backClip;  // back walking animation
+    public SpriteRenderer spriteRenderer; // Your single sprite
 
     [Header("Settings")]
-    public float minMoveSpeed = 0.05f;
+    public Transform playerTransform;
 
-    private string currentClipName = "";
-    private bool isIdle = true;
-    private Rigidbody rb;
-
-    void Start()
-    {
-        if (meshTransform == null)
-            meshTransform = transform; // default to this object
-
-        rb = GetComponent<Rigidbody>();
-    }
+    private Vector3 lastMoveDir = Vector3.down; // default facing
 
     void Update()
     {
-        // --- Movement check ---
-        Vector3 velocity = new Vector3(rb.velocity.x, 0, rb.velocity.z);
-        float speed = velocity.magnitude;
+        Vector3 moveDir = playerTransform.forward; // or your input dir
+        if (moveDir.sqrMagnitude > 0.001f)
+            lastMoveDir = moveDir.normalized;
 
-        if (speed <= minMoveSpeed)
-        {
-            if (!isIdle)
-            {
-                animator.speed = 0f;
-                isIdle = true;
-            }
-        }
+        UpdateSprite(lastMoveDir);
+    }
+
+    void UpdateSprite(Vector3 dir)
+    {
+        // Convert direction to angle
+        float angle = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg;
+
+        // Determine animation state (simplified 4 main directions)
+        string animState = "Idle";
+
+        if (angle >= -45 && angle < 45)          // Right side
+            animState = "Right";
+        else if (angle >= 45 && angle < 135)     // Up
+            animState = "Up";
+        else if (angle >= -135 && angle < -45)   // Down
+            animState = "Down";
+        else                                     // Left side
+            animState = "Right"; // reuse right animation
+
+        animator.Play(animState);
+
+        // Flip for left side
+        if (angle < -45 && angle >= -135 || angle > 135)
+            spriteRenderer.flipX = true;
         else
-        {
-            if (isIdle)
-            {
-                animator.speed = 1f;
-                isIdle = false;
-            }
-        }
-
-        // --- Determine animation from mesh facing ---
-        float angle = meshTransform.eulerAngles.y;
-
-        // Normalize to -180 → 180
-        if (angle > 180f) angle -= 360f;
-
-        AnimationClip clipToPlay = null;
-        bool flipX = false;
-
-        // --- Four-direction mapping ---
-        if (angle >= -45f && angle <= 45f)
-        {
-            // Top Right
-            clipToPlay = backClip;
-            flipX = false;
-        }
-        else if (angle > 45f && angle <= 135f)
-        {
-            // Bottom Right
-            clipToPlay = frontClip;
-            flipX = false;
-        }
-        else if (angle < -45f && angle >= -135f)
-        {
-            // Top Left
-            clipToPlay = backClip;
-            flipX = true;
-        }
-        else // Bottom Left
-        {
-            clipToPlay = frontClip;
-            flipX = true;
-        }
-
-        spriteRenderer.flipX = flipX;
-
-        if (clipToPlay != null && clipToPlay.name != currentClipName)
-        {
-            animator.Play(clipToPlay.name);
-            currentClipName = clipToPlay.name;
-        }
+            spriteRenderer.flipX = false;
     }
 }

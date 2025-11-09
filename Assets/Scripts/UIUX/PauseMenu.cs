@@ -4,15 +4,15 @@ using UnityEngine;
 
 public class PauseMenu : MonoBehaviour
 {
-    public GameObject pauseMenuUI;   // Assign your PauseMenu panel here
-    public KeyCode pauseKey = KeyCode.Escape;
+    public GameObject pauseMenuUI; //pausepanel here
+    public KeyCode pauseKey = KeyCode.Escape; //the button that triggers
 
     private bool isPaused = false;
 
     void Update()
     {
-        // Toggle pause when pressing the key
-        if (Input.GetKeyDown(pauseKey))
+
+        if (Input.GetKeyDown(pauseKey))//toggle when pressed
         {
             if (isPaused) Resume();
             else Pause();
@@ -30,7 +30,7 @@ public class PauseMenu : MonoBehaviour
     void Pause()
     {
         pauseMenuUI.SetActive(true);  // Show pause menu
-        Time.timeScale = 0f;          // Freeze everything
+        Time.timeScale = 0f;          // pause everything
         isPaused = true;
     }
 }
