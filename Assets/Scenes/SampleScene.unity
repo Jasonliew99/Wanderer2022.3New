@@ -437,7 +437,7 @@ GameObject:
   - component: {fileID: 8485541}
   - component: {fileID: 8485542}
   m_Layer: 0
-  m_Name: Point (12)
+  m_Name: Point (12)xghm,
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5328,7 +5328,7 @@ GameObject:
   - component: {fileID: 134885489}
   - component: {fileID: 134885490}
   m_Layer: 0
-  m_Name: Point (10)
+  m_Name: Point (10)ccxv
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5648,7 +5648,7 @@ GameObject:
   - component: {fileID: 139054597}
   - component: {fileID: 139054598}
   m_Layer: 0
-  m_Name: Point (4)
+  m_Name: Point (4)rtudy
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5772,7 +5772,7 @@ GameObject:
   - component: {fileID: 139929181}
   - component: {fileID: 139929182}
   m_Layer: 0
-  m_Name: Point (7)
+  m_Name: Point (7)dsfgsdf
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -10221,7 +10221,7 @@ GameObject:
   - component: {fileID: 287349682}
   - component: {fileID: 287349683}
   m_Layer: 0
-  m_Name: Point (17)
+  m_Name: Point (17)uilio
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -12530,7 +12530,7 @@ GameObject:
   - component: {fileID: 330789258}
   - component: {fileID: 330789259}
   m_Layer: 0
-  m_Name: Point (4)
+  m_Name: Point (4)dfsf
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -21727,7 +21727,7 @@ GameObject:
   - component: {fileID: 554481579}
   - component: {fileID: 554481580}
   m_Layer: 0
-  m_Name: Point (5)
+  m_Name: Point (5)sdgs
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -23976,7 +23976,7 @@ GameObject:
   - component: {fileID: 585352784}
   - component: {fileID: 585352785}
   m_Layer: 0
-  m_Name: Point (3)
+  m_Name: Point (3)dfd
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -35250,91 +35250,6 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!1001 &883141930
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: -8679921383154817045, guid: d33546be1a7c4ba449bd3a98a28b9dcc, type: 3}
-      propertyPath: m_LocalScale.x
-      value: 6.631192
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: d33546be1a7c4ba449bd3a98a28b9dcc, type: 3}
-      propertyPath: m_LocalScale.y
-      value: 6.631192
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: d33546be1a7c4ba449bd3a98a28b9dcc, type: 3}
-      propertyPath: m_LocalScale.z
-      value: 6.631192
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: d33546be1a7c4ba449bd3a98a28b9dcc, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: -457.9
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: d33546be1a7c4ba449bd3a98a28b9dcc, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 11.419
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: d33546be1a7c4ba449bd3a98a28b9dcc, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: -648.7
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: d33546be1a7c4ba449bd3a98a28b9dcc, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 0.7071068
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: d33546be1a7c4ba449bd3a98a28b9dcc, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: d33546be1a7c4ba449bd3a98a28b9dcc, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: -0.7071068
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: d33546be1a7c4ba449bd3a98a28b9dcc, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: d33546be1a7c4ba449bd3a98a28b9dcc, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: d33546be1a7c4ba449bd3a98a28b9dcc, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: -90
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: d33546be1a7c4ba449bd3a98a28b9dcc, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -5050395987615527665, guid: d33546be1a7c4ba449bd3a98a28b9dcc, type: 3}
-      propertyPath: m_Materials.Array.data[0]
-      value: 
-      objectReference: {fileID: 2100000, guid: 83a7235c903d2db40ac25132cd50ab12, type: 2}
-    - target: {fileID: 911373179564388827, guid: d33546be1a7c4ba449bd3a98a28b9dcc, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 1.9
-      objectReference: {fileID: 0}
-    - target: {fileID: 911373179564388827, guid: d33546be1a7c4ba449bd3a98a28b9dcc, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: -1.8728157
-      objectReference: {fileID: 0}
-    - target: {fileID: 911373179564388827, guid: d33546be1a7c4ba449bd3a98a28b9dcc, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: -3.67
-      objectReference: {fileID: 0}
-    - target: {fileID: 919132149155446097, guid: d33546be1a7c4ba449bd3a98a28b9dcc, type: 3}
-      propertyPath: m_Name
-      value: Crane (2)
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: d33546be1a7c4ba449bd3a98a28b9dcc, type: 3}
 --- !u!1 &884062041
 GameObject:
   m_ObjectHideFlags: 0
@@ -35514,7 +35429,7 @@ GameObject:
   - component: {fileID: 887546190}
   - component: {fileID: 887546191}
   m_Layer: 0
-  m_Name: Point (8)
+  m_Name: Point (8)fgfg
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -35630,7 +35545,7 @@ GameObject:
   - component: {fileID: 890009072}
   - component: {fileID: 890009073}
   m_Layer: 0
-  m_Name: Point (5)
+  m_Name: Point (5)tdyu
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -38282,7 +38197,7 @@ GameObject:
   - component: {fileID: 952224942}
   - component: {fileID: 952224943}
   m_Layer: 0
-  m_Name: Point
+  m_Name: Pointdzdfg
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -38939,7 +38854,7 @@ GameObject:
   - component: {fileID: 964606072}
   - component: {fileID: 964606073}
   m_Layer: 0
-  m_Name: Point (18)
+  m_Name: Point (18)dgf
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -39357,7 +39272,7 @@ GameObject:
   - component: {fileID: 973448679}
   - component: {fileID: 973448680}
   m_Layer: 0
-  m_Name: Point (21)
+  m_Name: Point (21)sdfgsfdg
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -41912,7 +41827,7 @@ GameObject:
   - component: {fileID: 1038877712}
   - component: {fileID: 1038877713}
   m_Layer: 0
-  m_Name: Point (1)
+  m_Name: Point (1)tyuyu
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -42539,7 +42454,7 @@ GameObject:
   - component: {fileID: 1054373840}
   - component: {fileID: 1054373841}
   m_Layer: 0
-  m_Name: Point (1)
+  m_Name: Point (1)fdgdsdg
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -42627,7 +42542,7 @@ GameObject:
   - component: {fileID: 1060763733}
   - component: {fileID: 1060763734}
   m_Layer: 0
-  m_Name: Point (9)
+  m_Name: Point (9)xcxc
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -44255,7 +44170,7 @@ GameObject:
   - component: {fileID: 1110426690}
   - component: {fileID: 1110426691}
   m_Layer: 0
-  m_Name: Point (11)
+  m_Name: Point (11)zxcxzc
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -45511,7 +45426,7 @@ GameObject:
   - component: {fileID: 1131409261}
   - component: {fileID: 1131409262}
   m_Layer: 0
-  m_Name: Point
+  m_Name: Pointdsds
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -53899,7 +53814,7 @@ GameObject:
   - component: {fileID: 1341066601}
   - component: {fileID: 1341066602}
   m_Layer: 0
-  m_Name: Point (13)
+  m_Name: Point (13)131
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -55612,7 +55527,7 @@ GameObject:
   - component: {fileID: 1367805591}
   - component: {fileID: 1367805592}
   m_Layer: 0
-  m_Name: Point (6)
+  m_Name: Point (6)retrdg
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -62002,7 +61917,7 @@ GameObject:
   - component: {fileID: 1512740818}
   - component: {fileID: 1512740819}
   m_Layer: 0
-  m_Name: Point (3)
+  m_Name: Point (3)rtyy
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -73331,7 +73246,7 @@ GameObject:
   - component: {fileID: 1796843407}
   - component: {fileID: 1796843408}
   m_Layer: 0
-  m_Name: Point (2)
+  m_Name: Point (2)tytuty
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -75766,7 +75681,7 @@ GameObject:
   - component: {fileID: 1865726840}
   - component: {fileID: 1865726841}
   m_Layer: 0
-  m_Name: Point (14)
+  m_Name: Point (14)343
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -77691,7 +77606,7 @@ GameObject:
   - component: {fileID: 1943497863}
   - component: {fileID: 1943497864}
   m_Layer: 0
-  m_Name: Point (16)
+  m_Name: Point (16)546
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -78843,7 +78758,7 @@ GameObject:
   - component: {fileID: 1968367844}
   - component: {fileID: 1968367845}
   m_Layer: 0
-  m_Name: Point (20)
+  m_Name: Point (20)34546
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -79395,7 +79310,7 @@ GameObject:
   - component: {fileID: 1987315296}
   - component: {fileID: 1987315297}
   m_Layer: 0
-  m_Name: Point (15)
+  m_Name: Point (15) df
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -82818,7 +82733,7 @@ GameObject:
   - component: {fileID: 2058170072}
   - component: {fileID: 2058170073}
   m_Layer: 0
-  m_Name: Point (2)
+  m_Name: Point (2)sdfgsf
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -85096,7 +85011,6 @@ SceneRoots:
   - {fileID: 1435409511}
   - {fileID: 201515126}
   - {fileID: 2050847569}
-  - {fileID: 883141930}
   - {fileID: 1419039836}
   - {fileID: 2007088607}
   - {fileID: 1585898218}
