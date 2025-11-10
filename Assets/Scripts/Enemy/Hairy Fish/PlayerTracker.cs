@@ -20,9 +20,9 @@ public class PlayerTracker : MonoBehaviour
 
     [Header("Detection Settings")]
     public float visionRadius = 10f;
-    public float visionConeRange = 8f;
     [Range(0f, 360f)]
     public float visionConeAngle = 90f;
+    public float visionConeRange = 8f;
 
     [Header("Sneak Detection Reduction")]
     public float sneakRadiusMultiplier = 0.5f;
@@ -39,6 +39,13 @@ public class PlayerTracker : MonoBehaviour
     public Transform[] patrolPoints;
     public bool patrolRandom = false;
 
+    [Header("Charge Settings")]
+    public float chargeDistance = 4f;   // Forward cone distance for charge
+    [Range(0f, 180f)]
+    public float chargeAngle = 60f;     // Forward cone angle for charge
+    public float chargeSpeedMultiplier = 2f; // Speed boost for charge
+    public float chargeDuration = 0.5f; // How long charge lasts
+
     private int patrolIndex = 0;
     private bool isWaiting = false;
 
@@ -49,8 +56,10 @@ public class PlayerTracker : MonoBehaviour
 
     private PlayerMovement playerMovement;
 
+    private bool isCharging = false; // prevents overlapping charges
+
     // --- Temporary death logic ---
-    private bool hasKilledPlayer = false; // prevents multiple reloads
+    private bool hasKilledPlayer = false;
 
     void Start()
     {
@@ -82,6 +91,8 @@ public class PlayerTracker : MonoBehaviour
                 Search();
                 break;
         }
+
+        HandleCharge();
     }
 
     void DetectPlayer()
@@ -147,7 +158,8 @@ public class PlayerTracker : MonoBehaviour
 
     void Chase()
     {
-        agent.SetDestination(player.position);
+        if (!isCharging)
+            agent.SetDestination(player.position);
     }
 
     void Search()
@@ -215,6 +227,33 @@ public class PlayerTracker : MonoBehaviour
         return closest;
     }
 
+    void HandleCharge()
+    {
+        if (isCharging || currentState != State.Chase || player == null) return;
+
+        Vector3 dirToPlayer = (player.position - transform.position).normalized;
+        float distance = Vector3.Distance(transform.position, player.position);
+        float angleToPlayer = Vector3.Angle(transform.forward, dirToPlayer);
+
+        if (distance <= chargeDistance && angleToPlayer <= chargeAngle * 0.5f)
+        {
+            StartCoroutine(ChargeForward());
+        }
+    }
+
+    IEnumerator ChargeForward()
+    {
+        isCharging = true;
+        float originalSpeed = agent.speed;
+        agent.speed *= chargeSpeedMultiplier;
+        agent.SetDestination(player.position);
+
+        yield return new WaitForSeconds(chargeDuration);
+
+        agent.speed = chaseSpeed;
+        isCharging = false;
+    }
+
     void OnDrawGizmosSelected()
     {
         Vector3 origin = transform.position + Vector3.up * 0.5f;
@@ -266,6 +305,17 @@ public class PlayerTracker : MonoBehaviour
             Gizmos.color = playerInSight ? Color.cyan : Color.gray;
             Gizmos.DrawLine(transform.position + Vector3.up, player.position + Vector3.up);
         }
+
+        // --- Charge cone gizmo ---
+        Gizmos.color = Color.magenta;
+        Vector3 chargeForward = transform.forward * chargeDistance;
+        Quaternion leftRot = Quaternion.Euler(0f, -chargeAngle * 0.5f, 0f);
+        Quaternion rightRot = Quaternion.Euler(0f, chargeAngle * 0.5f, 0f);
+        Vector3 leftDirC = leftRot * chargeForward;
+        Vector3 rightDirC = rightRot * chargeForward;
+        Gizmos.DrawRay(transform.position, leftDirC);
+        Gizmos.DrawRay(transform.position, rightDirC);
+        Gizmos.DrawLine(transform.position + leftDirC, transform.position + rightDirC);
     }
 
     // --- PLAYER CATCH LOGIC (uses respawn manager) ---
@@ -292,29 +342,4 @@ public class PlayerTracker : MonoBehaviour
             }
         }
     }
-
-    // --- TEMPORARY DEATH LOGIC ---
-    //private void OnCollisionEnter(Collision collision)
-    //{
-    //    if (!hasKilledPlayer && collision.transform == player)
-    //    {
-    //        hasKilledPlayer = true;
-    //        ReloadLevel();
-    //    }
-    //}
-
-    //private void OnTriggerEnter(Collider other)
-    //{
-    //    if (!hasKilledPlayer && other.transform == player)
-    //    {
-    //        hasKilledPlayer = true;
-    //        ReloadLevel();
-    //    }
-    //}
-
-    //private void ReloadLevel()
-    //{
-    //    Scene currentScene = SceneManager.GetActiveScene();
-    //    SceneManager.LoadScene(currentScene.name);
-    //}
 }
