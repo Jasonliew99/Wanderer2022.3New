@@ -9,21 +9,21 @@ public class FishStatueController : MonoBehaviour
 {
     [Header("References")]
     public Transform player;
-    public Light flashlight;
-    public LayerMask torchlightLayer;
-    public Volume postProcessingVolume;
-    public List<Transform> teleportPoints;
     public NavMeshAgent agent;
+    public Volume postProcessingVolume;
+    public Animator animator;
+    public SpriteRenderer spriteRenderer;
+    public AnimationClip triggerAnimation; // drag-and-drop here
+    public Sprite placeholderSprite;
+    public Sprite activeSprite;
 
     [Header("Chase Zone Reference")]
     public ChaseZoneStatueFish chaseZone;
 
     [Header("Activation & Timing Settings")]
     public float activationRadius = 5f;
-    public float despawnDelay = 0.5f;
     public float vibrationDuration = 1f;
     public float chargeSpeed = 10f;
-    public float flickerDuration = 0.5f;
     public float torchlightInterruptTime = 1f;
     public float cooldownAfterInterrupt = 3f;
 
@@ -35,22 +35,18 @@ public class FishStatueController : MonoBehaviour
     [Header("Vibration Settings")]
     public float vibrationIntensity = 0.05f;
 
-    [Header("Torchlight Detection Settings")]
-    public float flashlightAngle = 25f;
-    public float flashlightRange = 20f;
-
     private Vector3 originalPosition;
     private Vector3 spriteOriginalPos;
     private Vignette vignette;
 
-    private enum StatueState { Idle, Haunting, Teleport, Vibrating, Charge, Paused, Cooldown }
+    private enum StatueState { Idle, Haunting, Vibrating, Charge, Paused, Cooldown }
     private StatueState state = StatueState.Idle;
 
     private float timer = 0f;
     private float torchlightTimer = 0f;
     private float cooldownTimer = 0f;
-    private float despawnTimer = 0f;
     private bool isPlayerInView = true;
+    private bool isInFlashlight = false;
 
     void Start()
     {
@@ -68,6 +64,8 @@ public class FishStatueController : MonoBehaviour
             agent.speed = chargeSpeed;
             agent.isStopped = true;
         }
+
+        ResetSprite();
     }
 
     void Update()
@@ -86,52 +84,35 @@ public class FishStatueController : MonoBehaviour
                 {
                     state = StatueState.Haunting;
                     timer = 0f;
+                    PlayTriggerAnimation();
                 }
                 break;
 
             case StatueState.Haunting:
                 if (!isPlayerInView)
                 {
-                    despawnTimer += Time.deltaTime;
-                    if (despawnTimer >= despawnDelay)
-                    {
-                        despawnTimer = 0f;
-                        state = StatueState.Teleport;
-                    }
+                    state = StatueState.Vibrating;
+                    timer = 0f;
+                    agent.isStopped = true;
                 }
-                else
-                {
-                    despawnTimer = 0f;
-                }
-                break;
-
-            case StatueState.Teleport:
-                TeleportToRandomPoint();
-                timer = 0f;
-                state = StatueState.Vibrating;
-                agent.isStopped = true;
                 break;
 
             case StatueState.Vibrating:
-                timer += Time.deltaTime;
-                VibrateSprite();
-
-                vignette.intensity.value = Mathf.MoveTowards(vignette.intensity.value, maxVignetteIntensity, Time.deltaTime * vignetteSpeed);
-
-                if (FlashlightHitsStatue())
+                if (!isInFlashlight) // pause if flashlight shining
                 {
-                    torchlightTimer += Time.deltaTime;
-                    FlickerVignette();
-
-                    if (torchlightTimer >= torchlightInterruptTime)
-                        DespawnAndCooldown();
+                    timer += Time.deltaTime;
+                    VibrateSprite();
+                    vignette.intensity.value = Mathf.MoveTowards(vignette.intensity.value, maxVignetteIntensity, Time.deltaTime * vignetteSpeed);
                 }
                 else
                 {
-                    torchlightTimer = 0f;
+                    torchlightTimer += Time.deltaTime;
+                    FlickerVignette();
+                    if (torchlightTimer >= torchlightInterruptTime)
+                        StartCooldown();
                 }
 
-                if (timer >= vibrationDuration)
+                if (timer >= vibrationDuration && !isInFlashlight)
                 {
                     timer = 0f;
                     state = StatueState.Charge;
@@ -141,13 +122,13 @@ public class FishStatueController : MonoBehaviour
                 break;
 
             case StatueState.Charge:
-                if (agent != null)
+                if (agent != null && !isInFlashlight)
                     agent.SetDestination(player.position);
 
                 float distanceFactor = Mathf.Clamp01(1f - (Vector3.Distance(player.position, transform.position) / chaseZone.radius));
                 vignette.intensity.value = Mathf.MoveTowards(vignette.intensity.value, baselineIntensity + distanceFactor * (maxVignetteIntensity - baselineIntensity), Time.deltaTime * vignetteSpeed);
 
-                if (FlashlightHitsStatue())
+                if (isInFlashlight)
                 {
                     state = StatueState.Paused;
                     agent.isStopped = true;
@@ -160,7 +141,7 @@ public class FishStatueController : MonoBehaviour
                 break;
 
             case StatueState.Paused:
-                if (!FlashlightHitsStatue())
+                if (!isInFlashlight)
                 {
                     state = StatueState.Charge;
                     agent.isStopped = false;
@@ -196,27 +177,6 @@ public class FishStatueController : MonoBehaviour
         }
     }
 
-    void TeleportToRandomPoint()
-    {
-        if (teleportPoints.Count > 0)
-        {
-            Transform point = teleportPoints[Random.Range(0, teleportPoints.Count)];
-
-            if (teleportPoints.Count > 1)
-            {
-                int attempts = 0;
-                while (point.position == transform.position && attempts < 10)
-                {
-                    point = teleportPoints[Random.Range(0, teleportPoints.Count)];
-                    attempts++;
-                }
-            }
-
-            transform.position = point.position;
-            transform.forward = (player.position - transform.position).normalized;
-        }
-    }
-
     void VibrateSprite()
     {
         transform.localPosition = spriteOriginalPos + new Vector3(
@@ -232,34 +192,15 @@ public class FishStatueController : MonoBehaviour
             vignette.intensity.value = Random.Range(baselineIntensity, maxVignetteIntensity);
     }
 
-    void DespawnAndCooldown()
+    void StartCooldown()
     {
-        transform.position = new Vector3(0, -100, 0);
+        transform.position = new Vector3(0, -100, 0); // temporarily hide
         vignette.intensity.value = baselineIntensity;
         timer = 0f;
         torchlightTimer = 0f;
         state = StatueState.Cooldown;
         agent.isStopped = true;
-    }
-
-    bool FlashlightHitsStatue()
-    {
-        if (flashlight == null) return false;
-
-        Vector3 dirToStatue = (transform.position - flashlight.transform.position).normalized;
-        float angle = Vector3.Angle(flashlight.transform.forward, dirToStatue);
-        float distance = Vector3.Distance(flashlight.transform.position, transform.position);
-
-        if (angle <= flashlightAngle && distance <= flashlightRange)
-        {
-            if (Physics.Raycast(flashlight.transform.position, dirToStatue, out RaycastHit hit, flashlightRange, torchlightLayer))
-            {
-                if (hit.collider != null && hit.collider.gameObject == gameObject)
-                    return true;
-            }
-        }
-
-        return false;
+        ResetSprite();
     }
 
     void ResetStatue()
@@ -271,32 +212,33 @@ public class FishStatueController : MonoBehaviour
         timer = 0f;
         torchlightTimer = 0f;
         cooldownTimer = 0f;
-        despawnTimer = 0f;
         agent.isStopped = true;
+        ResetSprite();
     }
+
+    void PlayTriggerAnimation()
+    {
+        if (animator != null && triggerAnimation != null)
+        {
+            animator.Play(triggerAnimation.name, 0, 0f);
+        }
+        if (spriteRenderer != null && activeSprite != null)
+            spriteRenderer.sprite = activeSprite; // stays active sprite after animation
+    }
+
+    void ResetSprite()
+    {
+        if (spriteRenderer != null && placeholderSprite != null)
+            spriteRenderer.sprite = placeholderSprite;
+    }
+
+    // Called by TorchlightDetector script
+    public void OnTorchlightEnter() => isInFlashlight = true;
+    public void OnTorchlightExit() => isInFlashlight = false;
 
     void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, activationRadius);
-
-        if (teleportPoints != null)
-        {
-            Gizmos.color = Color.cyan;
-            foreach (var point in teleportPoints)
-            {
-                if (point != null)
-                {
-                    Gizmos.DrawSphere(point.position, 0.2f);
-                    Gizmos.DrawLine(transform.position, point.position);
-                }
-            }
-        }
-
-        if (agent != null && agent.hasPath)
-        {
-            Gizmos.color = Color.green;
-            Gizmos.DrawLine(transform.position, agent.destination);
-        }
     }
 }

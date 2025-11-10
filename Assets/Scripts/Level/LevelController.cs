@@ -24,7 +24,7 @@ public class LevelController : MonoBehaviour
     [SerializeField] private float objectiveDisplayTime = 2f; // Duration to display text if useDisplayTime is true
 
     private Coroutine objectiveCoroutine;
-    public bool levelStarted = false;
+    private bool levelStarted = false;
     public bool LevelStarted => levelStarted; // public read-only property
     private bool levelEnded = false;
 
