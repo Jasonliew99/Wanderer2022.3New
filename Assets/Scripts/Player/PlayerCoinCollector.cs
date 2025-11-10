@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -14,16 +14,23 @@ public class PlayerCoinCollector : MonoBehaviour
     public TextMeshProUGUI coinText;
 
     [Header("Animation Settings")]
-    public float scaleUpAmount = 1.2f;      // pop effect
+    public float scaleUpAmount = 1.2f;
     public float scaleDuration = 0.2f;
 
     [Header("Fade Settings")]
-    public float fadeDuration = 0.5f;       // fade speed
-    public float idleTimeBeforeFade = 3f;   // time before fading out
+    public float fadeDuration = 0.5f;
+    public float idleTimeBeforeFade = 3f;
 
     [Header("Animation Options")]
-    public bool animatePrefix = false;      // animate prefix text
-    public bool animateTotalCoins = true;   // animate total coin number
+    public bool animatePrefix = false;
+    public bool animateTotalCoins = true;
+
+    // 👇 Add these for the popup PNG
+    [Header("First Coin Popup Settings")]
+    public CanvasGroup firstCoinPopup; // assign CanvasGroup of PNG + text
+    public float popupFadeDuration = 1f;
+    public float popupDisplayDuration = 2f;
+    public static bool hasShownFirstCoinPopup = false;
 
     private Vector3 originalScale;
     private Coroutine fadeCoroutine;
@@ -47,8 +54,17 @@ public class PlayerCoinCollector : MonoBehaviour
     // Main coin collection logic
     public void CollectCoins(int amount = 1)
     {
+        bool wasZeroBefore = (totalCoins == 0); // 👈 check if first coin
         totalCoins += amount;
         UpdateCoinUI();
+
+        // 👇 show popup if this is first coin collected
+        if (wasZeroBefore && !hasShownFirstCoinPopup)
+        {
+            hasShownFirstCoinPopup = true;
+            if (firstCoinPopup != null)
+                StartCoroutine(ShowAndFadePopup());
+        }
 
         // Animate if options are enabled
         if (coinText != null && (animatePrefix || animateTotalCoins))
@@ -70,25 +86,7 @@ public class PlayerCoinCollector : MonoBehaviour
     {
         if (coinText != null)
         {
-            if (animatePrefix && animateTotalCoins)
-            {
-                coinText.text = prefixText + totalCoins;
-            }
-            else if (animatePrefix)
-            {
-                // Only animate prefix visually
-                coinText.text = prefixText + totalCoins;
-            }
-            else if (animateTotalCoins)
-            {
-                // Only animate total number visually
-                coinText.text = prefixText + totalCoins;
-            }
-            else
-            {
-                // No animation, just update text
-                coinText.text = prefixText + totalCoins;
-            }
+            coinText.text = prefixText + totalCoins;
         }
     }
 
@@ -151,5 +149,50 @@ public class PlayerCoinCollector : MonoBehaviour
         Color c = coinText.color;
         c.a = a;
         coinText.color = c;
+    }
+
+    // 👇 Handles first coin popup fade
+    private IEnumerator ShowAndFadePopup()
+    {
+        bool wePausedGame = false;
+
+        // Only pause if not already paused by something else (like pause menu or respawn)
+        if (Time.timeScale > 0f)
+        {
+            Time.timeScale = 0f;
+            wePausedGame = true;
+        }
+
+        firstCoinPopup.gameObject.SetActive(true);
+
+        // Fade in
+        float t = 0f;
+        while (t < popupFadeDuration)
+        {
+            t += Time.unscaledDeltaTime; // use unscaled time since we paused the game
+            firstCoinPopup.alpha = Mathf.Lerp(0f, 1f, t / popupFadeDuration);
+            yield return null;
+        }
+
+        firstCoinPopup.alpha = 1f;
+        yield return new WaitForSecondsRealtime(popupDisplayDuration);
+
+        // Fade out
+        t = 0f;
+        while (t < popupFadeDuration)
+        {
+            t += Time.unscaledDeltaTime;
+            firstCoinPopup.alpha = Mathf.Lerp(1f, 0f, t / popupFadeDuration);
+            yield return null;
+        }
+
+        firstCoinPopup.alpha = 0f;
+        firstCoinPopup.gameObject.SetActive(false);
+
+        // Only resume if we were the ones who paused
+        if (wePausedGame)
+        {
+            Time.timeScale = 1f;
+        }
     }
 }
