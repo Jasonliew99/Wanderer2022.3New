@@ -5,12 +5,12 @@ using UnityEngine;
 public class TorchLightDetector : MonoBehaviour
 {
     [Header("Detection Settings")]
-    public LayerMask detectableLayer; // Layer for statues
+    public LayerMask detectableLayer; // detected layers
     public bool visualizeGizmo = true;
 
     [Header("Cone Settings")]
-    public float coneAngle = 30f; // full angle of vision cone
-    public float coneRange = 10f; // distance of cone
+    //public float coneAngle = 30f; // the angle of vision cone, how wide is it?
+    public float coneRange = 10f; // the distance of cone/lenght, how far is it?
 
     private SphereCollider detectionCollider;
 
