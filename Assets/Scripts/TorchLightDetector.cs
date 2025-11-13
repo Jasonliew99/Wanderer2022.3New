@@ -5,88 +5,85 @@ using UnityEngine;
 public class TorchLightDetector : MonoBehaviour
 {
     [Header("Detection Settings")]
-    public LayerMask detectableLayer; // detected layers
+    public LayerMask detectableLayer;
+    public float coneAngle = 30f;
+    public float coneRange = 10f;
     public bool visualizeGizmo = true;
 
-    [Header("Cone Settings")]
-    //public float coneAngle = 30f; // the angle of vision cone, how wide is it?
-    public float coneRange = 10f; // the distance of cone/lenght, how far is it?
+    [Header("References")]
+    public TorchlightManager torchManager; // reference to your torch manager
 
-    private SphereCollider detectionCollider;
+    private List<TorchlightRevealItem> revealedItems = new List<TorchlightRevealItem>();
 
-    void Awake()
+    void Update()
     {
-        detectionCollider = GetComponent<SphereCollider>();
-        detectionCollider.isTrigger = true;
-        detectionCollider.radius = coneRange;
-    }
+        if (torchManager == null)
+            return;
 
-    void OnTriggerEnter(Collider other)
-    {
-        if (((1 << other.gameObject.layer) & detectableLayer) != 0)
+        // Only detect if torch is ON and has battery
+        if (!torchManager.IsTorchOn || torchManager.BatteryPercent <= 0f)
         {
-            if (IsWithinCone(other.transform.position))
+            // Hide all currently revealed items
+            foreach (var item in revealedItems)
             {
-                FishStatueController statue = other.GetComponent<FishStatueController>();
-                if (statue != null)
-                    statue.OnTorchlightEnter();
+                if (item != null) item.OnTorchlightExit();
+            }
+            revealedItems.Clear();
+            return;
+        }
+
+        // Detect all colliders in range
+        Collider[] hits = Physics.OverlapSphere(transform.position, coneRange, detectableLayer);
+
+        // Keep track of items detected this frame
+        List<TorchlightRevealItem> currentFrameItems = new List<TorchlightRevealItem>();
+
+        foreach (Collider col in hits)
+        {
+            TorchlightRevealItem item = col.GetComponent<TorchlightRevealItem>();
+            if (item == null) continue;
+
+            bool inCone = IsWithinCone(col.transform.position);
+
+            if (inCone)
+            {
+                item.OnTorchlightEnter();
+                currentFrameItems.Add(item);
+            }
+            else
+            {
+                item.OnTorchlightExit();
             }
         }
+
+        // Update revealedItems list
+        revealedItems = currentFrameItems;
     }
 
-    void OnTriggerStay(Collider other)
+    private bool IsWithinCone(Vector3 target)
     {
-        if (((1 << other.gameObject.layer) & detectableLayer) != 0)
-        {
-            if (IsWithinCone(other.transform.position))
-            {
-                FishStatueController statue = other.GetComponent<FishStatueController>();
-                if (statue != null)
-                    statue.OnTorchlightEnter();
-            }
-        }
-    }
-
-    void OnTriggerExit(Collider other)
-    {
-        if (((1 << other.gameObject.layer) & detectableLayer) != 0)
-        {
-            FishStatueController statue = other.GetComponent<FishStatueController>();
-            if (statue != null)
-                statue.OnTorchlightExit();
-        }
-    }
-
-    private bool IsWithinCone(Vector3 targetPos)
-    {
-        Vector3 dirToTarget = (targetPos - transform.position).normalized;
-        float angle = Vector3.Angle(transform.forward, dirToTarget);
-        float distance = Vector3.Distance(transform.position, targetPos);
+        Vector3 dir = (target - transform.position).normalized;
+        float angle = Vector3.Angle(transform.forward, dir);
+        float distance = Vector3.Distance(transform.position, target);
 
         return angle <= coneAngle * 0.5f && distance <= coneRange;
     }
 
+#if UNITY_EDITOR
     void OnDrawGizmos()
     {
         if (!visualizeGizmo) return;
 
-        Gizmos.color = new Color(1f, 1f, 0f, 0.3f); // semi-transparent yellow
+        Gizmos.color = new Color(1f, 1f, 0f, 0.2f);
         Vector3 forward = transform.forward * coneRange;
-
-        // Draw cone edges
         Vector3 leftDir = Quaternion.Euler(0, -coneAngle * 0.5f, 0) * forward;
         Vector3 rightDir = Quaternion.Euler(0, coneAngle * 0.5f, 0) * forward;
 
         Gizmos.DrawLine(transform.position, transform.position + leftDir);
         Gizmos.DrawLine(transform.position, transform.position + rightDir);
 
-        // Optionally draw simple arc with lines
-        int segments = 10;
-        for (int i = 0; i <= segments; i++)
-        {
-            float lerpAngle = Mathf.Lerp(-coneAngle * 0.5f, coneAngle * 0.5f, i / (float)segments);
-            Vector3 dir = Quaternion.Euler(0, lerpAngle, 0) * forward;
-            Gizmos.DrawLine(transform.position, transform.position + dir);
-        }
+        // Optional: draw sphere for range
+        Gizmos.DrawWireSphere(transform.position, coneRange);
     }
+#endif
 }
