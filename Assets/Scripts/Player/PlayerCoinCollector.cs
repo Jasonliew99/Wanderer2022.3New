@@ -58,7 +58,7 @@ public class PlayerCoinCollector : MonoBehaviour
         totalCoins += amount;
         UpdateCoinUI();
 
-        // 👇 show popup if this is first coin collected
+        //  show popup if this is first coin collected
         if (wasZeroBefore && !hasShownFirstCoinPopup)
         {
             hasShownFirstCoinPopup = true;
@@ -151,7 +151,7 @@ public class PlayerCoinCollector : MonoBehaviour
         coinText.color = c;
     }
 
-    // 👇 Handles first coin popup fade
+    //  Handles first coin popup fade
     private IEnumerator ShowAndFadePopup()
     {
         bool wePausedGame = false;
