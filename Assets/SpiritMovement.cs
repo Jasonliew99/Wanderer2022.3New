@@ -4,15 +4,84 @@ using UnityEngine;
 
 public class SpiritMovement : MonoBehaviour
 {
-    // Start is called before the first frame update
+    [Header("Patrol Settings")]
+    public Transform[] patrolPoints;          // Points it will move between
+    public float moveSpeed = 2f;              // Move speed
+    public float waitTimeAtPoint = 2f;        // Wait at each point
+    public bool randomOrder = false;          // Random or sequential
+
+    [Header("Floating Visual")]
+    public Transform visual;                  // The sprite/mesh ONLY
+    public float floatAmplitude = 0.2f;       // Height of up/down float
+    public float floatSpeed = 2f;             // Speed of float effect
+
+    private int currentPointIndex = 0;
+    private bool isWaiting = false;
+    private Vector3 visualStartLocalPos;
+
     void Start()
     {
-        
+        if (visual != null)
+            visualStartLocalPos = visual.localPosition;
     }
 
-    // Update is called once per frame
     void Update()
     {
-        
+        if (!isWaiting)
+            MoveToTarget();
+
+        FloatVisual();
+    }
+
+    void MoveToTarget()
+    {
+        if (patrolPoints.Length == 0)
+            return;
+
+        Transform target = patrolPoints[currentPointIndex];
+
+        // Move root transform (actual enemy movement)
+        transform.position = Vector3.MoveTowards(
+            transform.position,
+            target.position,
+            moveSpeed * Time.deltaTime
+        );
+
+        // When reached point
+        if (Vector3.Distance(transform.position, target.position) < 0.05f)
+        {
+            StartCoroutine(WaitAtPoint());
+        }
+    }
+
+    IEnumerator WaitAtPoint()
+    {
+        isWaiting = true;
+
+        yield return new WaitForSeconds(waitTimeAtPoint);
+
+        // Choose next point
+        if (randomOrder)
+        {
+            currentPointIndex = Random.Range(0, patrolPoints.Length);
+        }
+        else
+        {
+            currentPointIndex++;
+            if (currentPointIndex >= patrolPoints.Length)
+                currentPointIndex = 0;
+        }
+
+        isWaiting = false;
+    }
+
+    void FloatVisual()
+    {
+        if (visual == null) return;
+
+        // Floating motion ONLY for visual
+        float offset = Mathf.Sin(Time.time * floatSpeed) * floatAmplitude;
+
+        visual.localPosition = visualStartLocalPos + new Vector3(0, offset, 0);
     }
 }
