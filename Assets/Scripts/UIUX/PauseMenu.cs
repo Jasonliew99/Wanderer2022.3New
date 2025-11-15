@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class PauseMenu : MonoBehaviour
 {
@@ -9,10 +10,12 @@ public class PauseMenu : MonoBehaviour
 
     private bool isPaused = false;
 
+    [Header("Scene Settings")]
+    public string mainMenuSceneName = "MainMenu"; // scene to load when exiting
+
     void Update()
     {
-
-        if (Input.GetKeyDown(pauseKey))//toggle when pressed
+        if (Input.GetKeyDown(pauseKey)) //toggle when pressed
         {
             if (isPaused) Resume();
             else Pause();
@@ -32,5 +35,24 @@ public class PauseMenu : MonoBehaviour
         pauseMenuUI.SetActive(true);  // Show pause menu
         Time.timeScale = 0f;          // pause everything
         isPaused = true;
+    }
+
+    // ---------------------------
+    // NEW FUNCTIONS BELOW
+    // ---------------------------
+
+    // Restart the current scene
+    public void RestartLevel()
+    {
+        Time.timeScale = 1f; // important so the new scene isn't frozen
+        Scene current = SceneManager.GetActiveScene();
+        SceneManager.LoadScene(current.name);
+    }
+
+    // Exit to Main Menu scene
+    public void ExitToMainMenu()
+    {
+        Time.timeScale = 1f; // reset timescale
+        SceneManager.LoadScene(mainMenuSceneName);
     }
 }
