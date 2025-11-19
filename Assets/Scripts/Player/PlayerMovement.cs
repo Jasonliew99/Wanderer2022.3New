@@ -67,6 +67,7 @@ public class PlayerMovement : MonoBehaviour
 
     private Rigidbody rb;
     private Vector3 input;
+    public Transform MeshTransform;
 
     private enum MovementMode { Normal, Sprinting, Sneaking }
     private MovementMode currentMode = MovementMode.Normal;
@@ -80,6 +81,10 @@ public class PlayerMovement : MonoBehaviour
 
     private Vector3 facingDirection = Vector3.forward;
     public Vector3 FacingDirection => facingDirection;
+
+    [Header("Visual Mesh (Optional)")]
+    public Transform mesh; // assign player mesh for smooth rotation
+    public float meshRotateSpeed = 15f; // rotation speed of mesh
 
     // --- ADDED FOR ANIMATION ---
     private Vector2 lastMoveDir = Vector2.zero;
@@ -121,6 +126,14 @@ public class PlayerMovement : MonoBehaviour
                 stumbleCooldownTimer = stumbleCooldown;
             }
         }
+
+        // --- Smoothly rotate mesh to match facingDirection ---
+        Transform targetMesh = mesh != null ? mesh : transform;
+        if (facingDirection.sqrMagnitude > 0.001f)
+        {
+            Quaternion targetRot = Quaternion.LookRotation(facingDirection);
+            targetMesh.rotation = Quaternion.Slerp(targetMesh.rotation, targetRot, meshRotateSpeed * Time.deltaTime);
+        }
     }
 
     void FixedUpdate()
@@ -160,20 +173,25 @@ public class PlayerMovement : MonoBehaviour
     {
         if (isStumbling) return;
 
-        float x = 0f;
-        float z = 0f;
+        Vector3 dir = Vector3.zero;
 
-        if (Input.GetKey(moveLeftKey)) x -= 1f;
-        if (Input.GetKey(moveRightKey)) x += 1f;
-        if (Input.GetKey(moveDownKey)) z -= 1f;
-        if (Input.GetKey(moveUpKey)) z += 1f;
+        // Movement relative to facingDirection (fixes snap movement issue)
+        Vector3 right = Vector3.Cross(Vector3.up, facingDirection).normalized;
 
-        input = new Vector3(x, 0f, z).normalized;
+        if (Input.GetKey(moveUpKey))
+            dir += facingDirection;
+        if (Input.GetKey(moveDownKey))
+            dir -= facingDirection;
+        if (Input.GetKey(moveLeftKey))
+            dir -= right;
+        if (Input.GetKey(moveRightKey))
+            dir += right;
 
-        // --- ADDED FOR ANIMATION ---
+        input = dir.normalized;
+
+        // --- KEEP YOUR ANIMATION LOGIC ---
         if (input != Vector3.zero)
             lastMoveDir = new Vector2(input.x, input.z).normalized;
-        // ----------------------------
 
         if (Input.GetKeyDown(sprintKey)) lastPressedKey = sprintKey;
         if (Input.GetKeyDown(sneakKey)) lastPressedKey = sneakKey;
@@ -311,12 +329,16 @@ public class PlayerMovement : MonoBehaviour
     {
         if (isSneaking) return;
         if (newFacing.sqrMagnitude <= 0.001f) return;
+
         newFacing.y = 0f;
         facingDirection = newFacing.normalized;
-        transform.forward = facingDirection;
+
+        // Optional: immediately rotate root transform for physics/movement consistency
+        if (mesh == null)
+            transform.forward = facingDirection;
     }
 
-    void OnDrawGizmosSelected()
+        void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, mediumDangerRadius);
