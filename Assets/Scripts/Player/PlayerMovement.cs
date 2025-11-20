@@ -148,6 +148,7 @@ public class PlayerMovement : MonoBehaviour
         }
 
         Vector3 horizontalVelocity = new Vector3(input.x * currentSpeed, 0f, input.z * currentSpeed);
+        horizontalVelocity = Quaternion.AngleAxis(-44.6f, Vector3.up) * horizontalVelocity;
         rb.velocity = new Vector3(horizontalVelocity.x, rb.velocity.y, horizontalVelocity.z);
 
         if (!isGrounded)

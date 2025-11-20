@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -20,22 +20,23 @@ public class TorchLightDetector : MonoBehaviour
         if (torchManager == null)
             return;
 
-        // Only detect if torch is ON and has battery
+        // Torch is OFF or battery empty to exit everything
         if (!torchManager.IsTorchOn || torchManager.BatteryPercent <= 0f)
         {
-            // Hide all currently revealed items
             foreach (var item in revealedItems)
             {
-                if (item != null) item.OnTorchlightExit();
+                if (item != null)
+                    item.OnTorchlightExit();
             }
+
             revealedItems.Clear();
             return;
         }
 
-        // Detect all colliders in range
+        // Detect colliders within range
         Collider[] hits = Physics.OverlapSphere(transform.position, coneRange, detectableLayer);
 
-        // Keep track of items detected this frame
+        // Track items hit and inside cone THIS frame
         List<TorchlightRevealItem> currentFrameItems = new List<TorchlightRevealItem>();
 
         foreach (Collider col in hits)
@@ -43,20 +44,26 @@ public class TorchLightDetector : MonoBehaviour
             TorchlightRevealItem item = col.GetComponent<TorchlightRevealItem>();
             if (item == null) continue;
 
+            // Check cone
             bool inCone = IsWithinCone(col.transform.position);
 
             if (inCone)
             {
-                item.OnTorchlightEnter();
                 currentFrameItems.Add(item);
-            }
-            else
-            {
-                item.OnTorchlightExit();
+
+                // Only call enter if it was NOT revealed last frame
+                if (!revealedItems.Contains(item))
+                    item.OnTorchlightEnter();
             }
         }
 
-        // Update revealedItems list
+        // Handle items that were revealed last frame but not this frame
+        foreach (var oldItem in revealedItems)
+        {
+            if (!currentFrameItems.Contains(oldItem))
+                oldItem.OnTorchlightExit();
+        }
+
         revealedItems = currentFrameItems;
     }
 

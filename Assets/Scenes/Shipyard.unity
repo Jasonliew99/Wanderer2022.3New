@@ -29282,6 +29282,7 @@ GameObject:
   - component: {fileID: 867241707}
   - component: {fileID: 867241710}
   - component: {fileID: 867241711}
+  - component: {fileID: 867241712}
   m_Layer: 9
   m_Name: Enemy(Fish)
   m_TagString: Enemy
@@ -29506,6 +29507,25 @@ MonoBehaviour:
   meshTransform: {fileID: 1000885597}
   frontRightClip: {fileID: 7400000, guid: cd50abebfbdf0b942b955e0930e7f313, type: 2}
   backRightClip: {fileID: 7400000, guid: f33b2061b29224a408792a65b0ac3d01, type: 2}
+--- !u!114 &867241712
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 867241701}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 67da695e16e2f8b4989c87e636c4b7ee, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  chargeSpeed: 0.5
+  drainSpeed: 0.3
+  chargeValue: 0
+  destroyOnFullCharge: 1
+  isCharging: 0
+  isChargeFinished: 0
+  torchLightDetector: {fileID: 1196087069}
 --- !u!1001 &867331444
 PrefabInstance:
   m_ObjectHideFlags: 0
