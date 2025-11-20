@@ -20,7 +20,7 @@ public class TorchlightRevealItem : MonoBehaviour
         if (!spriteRenderer) spriteRenderer = GetComponentInChildren<SpriteRenderer>();
         baseColor = spriteRenderer.color;
 
-        SetAlpha(0f); // start hidden
+        SetAlpha(0f); // start hidden or transparent
     }
 
     void Update()
@@ -30,23 +30,23 @@ public class TorchlightRevealItem : MonoBehaviour
         spriteRenderer.color = c;
     }
 
-    /// <summary>Call when torchlight cone touches this item</summary>
+    // when torchlight cone touches this object
     public void OnTorchlightEnter()
     {
         targetAlpha = 1f; // fade in
     }
 
-    /// <summary>Call when torchlight cone exits this item</summary>
+    // when torchlight cone touches this object
     public void OnTorchlightExit()
     {
         if (!staysVisibleAfterRevealed)
             targetAlpha = 0f; // fade out
     }
 
-    /// <summary>Check if this coin can be collected</summary>
+    // Check if this coin can be collected
     public bool CanBeCollected()
     {
-        return spriteRenderer.color.a > 0.1f; // only when visible
+        return spriteRenderer.color.a > 0.1f; // only when visible, means if not visible cannot be collected
     }
 
     private void SetAlpha(float alpha)

@@ -8,12 +8,12 @@ public class SpiritMovement : MonoBehaviour
     public Transform[] patrolPoints;          // Points it will move between
     public float moveSpeed = 2f;              // Move speed
     public float waitTimeAtPoint = 2f;        // Wait at each point
-    public bool randomOrder = false;          // Random or sequential
+    public bool randomOrder = false;          // Random or in sequence
 
-    [Header("Floating Visual")]
-    public Transform visual;                  // The sprite/mesh ONLY
-    public float floatAmplitude = 0.2f;       // Height of up/down float
-    public float floatSpeed = 2f;             // Speed of float effect
+    [Header("Floating Visual")] // the sprite which is the child of the actual 3d mesh
+    public Transform visual;                  // The sprite only
+    public float floatAmplitude = 0.2f;       // Height of up n down floaty movement
+    public float floatSpeed = 2f;             // Speed of float effect (how fast it goes up n down)
 
     private int currentPointIndex = 0;
     private bool isWaiting = false;
@@ -79,7 +79,7 @@ public class SpiritMovement : MonoBehaviour
     {
         if (visual == null) return;
 
-        // Floating motion ONLY for visual
+        // Floating motion for visual only
         float offset = Mathf.Sin(Time.time * floatSpeed) * floatAmplitude;
 
         visual.localPosition = visualStartLocalPos + new Vector3(0, offset, 0);
