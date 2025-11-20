@@ -11,16 +11,35 @@ public class TorchlightRevealItem : MonoBehaviour
 
     [Header("References")]
     public SpriteRenderer spriteRenderer;  // assign child sprite here
+    public TorchLightDetector torchLightDetector; // optional, drag here
 
     private float targetAlpha = 0f;
     private Color baseColor;
 
     void Awake()
     {
-        if (!spriteRenderer) spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+        if (!spriteRenderer)
+            spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+
         baseColor = spriteRenderer.color;
 
-        SetAlpha(0f); // start hidden or transparent
+        SetAlpha(0f); // start hidden
+
+        // Subscribe to modular detector if assigned
+        if (torchLightDetector != null)
+        {
+            torchLightDetector.onEnter += OnDetectorEnter;
+            torchLightDetector.onExit += OnDetectorExit;
+        }
+    }
+
+    void OnDestroy()
+    {
+        if (torchLightDetector != null)
+        {
+            torchLightDetector.onEnter -= OnDetectorEnter;
+            torchLightDetector.onExit -= OnDetectorExit;
+        }
     }
 
     void Update()
@@ -30,23 +49,35 @@ public class TorchlightRevealItem : MonoBehaviour
         spriteRenderer.color = c;
     }
 
-    // when torchlight cone touches this object
+    // ITorchlightDetectable interface
     public void OnTorchlightEnter()
     {
         targetAlpha = 1f; // fade in
     }
 
-    // when torchlight cone touches this object
     public void OnTorchlightExit()
     {
         if (!staysVisibleAfterRevealed)
             targetAlpha = 0f; // fade out
     }
 
-    // Check if this coin can be collected
+    // helper called by detector
+    private void OnDetectorEnter(Collider col)
+    {
+        if (col == GetComponent<Collider>())
+            OnTorchlightEnter();
+    }
+
+    private void OnDetectorExit(Collider col)
+    {
+        if (col == GetComponent<Collider>())
+            OnTorchlightExit();
+    }
+
+    // Check if item can be collected
     public bool CanBeCollected()
     {
-        return spriteRenderer.color.a > 0.1f; // only when visible, means if not visible cannot be collected
+        return spriteRenderer.color.a > 0.1f;
     }
 
     private void SetAlpha(float alpha)
