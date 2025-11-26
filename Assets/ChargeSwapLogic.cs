@@ -6,6 +6,7 @@ public class ChargeSwapLogic : MonoBehaviour
 {
     [Header("Charge Settings")]
     public float chargeSpeed = 0.5f;
+    public float drainSpeed = 0.3f;
     [Range(0f, 1f)]
     public float chargeValue = 0f;
     public bool isCharged = false;
@@ -48,6 +49,7 @@ public class ChargeSwapLogic : MonoBehaviour
 
         if (isBeingShined)
         {
+            // FILL
             chargeValue += chargeSpeed * Time.deltaTime;
             chargeValue = Mathf.Clamp01(chargeValue);
 
@@ -55,6 +57,15 @@ public class ChargeSwapLogic : MonoBehaviour
             {
                 isCharged = true;
                 RevealObject();
+            }
+        }
+        else
+        {
+            // DRAIN BACK
+            if (chargeValue > 0f)
+            {
+                chargeValue -= drainSpeed * Time.deltaTime;
+                chargeValue = Mathf.Clamp01(chargeValue);
             }
         }
 
