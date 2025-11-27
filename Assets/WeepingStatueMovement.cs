@@ -58,7 +58,7 @@ public class WeepingStatueMovement : MonoBehaviour
     private Vector3 initialPosition;
     private Quaternion initialRotation;
 
-    private Animator animator; // We detect and disable it
+    private Animator animator; // detect and disable it
 
     void Awake()
     {
@@ -73,9 +73,7 @@ public class WeepingStatueMovement : MonoBehaviour
         agent.stoppingDistance = stoppingDistance;
         agent.isStopped = true;
 
-        // ------------------------------------------
         // LEGACY ANIMATION SETUP — DOES NOT AUTOPLAY
-        // ------------------------------------------
         activationAnimation = gameObject.AddComponent<Animation>();
         activationAnimation.playAutomatically = false;
         activationAnimation.wrapMode = WrapMode.Once;
@@ -83,9 +81,8 @@ public class WeepingStatueMovement : MonoBehaviour
         if (activationClip != null)
             activationAnimation.AddClip(activationClip, activationClip.name);
 
-        // ------------------------------------------
+
         // Animator must NOT run any animation ever
-        // ------------------------------------------
         if (animator != null)
         {
             animator.enabled = false;
@@ -140,9 +137,7 @@ public class WeepingStatueMovement : MonoBehaviour
         }
     }
 
-    // ────────────────────────────────────────────────
     // ACTIVATION
-    // ────────────────────────────────────────────────
     private void CheckActivation()
     {
         if (Vector3.Distance(transform.position, player.position) <= activationRadius)
@@ -194,9 +189,7 @@ public class WeepingStatueMovement : MonoBehaviour
         if (debugLogs) Debug.Log("[Statue] Active");
     }
 
-    // ────────────────────────────────────────────────
     //  ACTIVE MOVEMENT
-    // ────────────────────────────────────────────────
     private void ActiveMovement()
     {
         if (isIlluminated || isUnfreezeDelayed)
@@ -222,9 +215,8 @@ public class WeepingStatueMovement : MonoBehaviour
         }
     }
 
-    // ────────────────────────────────────────────────
+
     // TORCH EVENTS (ACTIVE ONLY)
-    // ────────────────────────────────────────────────
     private bool IsSelf(Collider col)
     {
         return col.transform == transform || col.transform.IsChildOf(transform);
@@ -265,9 +257,7 @@ public class WeepingStatueMovement : MonoBehaviour
         if (enableShake) StartCoroutine(ShakeRoutine());
     }
 
-    // ────────────────────────────────────────────────
     // SHAKE ROUTINE (world-space safe)
-    // ────────────────────────────────────────────────
     private IEnumerator ShakeRoutine()
     {
         Vector3 original = transform.position;
@@ -287,9 +277,7 @@ public class WeepingStatueMovement : MonoBehaviour
         transform.position = original;
     }
 
-    // ────────────────────────────────────────────────
     // RESET TO INITIAL POSITION
-    // ────────────────────────────────────────────────
     private void ResetToInitial()
     {
         if (debugLogs) Debug.Log("[Statue] Reset");
@@ -307,9 +295,7 @@ public class WeepingStatueMovement : MonoBehaviour
         StopMovement();
     }
 
-    // ────────────────────────────────────────────────
     // GIZMOS
-    // ────────────────────────────────────────────────
     private void OnDrawGizmosSelected()
     {
         if (!showActivationGizmo) return;
