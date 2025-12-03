@@ -1197,7 +1197,7 @@ GameObject:
   - component: {fileID: 32744967}
   m_Layer: 10
   m_Name: Collectable (3)
-  m_TagString: Untagged
+  m_TagString: Collectable
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -14326,7 +14326,7 @@ GameObject:
   - component: {fileID: 270691068}
   m_Layer: 10
   m_Name: Collectable (7)
-  m_TagString: Untagged
+  m_TagString: Collectable
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -16676,7 +16676,7 @@ GameObject:
   - component: {fileID: 332495664}
   m_Layer: 10
   m_Name: Collectable (5)
-  m_TagString: Untagged
+  m_TagString: Collectable
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -25198,7 +25198,7 @@ GameObject:
   - component: {fileID: 433524590}
   m_Layer: 10
   m_Name: Collectable (8)
-  m_TagString: Untagged
+  m_TagString: Collectable
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -31696,7 +31696,7 @@ GameObject:
   - component: {fileID: 601541282}
   m_Layer: 10
   m_Name: Collectable (1)
-  m_TagString: Untagged
+  m_TagString: Collectable
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -53628,7 +53628,7 @@ GameObject:
   - component: {fileID: 949186310}
   m_Layer: 10
   m_Name: Collectable (2)
-  m_TagString: Untagged
+  m_TagString: Collectable
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -54429,7 +54429,7 @@ Camera:
     width: 1
     height: 1
   near clip plane: -200
-  far clip plane: 400
+  far clip plane: 500
   field of view: 55
   orthographic: 1
   orthographic size: 17
@@ -56198,8 +56198,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   minDelay: 5
   maxDelay: 10
-  spiritOrbPrefab: {fileID: 0}
-  targetTag: HintTarget
+  spiritOrbPrefab: {fileID: 1253623820499420477, guid: bc3fd3474929caf4bb83ec354327a356, type: 3}
+  targetTag: Collectable
   searchRadius: 100
 --- !u!1 &1001849796
 GameObject:
@@ -104958,7 +104958,7 @@ GameObject:
   - component: {fileID: 1652889059}
   m_Layer: 10
   m_Name: Collectable
-  m_TagString: Untagged
+  m_TagString: Collectable
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -128041,7 +128041,7 @@ GameObject:
   - component: {fileID: 2079947482}
   m_Layer: 10
   m_Name: Collectable (4)
-  m_TagString: Untagged
+  m_TagString: Collectable
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -128536,7 +128536,7 @@ GameObject:
   - component: {fileID: 2102904927}
   m_Layer: 10
   m_Name: Collectable (6)
-  m_TagString: Untagged
+  m_TagString: Collectable
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -129999,7 +129999,7 @@ SceneRoots:
   - {fileID: 1766797479}
   - {fileID: 2030711309}
   - {fileID: 1435409511}
-  - {fileID: 2055559397}
   - {fileID: 665438876}
   - {fileID: 2077008616}
+  - {fileID: 2055559397}
   - {fileID: 974081355}

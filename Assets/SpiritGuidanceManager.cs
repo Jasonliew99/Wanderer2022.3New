@@ -58,4 +58,10 @@ public class SpiritGuidanceManager : MonoBehaviour
         GameObject orb = Instantiate(spiritOrbPrefab, transform.position + Vector3.up * 1f, Quaternion.identity);
         orb.GetComponent<SpiritOrbBehaviour>().SetTarget(target);
     }
+
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = new Color(0.2f, 0.8f, 1f, 0.35f); // light blue, semi-transparent
+        Gizmos.DrawWireSphere(transform.position, searchRadius);
+    }
 }
