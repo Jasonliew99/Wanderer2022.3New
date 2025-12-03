@@ -1,181 +1,263 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class RespawnController : MonoBehaviour
 {
-    [Header("Player Settings")]
-    public GameObject player;
-    public Transform[] respawnPoints;
-    public int maxLives = 3;
-
-    [Header("UI Settings")]
-    public Canvas lifeCanvas;        // Life remaining canvas
-    public Image[] lifeImages;       // 3 head images
-    public Sprite hurtSprite;        // Sprite to swap when life lost
-    public Canvas deathCanvas;       // Death canvas with retry/exit buttons
-    public float lifeDisplayTime = 1f; // How long to show life hurt animation
-
-    [Header("Level Controller")]
-    public LevelController levelController; // Drag your LevelController here
-
-    [Header("Enemy Settings")]
-    public string enemyTag = "Enemy";   // Tag for enemies that can kill player
-    public EnemyRespawn[] enemies;      // Array to reset enemy positions if needed
-
     [System.Serializable]
-    public class EnemyRespawn
+    public class LevelBlock
     {
-        public GameObject enemy;
-        public Transform[] respawnPoints; // Optional: multiple spawn points for enemy
-        public bool stayAtInitialPosition = true; // If true, enemy respawns at initial position
+        [Header("Level Doors")]
+        public GameObject[] closedDoors; // closed door models
+        public GameObject[] openDoors;   // open door models
+
+        [Header("Level Objects")]
+        public GameObject[] bosses; // enemies for this level
+        public GameObject[] coins;  // collectibles
+
+        [Header("Level Triggers")]
+        public GameObject[] activators;    // triggers that start this level
+        public GameObject[] deactivators;  // triggers that end this level
+
+        [Header("Objective Text")]
+        public string firstObjective = "Collect all coins!";
+        public string secondObjective = "Find the exit!";
     }
 
-    private int currentLives;
-    private bool isRespawning = false;
+    [Header("All Levels")]
+    public List<LevelBlock> levels = new List<LevelBlock>();
+
+    [Header("Objective UI")]
+    public TextMeshProUGUI objectiveText;
+    public float fadeDuration = 0.5f;
+    public float displayTime = 2f;
+
+    private Coroutine objectiveRoutine;
+    private int currentLevelIndex = -1;
+    private bool isLevelRunning = false;
+
+
+    // Used by respawn controller
+    public bool IsAnyLevelRunning()
+    {
+        return isLevelRunning;
+    }
 
     void Start()
     {
-        currentLives = maxLives;
-        lifeCanvas.gameObject.SetActive(false);
-        deathCanvas.gameObject.SetActive(false);
-    }
-
-    void Update()
-    {
-        // Detect collisions with enemies using overlap check
-        if (!isRespawning && player != null)
+        // Initialize all levels
+        for (int i = 0; i < levels.Count; i++)
         {
-            Collider[] hits = Physics.OverlapSphere(player.transform.position, 0.5f);
-            foreach (Collider hit in hits)
+            LevelBlock lvl = levels[i];
+
+            // Spawn enemies but keep them frozen
+            SetEnemiesFrozen(lvl.bosses, true);
+
+            // Coins disabled at scene start
+            SetActiveArray(lvl.coins, false);
+
+            // Deactivators always off at scene start
+            SetActiveArray(lvl.deactivators, false);
+
+            if (i == 0)
             {
-                if (hit.CompareTag(enemyTag))
-                {
-                    HandlePlayerDeath();
-                    break;
-                }
-            }
-        }
-    }
-
-    // Call this when player dies
-    public void HandlePlayerDeath()
-    {
-        if (isRespawning) return;
-        if (levelController == null || !levelController.LevelStarted) return;
-
-        StartCoroutine(RespawnRoutine());
-    }
-
-    private IEnumerator RespawnRoutine()
-    {
-        isRespawning = true;
-
-        // Pause game
-        Time.timeScale = 0f;
-
-        if (currentLives > 1)
-        {
-            // Show Life Canvas
-            lifeCanvas.gameObject.SetActive(true);
-
-            // Update head images
-            for (int i = 0; i < lifeImages.Length; i++)
-            {
-                if (i < currentLives)
-                    lifeImages[i].sprite = lifeImages[i].sprite; // normal sprite
-                else
-                    lifeImages[i].enabled = false; // hide extra heads
-            }
-
-            // Wait a short moment then swap current life to hurt
-            yield return new WaitForSecondsRealtime(lifeDisplayTime);
-            lifeImages[currentLives - 1].sprite = hurtSprite;
-
-            // Wait again before fade out
-            yield return new WaitForSecondsRealtime(lifeDisplayTime);
-
-            // Hide life canvas and resume game
-            lifeCanvas.gameObject.SetActive(false);
-            Time.timeScale = 1f;
-
-            currentLives--;
-
-            // Respawn player
-            RespawnPlayer();
-
-            // Reset enemies
-            ResetEnemies();
-        }
-        else
-        {
-            // Last life -> show Death Canvas
-            deathCanvas.gameObject.SetActive(true);
-            Time.timeScale = 0f;
-        }
-
-        isRespawning = false;
-    }
-
-    private void RespawnPlayer()
-    {
-        if (respawnPoints.Length == 0 || player == null) return;
-
-        // Choose random respawn point
-        Transform spawnPoint = respawnPoints[Random.Range(0, respawnPoints.Length)];
-        player.transform.position = spawnPoint.position;
-        player.transform.rotation = spawnPoint.rotation;
-
-        // Reset player state if needed (health, velocity, etc.)
-        Rigidbody rb = player.GetComponent<Rigidbody>();
-        if (rb != null)
-        {
-            rb.velocity = Vector3.zero;
-            rb.angularVelocity = Vector3.zero;
-        }
-    }
-
-    private void ResetEnemies()
-    {
-        foreach (var e in enemies)
-        {
-            if (e.enemy == null) continue;
-
-            if (e.stayAtInitialPosition || e.respawnPoints.Length == 0)
-            {
-                // Reset to initial position
-                e.enemy.transform.position = e.enemy.transform.position; // original position
+                // LEVEL 1 START CONDITION
+                SetActiveArray(lvl.openDoors, true);
+                SetActiveArray(lvl.closedDoors, false);
+                SetActiveArray(lvl.activators, true);
             }
             else
             {
-                // Choose random respawn point
-                Transform spawnPoint = e.respawnPoints[Random.Range(0, e.respawnPoints.Length)];
-                e.enemy.transform.position = spawnPoint.position;
-                e.enemy.transform.rotation = spawnPoint.rotation;
+                // LEVEL 2+ START LOCKED
+                SetActiveArray(lvl.openDoors, false);
+                SetActiveArray(lvl.closedDoors, true);
+                SetActiveArray(lvl.activators, false);
             }
+        }
 
-            // Optional: reset NavMeshAgent if enemy uses it
-            var agent = e.enemy.GetComponent<UnityEngine.AI.NavMeshAgent>();
-            if (agent != null)
+        if (objectiveText != null)
+            objectiveText.alpha = 0f;
+    }
+
+
+    // ================================
+    //          START LEVEL
+    // ================================
+    public void StartLevel(int levelID)
+    {
+        if (isLevelRunning) return;
+        if (levelID < 0 || levelID >= levels.Count) return;
+
+        currentLevelIndex = levelID;
+        isLevelRunning = true;
+
+        LevelBlock lvl = levels[levelID];
+
+        // Reset player lives
+        FindObjectOfType<RespawnController>()?.ResetLivesToFull();
+
+        // Freeze other level enemies
+        FreezeAllEnemiesExcept(levelID);
+
+        // Unfreeze enemies for this level
+        SetEnemiesFrozen(lvl.bosses, false);
+
+        // Activate coins
+        SetActiveArray(lvl.coins, true);
+
+        // Close this level's door
+        SetActiveArray(lvl.openDoors, false);
+        SetActiveArray(lvl.closedDoors, true);
+
+        // Disable this level's activators
+        SetActiveArray(lvl.activators, false);
+
+        // Show objective 1
+        if (objectiveRoutine != null)
+            StopCoroutine(objectiveRoutine);
+
+        objectiveRoutine = StartCoroutine(ShowText(lvl.firstObjective));
+    }
+
+
+    // ================================
+    //       COIN COLLECTION CHECK
+    // ================================
+    public void CoinCollected()
+    {
+        if (!isLevelRunning) return;
+        StartCoroutine(CheckCoins());
+    }
+
+    private IEnumerator CheckCoins()
+    {
+        yield return null;
+
+        LevelBlock lvl = levels[currentLevelIndex];
+        bool anyLeft = false;
+
+        foreach (var coin in lvl.coins)
+        {
+            if (coin != null && coin.activeInHierarchy)
             {
-                agent.ResetPath();
+                anyLeft = true;
+                break;
             }
+        }
+
+        if (!anyLeft)
+        {
+            Debug.Log($"Level {currentLevelIndex + 1} complete!");
+
+            // Open exits
+            SetActiveArray(lvl.closedDoors, false);
+            SetActiveArray(lvl.openDoors, true);
+
+            // Enable end trigger
+            SetActiveArray(lvl.deactivators, true);
+
+            if (objectiveRoutine != null)
+                StopCoroutine(objectiveRoutine);
+
+            objectiveRoutine = StartCoroutine(ShowText(lvl.secondObjective));
         }
     }
 
-    // Buttons for Death Canvas
-    public void RetryLevel()
+
+    // ================================
+    //            END LEVEL
+    // ================================
+    public void EndLevel(int levelID)
     {
-        Time.timeScale = 1f;
-        Scene currentScene = SceneManager.GetActiveScene();
-        SceneManager.LoadScene(currentScene.name);
+        LevelBlock lvl = levels[levelID];
+        isLevelRunning = false;
+
+        // Freeze this level's enemies
+        SetEnemiesFrozen(lvl.bosses, true);
+
+        // Disable coins and exit triggers
+        SetActiveArray(lvl.coins, false);
+        SetActiveArray(lvl.deactivators, false);
+
+        // Close this level’s doors behind player
+        SetActiveArray(lvl.openDoors, false);
+        SetActiveArray(lvl.closedDoors, true);
+
+        // Unlock next level
+        int next = levelID + 1;
+        if (next < levels.Count)
+        {
+            Debug.Log($"Level {next + 1} unlocked!");
+            SetActiveArray(levels[next].openDoors, true);
+            SetActiveArray(levels[next].closedDoors, false);
+            SetActiveArray(levels[next].activators, true);
+        }
     }
 
-    public void ExitToMenu(string menuSceneName)
+
+    // ================================
+    //        ENEMY FREEZE / UNFREEZE
+    // ================================
+    private void SetEnemiesFrozen(GameObject[] enemies, bool freeze)
     {
-        Time.timeScale = 1f;
-        SceneManager.LoadScene(menuSceneName);
+        foreach (var e in enemies)
+        {
+            if (e == null) continue;
+
+            e.SetActive(true); // always visible
+
+            // Whatever controls your enemy movement:
+            var ai = e.GetComponent<MonoBehaviour>();
+            if (ai != null)
+                ai.enabled = !freeze;
+        }
+    }
+
+    private void FreezeAllEnemiesExcept(int levelID)
+    {
+        for (int i = 0; i < levels.Count; i++)
+        {
+            if (i == levelID) continue; // skip current level
+            SetEnemiesFrozen(levels[i].bosses, true);
+        }
+    }
+
+
+    // ================================
+    //              HELPERS
+    // ================================
+    private void SetActiveArray(GameObject[] arr, bool state)
+    {
+        foreach (var obj in arr)
+            if (obj != null)
+                obj.SetActive(state);
+    }
+
+    private IEnumerator ShowText(string msg)
+    {
+        objectiveText.text = msg;
+
+        // Fade in
+        float t = 0;
+        while (t < fadeDuration)
+        {
+            t += Time.deltaTime;
+            objectiveText.alpha = Mathf.Lerp(0, 1, t / fadeDuration);
+            yield return null;
+        }
+
+        yield return new WaitForSeconds(displayTime);
+
+        // Fade out
+        t = 0;
+        while (t < fadeDuration)
+        {
+            t += Time.deltaTime;
+            objectiveText.alpha = Mathf.Lerp(1, 0, t / fadeDuration);
+            yield return null;
+        }
     }
 }
