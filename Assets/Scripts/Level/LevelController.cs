@@ -8,7 +8,11 @@ public class LevelController : MonoBehaviour
     [Header("Level Objects")]
     [SerializeField] private GameObject[] bosses;
     [SerializeField] private GameObject[] coins;
-    [SerializeField] private GameObject[] doors;
+
+    [Header("Door Sets")]
+    [SerializeField] private GameObject[] closedDoors;   // closed door version
+    [SerializeField] private GameObject[] openDoors;     // open door version
+
     [SerializeField] private GameObject[] levelActivators;
     [SerializeField] private GameObject[] levelDeactivators;
 
@@ -19,24 +23,29 @@ public class LevelController : MonoBehaviour
     [SerializeField] private float objectiveFadeDuration = 0.5f;
 
     [Header("Display Options")]
-    [SerializeField] private bool enableFade = true;         // Fade in/out enabled
-    [SerializeField] private bool useDisplayTime = true;     // Toggle auto-hide
-    [SerializeField] private float objectiveDisplayTime = 2f; // Duration to display text if useDisplayTime is true
+    [SerializeField] private bool enableFade = true;
+    [SerializeField] private bool useDisplayTime = true;
+    [SerializeField] private float objectiveDisplayTime = 2f;
 
     private Coroutine objectiveCoroutine;
     private bool levelStarted = false;
-    public bool LevelStarted => levelStarted; // public read-only property
+    public bool LevelStarted => levelStarted;
     private bool levelEnded = false;
 
     void Start()
     {
         SetActiveArray(bosses, false);
-        SetActiveArray(doors, false);
+
+        // --- NEW LOGIC ---
+        // Scene loads OPEN → open door visible, closed door hidden
+        SetActiveArray(closedDoors, false);
+        SetActiveArray(openDoors, true);
+
         SetActiveArray(levelDeactivators, false);
         SetActiveArray(coins, false);
 
         if (objectiveText != null && enableFade)
-            objectiveText.alpha = 0f; // start hidden
+            objectiveText.alpha = 0f;
     }
 
     public void StartLevel()
@@ -49,8 +58,12 @@ public class LevelController : MonoBehaviour
         Debug.Log($"[{name}] Level started!");
         SetActiveArray(levelActivators, false);
         SetActiveArray(bosses, true);
-        SetActiveArray(doors, true);
         SetActiveArray(coins, true);
+
+        // --- NEW LOGIC ---
+        // Level starts → CLOSE the door
+        SetActiveArray(closedDoors, true);
+        SetActiveArray(openDoors, false);
 
         // Show first objective
         if (objectiveText != null)
@@ -65,13 +78,12 @@ public class LevelController : MonoBehaviour
     public void CoinCollected()
     {
         if (!levelStarted || levelEnded) return;
-
         StartCoroutine(CheckCoinsNextFrame());
     }
 
     private IEnumerator CheckCoinsNextFrame()
     {
-        yield return null; // wait one frame
+        yield return null;
 
         bool anyCoinsLeft = false;
         foreach (GameObject coin in coins)
@@ -88,7 +100,6 @@ public class LevelController : MonoBehaviour
             Debug.Log($"[{name}] All coins collected! Opening exit...");
             OpenExit();
 
-            // Show second objective
             if (objectiveText != null)
             {
                 if (objectiveCoroutine != null)
@@ -101,8 +112,13 @@ public class LevelController : MonoBehaviour
 
     private void OpenExit()
     {
-        Debug.Log($"[{name}] Exit opened. Doors disabled, exit colliders active.");
-        SetActiveArray(doors, false);
+        Debug.Log($"[{name}] Exit opened. Doors swapped.");
+
+        // --- NEW LOGIC ---
+        // Exit opens → OPEN DOOR visible
+        SetActiveArray(closedDoors, false);
+        SetActiveArray(openDoors, true);
+
         SetActiveArray(levelDeactivators, true);
     }
 
@@ -115,7 +131,11 @@ public class LevelController : MonoBehaviour
 
         SetActiveArray(bosses, false);
         SetActiveArray(levelDeactivators, false);
-        SetActiveArray(doors, true);
+
+        // --- NEW LOGIC ---
+        // Level ended → CLOSE DOOR again
+        SetActiveArray(closedDoors, true);
+        SetActiveArray(openDoors, false);
     }
 
     private void SetActiveArray(GameObject[] arr, bool state)
@@ -128,14 +148,12 @@ public class LevelController : MonoBehaviour
         }
     }
 
-    // --- Show objective with optional fade and display time ---
     private IEnumerator ShowObjective(string text)
     {
         objectiveText.text = text;
 
         if (enableFade)
         {
-            // Fade in
             float timer = 0f;
             while (timer < objectiveFadeDuration)
             {
@@ -150,14 +168,12 @@ public class LevelController : MonoBehaviour
             objectiveText.alpha = 1f;
         }
 
-        // Wait display time if enabled
         if (useDisplayTime)
         {
             yield return new WaitForSeconds(objectiveDisplayTime);
 
             if (enableFade)
             {
-                // Fade out
                 float timer = 0f;
                 while (timer < objectiveFadeDuration)
                 {
@@ -172,6 +188,5 @@ public class LevelController : MonoBehaviour
                 objectiveText.alpha = 0f;
             }
         }
-        // else: no time limit, objective stays visible
     }
 }

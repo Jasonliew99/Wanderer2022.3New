@@ -16,12 +16,19 @@ public class ChargeSwapLogic : MonoBehaviour
     public ParticleSystem particleEffect;
     public SpriteRenderer spriteRenderer;
 
+    [Tooltip("Script that handles collecting the item. Will be disabled until fully charged.")]
+    public MonoBehaviour collectableScript;     // << NEW
+
     private bool isBeingShined = false;
 
     private void Awake()
     {
         if (particleEffect != null) particleEffect.gameObject.SetActive(true);
         if (spriteRenderer != null) spriteRenderer.enabled = false;
+
+        // NEW — Disable collectable script at start
+        if (collectableScript != null)
+            collectableScript.enabled = false;
 
         if (torchLightDetector != null)
         {
@@ -49,7 +56,6 @@ public class ChargeSwapLogic : MonoBehaviour
 
         if (isBeingShined)
         {
-            // FILL
             chargeValue += chargeSpeed * Time.deltaTime;
             chargeValue = Mathf.Clamp01(chargeValue);
 
@@ -61,7 +67,6 @@ public class ChargeSwapLogic : MonoBehaviour
         }
         else
         {
-            // DRAIN BACK
             if (chargeValue > 0f)
             {
                 chargeValue -= drainSpeed * Time.deltaTime;
@@ -69,7 +74,7 @@ public class ChargeSwapLogic : MonoBehaviour
             }
         }
 
-        isBeingShined = false; // reset each frame
+        isBeingShined = false;
     }
 
     private void OnDetectorStay(Collider col)
@@ -91,5 +96,9 @@ public class ChargeSwapLogic : MonoBehaviour
 
         if (spriteRenderer != null)
             spriteRenderer.enabled = true;
+
+        // NEW — now the item becomes collectable
+        if (collectableScript != null)
+            collectableScript.enabled = true;
     }
 }
