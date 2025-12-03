@@ -5,13 +5,13 @@ using UnityEngine;
 public class LevelDeactivator : MonoBehaviour
 {
     public LevelController controller;
-    public int levelID = 0; // Which level this ends
+    public int levelID = 0;
 
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Player"))
         {
-            Debug.Log($"Level {levelID + 1} DEACTIVATOR touched");
+            Debug.Log($"Level {levelID + 1} ended.");
             controller.EndLevel(levelID);
         }
     }

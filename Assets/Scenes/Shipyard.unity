@@ -25191,6 +25191,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   controller: {fileID: 1645658966}
+  levelID: -1
 --- !u!4 &417333486
 Transform:
   m_ObjectHideFlags: 0
@@ -27374,6 +27375,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   controller: {fileID: 982993626}
+  levelID: -1
 --- !u!1 &473596124
 GameObject:
   m_ObjectHideFlags: 0
@@ -27947,6 +27949,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   controller: {fileID: 982993626}
+  levelID: -1
 --- !u!1001 &496224576
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -34764,7 +34767,6 @@ MonoBehaviour:
   objectiveText: {fileID: 0}
   fadeDuration: 0.5
   displayTime: 2
-  fade: 1
 --- !u!64 &548372229
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -37438,7 +37440,7 @@ MonoBehaviour:
   torchLightDetector: {fileID: 1196087069}
   particleEffect: {fileID: 2011840465}
   spriteRenderer: {fileID: 617350592}
-  collectableScript: {fileID: 0}
+  collectableScript: {fileID: 601541282}
 --- !u!135 &601541279
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -43668,6 +43670,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   controller: {fileID: 982993626}
+  levelID: -1
 --- !u!1001 &635886263
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -49543,6 +49546,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   controller: {fileID: 982993626}
+  levelID: -1
 --- !u!23 &674642646
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -58962,6 +58966,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   controller: {fileID: 0}
+  levelID: -1
 --- !u!65 &930982914
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -61403,8 +61408,7 @@ MonoBehaviour:
     secondObjective: Find the Exit
   objectiveText: {fileID: 767226738}
   fadeDuration: 0.5
-  displayTime: 2
-  fade: 1
+  displayTime: 10
 --- !u!1 &983237141
 GameObject:
   m_ObjectHideFlags: 0
@@ -80132,6 +80136,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   controller: {fileID: 1645658966}
+  levelID: -1
 --- !u!4 &1232173474
 Transform:
   m_ObjectHideFlags: 0
@@ -99361,6 +99366,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   controller: {fileID: 1645658966}
+  levelID: -1
 --- !u!1 &1565834731
 GameObject:
   m_ObjectHideFlags: 0
@@ -107171,7 +107177,6 @@ MonoBehaviour:
   objectiveText: {fileID: 767226738}
   fadeDuration: 0.5
   displayTime: 2
-  fade: 1
 --- !u!1 &1646116166
 GameObject:
   m_ObjectHideFlags: 0
@@ -111563,19 +111568,6 @@ MonoBehaviour:
   lifeDisplayTime: 1
   levelController: {fileID: 982993626}
   enemyTag: Enemy
-  enemies:
-  - enemy: {fileID: 867241701}
-    respawnPoints:
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    stayAtInitialPosition: 1
-  - enemy: {fileID: 172171775}
-    respawnPoints: []
-    stayAtInitialPosition: 1
-  - enemy: {fileID: 0}
-    respawnPoints: []
-    stayAtInitialPosition: 1
 --- !u!1 &1771756958
 GameObject:
   m_ObjectHideFlags: 0
@@ -137466,6 +137458,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   controller: {fileID: 1645658966}
+  levelID: -1
 --- !u!4 &2083267631
 Transform:
   m_ObjectHideFlags: 0
@@ -139117,6 +139110,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   controller: {fileID: 0}
+  levelID: -1
 --- !u!1001 &2141102962
 PrefabInstance:
   m_ObjectHideFlags: 0

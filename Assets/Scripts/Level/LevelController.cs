@@ -10,19 +10,19 @@ public class LevelController : MonoBehaviour
     [System.Serializable]
     public class LevelBlock
     {
-        [Header("Level Doors")]
+        [Header("Doors")]
         public GameObject[] closedDoors;
         public GameObject[] openDoors;
 
-        [Header("Level Objects")]
-        public GameObject[] bosses;
+        [Header("Objects")]
+        public GameObject[] bosses; // ENEMIES for this level
         public GameObject[] coins;
 
-        [Header("Level Logic")]
+        [Header("Triggers")]
         public GameObject[] activators;
         public GameObject[] deactivators;
 
-        [Header("Objective Text")]
+        [Header("Objectives")]
         public string firstObjective = "Collect all coins!";
         public string secondObjective = "Find the exit!";
     }
@@ -30,82 +30,91 @@ public class LevelController : MonoBehaviour
     [Header("All Levels")]
     public List<LevelBlock> levels = new List<LevelBlock>();
 
-    [Header("Objective UI")]
+    [Header("UI")]
     public TextMeshProUGUI objectiveText;
     public float fadeDuration = 0.5f;
     public float displayTime = 2f;
-    public bool fade = true;
 
     private Coroutine objectiveRoutine;
     private int currentLevelIndex = -1;
     private bool isLevelRunning = false;
 
-    // Required by RespawnController
-    public bool IsAnyLevelRunning()
-    {
-        return isLevelRunning;
-    }
 
+    // ============================
+    //          SCENE START
+    // ============================
     void Start()
     {
-        foreach (var lvl in levels)
+        for (int i = 0; i < levels.Count; i++)
         {
-            SetActiveArray(lvl.bosses, false);
-            SetActiveArray(lvl.coins, false);
+            LevelBlock lvl = levels[i];
 
-            SetActiveArray(lvl.activators, true);
-            SetActiveArray(lvl.deactivators, false);
+            // ENEMIES OFF AT START
+            SetActive(lvl.bosses, false);
 
-            // Scene start: all doors open
-            SetActiveArray(lvl.openDoors, true);
-            SetActiveArray(lvl.closedDoors, false);
+            // Coins off
+            SetActive(lvl.coins, false);
+
+            // Deactivators off
+            SetActive(lvl.deactivators, false);
+
+            if (i == 0)
+            {
+                // Level 1 door open
+                SetActive(lvl.openDoors, true);
+                SetActive(lvl.closedDoors, false);
+                SetActive(lvl.activators, true);
+            }
+            else
+            {
+                // Level 2+ closed
+                SetActive(lvl.openDoors, false);
+                SetActive(lvl.closedDoors, true);
+                SetActive(lvl.activators, false);
+            }
         }
 
         if (objectiveText != null)
             objectiveText.alpha = 0f;
     }
 
-    // ========== LEVEL START ==========
+
+    // ============================
+    //          START LEVEL
+    // ============================
     public void StartLevel(int levelID)
     {
         if (isLevelRunning) return;
-        if (levelID < 0 || levelID >= levels.Count) return;
 
         currentLevelIndex = levelID;
         isLevelRunning = true;
 
-        // Reset lives on new level
-        var respawn = FindObjectOfType<RespawnController>();
-        if (respawn != null)
-            respawn.ResetLivesToFull();
+        LevelBlock lvl = levels[levelID];
 
-        var lvl = levels[levelID];
+        // Reset lives
+        FindObjectOfType<RespawnController>()?.ResetLivesToFull();
 
-        // Disable activators for this level
-        SetActiveArray(lvl.activators, false);
+        // TURN ON ENEMIES FOR THIS LEVEL
+        SetActive(lvl.bosses, true);
 
-        // Enable gameplay objects
-        SetActiveArray(lvl.bosses, true);
-        SetActiveArray(lvl.coins, true);
+        // Spawn coins
+        SetActive(lvl.coins, true);
 
-        // Close doors
-        SetActiveArray(lvl.closedDoors, true);
-        SetActiveArray(lvl.openDoors, false);
+        // Close door
+        SetActive(lvl.openDoors, false);
+        SetActive(lvl.closedDoors, true);
 
-        // Objective text
-        if (objectiveRoutine != null)
-            StopCoroutine(objectiveRoutine);
+        // Disable activator
+        SetActive(lvl.activators, false);
 
-        objectiveRoutine = StartCoroutine(ShowObjective(lvl.firstObjective));
+        // Show objective
+        ShowObjective(lvl.firstObjective);
     }
 
-    // Backward compatibility (old script calls this)
-    public void StartLevel()
-    {
-        StartLevel(0);
-    }
 
-    // ========== COIN COLLECTED ==========
+    // ============================
+    //     COIN COLLECT CHECK
+    // ============================
     public void CoinCollected()
     {
         if (!isLevelRunning) return;
@@ -116,114 +125,81 @@ public class LevelController : MonoBehaviour
     {
         yield return null;
 
-        var lvl = levels[currentLevelIndex];
-        bool left = false;
+        LevelBlock lvl = levels[currentLevelIndex];
 
+        bool anyLeft = false;
         foreach (var c in lvl.coins)
+            if (c.activeInHierarchy)
+                anyLeft = true;
+
+        if (!anyLeft)
         {
-            if (c != null && c.activeInHierarchy)
-            {
-                left = true;
-                break;
-            }
-        }
+            // Open exit
+            SetActive(lvl.openDoors, true);
+            SetActive(lvl.closedDoors, false);
 
-        if (!left)
-        {
-            Debug.Log($"LEVEL {currentLevelIndex + 1} — all coins collected!");
-            OpenExit(currentLevelIndex);
+            // Enable exit trigger
+            SetActive(lvl.deactivators, true);
 
-            if (objectiveRoutine != null)
-                StopCoroutine(objectiveRoutine);
-
-            objectiveRoutine = StartCoroutine(ShowObjective(lvl.secondObjective));
+            ShowObjective(lvl.secondObjective);
         }
     }
 
-    // ========== EXIT OPEN ==========
-    private void OpenExit(int levelID)
-    {
-        var lvl = levels[levelID];
 
-        SetActiveArray(lvl.closedDoors, false);
-        SetActiveArray(lvl.openDoors, true);
-
-        SetActiveArray(lvl.deactivators, true);
-
-        Debug.Log($"LEVEL {levelID + 1} EXIT OPENED");
-    }
-
-    // ========== END LEVEL ==========
+    // ============================
+    //          END LEVEL
+    // ============================
     public void EndLevel(int levelID)
     {
-        Debug.Log($"LEVEL {levelID + 1} ENDED.");
         isLevelRunning = false;
 
-        var lvl = levels[levelID];
+        LevelBlock lvl = levels[levelID];
 
-        SetActiveArray(lvl.bosses, false);
-        SetActiveArray(lvl.deactivators, false);
+        // TURN OFF ENEMIES
+        SetActive(lvl.bosses, false);
 
-        // Close door again after leaving
-        SetActiveArray(lvl.closedDoors, true);
-        SetActiveArray(lvl.openDoors, false);
+        // Hide coins + exit trigger
+        SetActive(lvl.coins, false);
+        SetActive(lvl.deactivators, false);
+
+        // Close door
+        SetActive(lvl.openDoors, false);
+        SetActive(lvl.closedDoors, true);
 
         // Unlock next level
         int next = levelID + 1;
         if (next < levels.Count)
         {
-            SetActiveArray(levels[next].activators, true);
-            Debug.Log($"LEVEL {next + 1} UNLOCKED!");
+            var nextLvl = levels[next];
+
+            SetActive(nextLvl.openDoors, true);
+            SetActive(nextLvl.closedDoors, false);
+            SetActive(nextLvl.activators, true);
         }
     }
 
-    // Old compatibility version
-    public void EndLevel()
+
+    // ============================
+    //          HELPERS
+    // ============================
+    private void SetActive(GameObject[] arr, bool state)
     {
-        if (currentLevelIndex >= 0)
-            EndLevel(currentLevelIndex);
+        foreach (var o in arr)
+            if (o != null)
+                o.SetActive(state);
     }
 
-    // ========== HELPERS ==========
-
-    // Needed by activators
-    public int GetLevelIndexForActivator(LevelActivater activater)
+    private void ShowObjective(string msg)
     {
-        for (int i = 0; i < levels.Count; i++)
-        {
-            foreach (var obj in levels[i].activators)
-            {
-                if (obj == activater.gameObject)
-                    return i;
-            }
-        }
-        return -1;
+        if (objectiveRoutine != null)
+            StopCoroutine(objectiveRoutine);
+
+        objectiveRoutine = StartCoroutine(FadeObjective(msg));
     }
 
-    // Needed by deactivators
-    public int GetLevelIndexForDeactivator(LevelDeactivator deactivator)
+    private IEnumerator FadeObjective(string msg)
     {
-        for (int i = 0; i < levels.Count; i++)
-        {
-            foreach (var obj in levels[i].deactivators)
-            {
-                if (obj == deactivator.gameObject)
-                    return i;
-            }
-        }
-        return -1;
-    }
-
-    private void SetActiveArray(GameObject[] objs, bool state)
-    {
-        if (objs == null) return;
-        foreach (var o in objs)
-            if (o != null) o.SetActive(state);
-    }
-
-    private IEnumerator ShowObjective(string txt)
-    {
-        objectiveText.text = txt;
+        objectiveText.text = msg;
 
         // Fade in
         float t = 0;
