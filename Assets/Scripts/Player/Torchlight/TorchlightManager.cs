@@ -13,7 +13,7 @@ public class TorchThreshold
     [Tooltip("Color for the battery bar when this threshold is active.")]
     public Color barColor = Color.red;
 
-    [Tooltip("If true, the battery bar will be shown when battery <= thresholdValue.")]
+    [Tooltip("If true, the battery bar will be shown when battery <= this value.")]
     public bool showBarWhenReached = true;
 
     [Tooltip("If true, the warning icon will show (when torch is draining) at this threshold.")]
@@ -28,7 +28,7 @@ public class TorchThreshold
 
 public class TorchlightManager : MonoBehaviour
 {
-    public enum TorchMode { MouseFree } // Clean: only the used mode
+    public enum TorchMode { MouseFree }
 
     [Header("Torch Settings")]
     public TorchMode torchMode = TorchMode.MouseFree;
@@ -49,6 +49,13 @@ public class TorchlightManager : MonoBehaviour
     public PlayerMovement player;
     public Light lightSource;
     public Camera mainCamera;
+
+    [Header("Secondary Light (Visual Follower)")]
+    [Tooltip("Optional secondary spotlight (gradient light) for visuals.")]
+    public Light secondaryLight;
+
+    // Base intensity store for proportional flicker
+    private float secondaryBaseIntensity;
 
     [Header("Battery Settings")]
     [Range(0f, 1f)] public float battery = 1f;
@@ -114,13 +121,15 @@ public class TorchlightManager : MonoBehaviour
             StartCoroutine(FlickerRoutine());
         }
 
+        if (secondaryLight != null)
+            secondaryBaseIntensity = secondaryLight.intensity;
+
         if (uiCanvasGroup != null)
             uiCanvasGroup.alpha = 0f;
 
         if (warningIcon != null)
             warningIcon.gameObject.SetActive(false);
 
-        // initial direction
         lastFlashlightDir = player.FacingDirection;
         if (lastFlashlightDir == Vector3.zero)
             lastFlashlightDir = transform.forward;
@@ -135,6 +144,9 @@ public class TorchlightManager : MonoBehaviour
 
         if (lightSource != null)
             lightSource.enabled = isTorchOn && battery > 0f;
+
+        if (secondaryLight != null)
+            secondaryLight.enabled = lightSource.enabled;
 
         if (isTorchOn && battery > 0f)
         {
@@ -164,6 +176,9 @@ public class TorchlightManager : MonoBehaviour
             Quaternion targetRot = Quaternion.LookRotation(lastFlashlightDir);
             flashlight.rotation = Quaternion.Slerp(flashlight.rotation, targetRot, rotationSpeed * Time.deltaTime);
         }
+
+        // Secondary light no longer needs movement code (it's a child)
+        // Enable/disable is already handled in Update()
     }
 
     // ------------------------
@@ -196,6 +211,9 @@ public class TorchlightManager : MonoBehaviour
             isTorchOn = false;
             if (lightSource != null)
                 lightSource.enabled = false;
+
+            if (secondaryLight != null)
+                secondaryLight.enabled = false;
         }
     }
 
@@ -211,6 +229,13 @@ public class TorchlightManager : MonoBehaviour
             intensity *= maxBrightnessAtWarning;
 
         lightSource.intensity = intensity;
+
+        // Secondary follows brightness proportionally
+        if (secondaryLight != null && baseIntensity > 0f)
+        {
+            float factor = intensity / baseIntensity;
+            secondaryLight.intensity = secondaryBaseIntensity * factor;
+        }
     }
 
     // ------------------------
@@ -396,6 +421,9 @@ public class TorchlightManager : MonoBehaviour
             isTorchOn = false;
             if (lightSource != null)
                 lightSource.enabled = false;
+
+            if (secondaryLight != null)
+                secondaryLight.enabled = false;
         }
 
         ShowTemporaryUI();
@@ -411,6 +439,9 @@ public class TorchlightManager : MonoBehaviour
             uiCanvasGroup.alpha = 1f;
     }
 
+    // ------------------------
+    // FLICKER SYSTEM (including secondary proportional flicker)
+    // ------------------------
     IEnumerator FlickerRoutine()
     {
         while (true)
@@ -422,17 +453,31 @@ public class TorchlightManager : MonoBehaviour
             {
                 for (int i = 0; i < flickerCount; i++)
                 {
-                    lightSource.intensity = Random.Range(minIntensity, maxIntensity);
+                    float flickerValue = Random.Range(minIntensity, maxIntensity);
+                    lightSource.intensity = flickerValue;
+
+                    if (secondaryLight != null && baseIntensity > 0f)
+                    {
+                        float factor = flickerValue / baseIntensity;
+                        secondaryLight.intensity = secondaryBaseIntensity * factor;
+                    }
+
                     yield return new WaitForSeconds(flickerInterval);
 
+                    // occasional blackout blink
                     if (Random.value < 0.3f)
                     {
                         lightSource.enabled = false;
+                        if (secondaryLight != null) secondaryLight.enabled = false;
+
                         yield return new WaitForSeconds(flickerInterval);
+
                         lightSource.enabled = true;
+                        if (secondaryLight != null) secondaryLight.enabled = true;
                     }
                 }
-                HandleBrightness();
+
+                HandleBrightness(); // restore after flicker
             }
         }
     }
@@ -449,7 +494,6 @@ public class TorchlightManager : MonoBehaviour
         if (facing.sqrMagnitude < 0.001f)
             facing = transform.forward;
 
-        // left and right bounds of the free aim radius
         Quaternion leftRot = Quaternion.AngleAxis(-freeAimRadius, Vector3.up);
         Quaternion rightRot = Quaternion.AngleAxis(freeAimRadius, Vector3.up);
 
@@ -461,7 +505,6 @@ public class TorchlightManager : MonoBehaviour
         Gizmos.DrawRay(origin, leftDir * length);
         Gizmos.DrawRay(origin, rightDir * length);
 
-        // Draw arc
         int steps = 24;
         Vector3 prev = leftDir * length;
 
@@ -476,7 +519,6 @@ public class TorchlightManager : MonoBehaviour
             prev = cur;
         }
 
-        // Draw snap tolerance lines
         Gizmos.color = Color.cyan;
 
         Quaternion leftSnap = Quaternion.AngleAxis(-(freeAimRadius + snapTolerance), Vector3.up);

@@ -15,6 +15,8 @@ public class SpiritGuidanceManager : MonoBehaviour
     public string targetTag = "HintTarget";
     public float searchRadius = 100f;
 
+    private GameObject currentOrb; // keeps track of active orb
+
     private void Start()
     {
         StartCoroutine(HintRoutine());
@@ -24,13 +26,19 @@ public class SpiritGuidanceManager : MonoBehaviour
     {
         while (true)
         {
+            // If there is still an orb, wait until it's gone
+            while (currentOrb != null)
+                yield return null;
+
+            // Delay AFTER orb is gone
             float delay = Random.Range(minDelay, maxDelay);
             yield return new WaitForSeconds(delay);
 
+            // Find nearest target and spawn orb
             Transform nearest = FindNearestTarget();
             if (nearest != null)
             {
-                SpawnOrb(nearest);
+                currentOrb = SpawnOrb(nearest);
             }
         }
     }
@@ -53,15 +61,25 @@ public class SpiritGuidanceManager : MonoBehaviour
         return nearest;
     }
 
-    void SpawnOrb(Transform target)
+    GameObject SpawnOrb(Transform target)
     {
         GameObject orb = Instantiate(spiritOrbPrefab, transform.position + Vector3.up * 1f, Quaternion.identity);
-        orb.GetComponent<SpiritOrbBehaviour>().SetTarget(target);
+
+        var behavior = orb.GetComponent<SpiritOrbBehaviour>();
+        behavior.SetTarget(target);
+
+        // When orb is destroyed, clear reference
+        StartCoroutine(WatchOrb(orb));
+
+        return orb;
     }
 
-    private void OnDrawGizmosSelected()
+    IEnumerator WatchOrb(GameObject orb)
     {
-        Gizmos.color = new Color(0.2f, 0.8f, 1f, 0.35f); // light blue, semi-transparent
-        Gizmos.DrawWireSphere(transform.position, searchRadius);
+        // Wait until orb is destroyed
+        while (orb != null)
+            yield return null;
+
+        currentOrb = null;
     }
 }
