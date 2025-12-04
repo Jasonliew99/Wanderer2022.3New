@@ -28,7 +28,6 @@ public class RespawnController : MonoBehaviour
     private int currentLives;
     private bool isRespawning = false;
 
-
     void Start()
     {
         currentLives = maxLives;
@@ -52,10 +51,7 @@ public class RespawnController : MonoBehaviour
         }
     }
 
-
-    // ===================================================
     //              PUBLIC RESET LIFE FUNCTION
-    // ===================================================
     public void ResetLivesToFull()
     {
         currentLives = maxLives;
@@ -72,9 +68,7 @@ public class RespawnController : MonoBehaviour
     }
 
 
-    // ===================================================
     //                ON PLAYER DEATH
-    // ===================================================
     public void HandlePlayerDeath()
     {
         //if (!levelController.IsAnyLevelRunning()) return;

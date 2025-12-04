@@ -40,9 +40,7 @@ public class LevelController : MonoBehaviour
     private bool isLevelRunning = false;
 
 
-    // ============================
     //          SCENE START
-    // ============================
     void Start()
     {
         for (int i = 0; i < levels.Count; i++)
@@ -78,10 +76,7 @@ public class LevelController : MonoBehaviour
             objectiveText.alpha = 0f;
     }
 
-
-    // ============================
     //          START LEVEL
-    // ============================
     public void StartLevel(int levelID)
     {
         if (isLevelRunning) return;
@@ -112,9 +107,7 @@ public class LevelController : MonoBehaviour
     }
 
 
-    // ============================
     //     COIN COLLECT CHECK
-    // ============================
     public void CoinCollected()
     {
         if (!isLevelRunning) return;
@@ -146,9 +139,7 @@ public class LevelController : MonoBehaviour
     }
 
 
-    // ============================
     //          END LEVEL
-    // ============================
     public void EndLevel(int levelID)
     {
         isLevelRunning = false;
@@ -178,10 +169,7 @@ public class LevelController : MonoBehaviour
         }
     }
 
-
-    // ============================
     //          HELPERS
-    // ============================
     private void SetActive(GameObject[] arr, bool state)
     {
         foreach (var o in arr)
