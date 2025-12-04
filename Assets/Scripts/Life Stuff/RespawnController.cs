@@ -77,7 +77,7 @@ public class RespawnController : MonoBehaviour
     // ===================================================
     public void HandlePlayerDeath()
     {
-        if (!levelController.IsAnyLevelRunning()) return;
+        //if (!levelController.IsAnyLevelRunning()) return;
         StartCoroutine(RespawnRoutine());
     }
 
