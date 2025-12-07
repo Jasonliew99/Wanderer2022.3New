@@ -27445,9 +27445,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 473345094}
+  - component: {fileID: 473345097}
   - component: {fileID: 473345096}
   - component: {fileID: 473345095}
-  - component: {fileID: 473345097}
   m_Layer: 0
   m_Name: Deactivator Level
   m_TagString: Untagged
@@ -28120,7 +28120,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   controller: {fileID: 982993626}
-  levelID: -1
+  levelID: 0
 --- !u!1001 &496224576
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -43841,7 +43841,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   controller: {fileID: 982993626}
-  levelID: -1
+  levelID: 1
 --- !u!1001 &635886263
 PrefabInstance:
   m_ObjectHideFlags: 0

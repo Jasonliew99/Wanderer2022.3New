@@ -14,5 +14,7 @@ public class LevelActivater : MonoBehaviour
             Debug.Log($"Level {levelID + 1} started.");
             controller.StartLevel(levelID);
         }
+
+
     }
 }
