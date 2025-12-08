@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 
+//bro this script is like teachign a baby how to walk
 public class PlayerMovement : MonoBehaviour
 {
     [Header("Movement Speeds")]
@@ -34,6 +35,7 @@ public class PlayerMovement : MonoBehaviour
     public float sneakSize = 4f;
     public float zoomSpeed = 5f;
 
+    //floating text hahahhahas
     [Header("UI")]
     public RectTransform sprintBarFill;
     public CanvasGroup sprintBarGroup;
@@ -84,7 +86,6 @@ public class PlayerMovement : MonoBehaviour
     // --- ADDED FOR ANIMATION ---
     private Vector2 lastMoveDir = Vector2.zero;
     public Vector2 GetLastMoveDirection() => lastMoveDir;
-    // ----------------------------
 
     void Start()
     {
@@ -157,6 +158,7 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    //if u press this then this will happen type shii
     void HandleInput()
     {
         if (isStumbling) return;
@@ -174,7 +176,6 @@ public class PlayerMovement : MonoBehaviour
         // --- ADDED FOR ANIMATION ---
         if (input != Vector3.zero)
             lastMoveDir = new Vector2(input.x, input.z).normalized;
-        // ----------------------------
 
         if (Input.GetKeyDown(sprintKey)) lastPressedKey = sprintKey;
         if (Input.GetKeyDown(sneakKey)) lastPressedKey = sneakKey;
@@ -222,6 +223,7 @@ public class PlayerMovement : MonoBehaviour
         isSneaking = (currentMode == MovementMode.Sneaking);
     }
 
+    //playing with the mm whatever its called the zoom?
     void UpdateCameraZoom()
     {
         if (mainCamera == null) return;
@@ -267,6 +269,7 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    //more math shit that is related to draining the stamina of the sprint
     float GetSprintDrainMultiplier()
     {
         float highestMultiplier = 1f;
@@ -299,6 +302,7 @@ public class PlayerMovement : MonoBehaviour
         group.alpha = endAlpha;
     }
 
+    //aiya i fell down
     IEnumerator DoStumble()
     {
         isStumbling = true;

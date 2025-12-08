@@ -11,17 +11,18 @@ public class LevelController : MonoBehaviour
     public class LevelBlock
     {
         [Header("Doors")]
-        public GameObject[] closedDoors;     // Doors that close when level starts
-        public GameObject[] openDoors;       // Doors that open when not in level
+        public GameObject[] closedDoors;     // Pintu tutup
+        public GameObject[] openDoors;       // Pintu Buka
 
         [Header("Objects")]
-        public GameObject[] bosses;          // Enemies for this level
-        public GameObject[] coins;           // Coins for this level
+        public GameObject[] bosses;          // Shit that want to kill u
+        public GameObject[] coins;           // Shit to collect
 
         [Header("Triggers")]
-        public GameObject[] activators;      // Start points for this level
-        public GameObject[] deactivators;    // Exit points when level is finished
+        public GameObject[] activators;      // Molest this to activate
+        public GameObject[] deactivators;    // Molest this to deactivate
 
+        //this thing makes the game looked low quality but if this shit doesnt exist player dont know what to do, like baby on day 1
         [Header("Objectives")]
         public string firstObjective = "Collect all coins!";
         public string secondObjective = "Find the exit!";
@@ -39,11 +40,7 @@ public class LevelController : MonoBehaviour
     private bool isLevelRunning = false;
     private Coroutine objectiveRoutine;
 
-
-
-    // --------------------------------------------------------------------
     // INITIAL SETUP
-    // --------------------------------------------------------------------
     void Start()
     {
         for (int i = 0; i < levels.Count; i++)
@@ -107,10 +104,7 @@ public class LevelController : MonoBehaviour
     }
 
 
-
-    // --------------------------------------------------------------------
     // COIN CHECK
-    // --------------------------------------------------------------------
     public void CoinCollected()
     {
         if (!isLevelRunning) return;
@@ -141,10 +135,7 @@ public class LevelController : MonoBehaviour
     }
 
 
-
-    // --------------------------------------------------------------------
     // END LEVEL
-    // --------------------------------------------------------------------
     public void EndLevel(int levelID)
     {
         isLevelRunning = false;
@@ -162,7 +153,7 @@ public class LevelController : MonoBehaviour
         SetActive(lvl.openDoors, false);
         SetActive(lvl.closedDoors, true);
 
-        // Unlock next level
+        // Unlock next fucking level
         int next = levelID + 1;
 
         if (next < levels.Count)
@@ -177,9 +168,7 @@ public class LevelController : MonoBehaviour
 
 
 
-    // --------------------------------------------------------------------
-    // HELPERS
-    // --------------------------------------------------------------------
+    // HELPERS more like unhelpers making my life more miserable
     private void SetActive(GameObject[] arr, bool state)
     {
         if (arr == null) return;

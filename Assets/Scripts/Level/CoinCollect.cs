@@ -15,7 +15,7 @@ public class CoinCollect : MonoBehaviour
         if (revealItem == null)
             Debug.LogWarning($"[{name}] TorchlightRevealItem missing!");
 
-        // Automatically find the nearest active LevelController in the scene
+        // Automatically find the nearest active LevelController in the scene if nto i will kill their entire family
         levelController = FindObjectOfType<LevelController>();
         if (levelController == null)
         {

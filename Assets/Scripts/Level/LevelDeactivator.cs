@@ -7,6 +7,7 @@ public class LevelDeactivator : MonoBehaviour
     public LevelController controller;
     public int levelID = 0;
 
+    //if molested by player, end level
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Player"))

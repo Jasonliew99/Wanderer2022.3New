@@ -112511,8 +112511,6 @@ MonoBehaviour:
   player: {fileID: 1000885592}
   respawnPoints:
   - {fileID: 783921474}
-  - {fileID: 409698643}
-  - {fileID: 1891138598}
   maxLives: 3
   lifeCanvas: {fileID: 569565164}
   lifeImages:

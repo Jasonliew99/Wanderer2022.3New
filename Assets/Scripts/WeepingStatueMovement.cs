@@ -8,25 +8,29 @@ using UnityEngine.Playables;
 [RequireComponent(typeof(Collider))]
 [RequireComponent(typeof(Rigidbody))]
 [RequireComponent(typeof(NavMeshAgent))]
+
+//This is the worst script for now, im bouta recreate anothe ww2 bro
+//The logic is all over the place and its a mess ngl
+//THis thing is easy to think but hard to write cause it keeps splitting cause this AI has more life choices than me
 public class WeepingStatueMovement : MonoBehaviour
 {
-    public enum StatueState { Inactive, Triggered, Active }
+    public enum StatueState { Inactive, Triggered, Active } //hahhahahahah statue states ahhahaha
 
     [Header("References")]
     public Transform player;
     public TorchLightDetector torchDetector;
-    public ChaseZoneStatueFish hauntingZone;
+    public ChaseZoneStatueFish hauntingZone; //this will be removed later once i figure out how to make the statue SMARTER. WHy am i trying to make an AI smarter anyways. This shit is making better choices than me in my life
 
     [Header("Triggered Animation (One-shot)")]
     public AnimationClip activationClip;
     private Animation activationAnimation;  // Legacy Animation Player
 
     [Header("Sprites")]
-    public SpriteRenderer spriteRenderer;
-    public Sprite inactiveSprite;
-    public Sprite activeSprite;
+    public SpriteRenderer spriteRenderer; //their skin
+    public Sprite inactiveSprite; //sleep skin
+    public Sprite activeSprite; //woke up skin
 
-    [Header("Activation Settings")]
+    [Header("Activation Settings")] //wake the fuck up samurai
     public float activationRadius = 5f;
     public float postTriggerDelay = 0.05f;
 
@@ -34,7 +38,7 @@ public class WeepingStatueMovement : MonoBehaviour
     public float chaseSpeed = 3.5f;
     public float stoppingDistance = 1f;
 
-    [Header("Torch Freeze (Active Only)")]
+    [Header("Torch Freeze (Active Only)")] //Go to sleep go to sleep
     public float unfreezeDelay = 0.2f;
 
     [Header("Shake Settings")]
