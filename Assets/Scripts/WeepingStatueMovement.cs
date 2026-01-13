@@ -88,7 +88,7 @@ public class WeepingStatueMovement : MonoBehaviour
         agent.obstacleAvoidanceType = ObstacleAvoidanceType.HighQualityObstacleAvoidance;
         agent.avoidancePriority = Random.Range(20, 80);
 
-        // Init standby dictionary
+        // standby
         foreach (var p in standbyPoints)
         {
             if (!standbyOccupied.ContainsKey(p))
@@ -151,6 +151,7 @@ public class WeepingStatueMovement : MonoBehaviour
         }
     }
 
+    //if triggered, play animation, shake, then become active
     private void StartTriggerState()
     {
         if (currentState != StatueState.Inactive) return;
@@ -169,12 +170,14 @@ public class WeepingStatueMovement : MonoBehaviour
         StartCoroutine(WaitAndBecomeActive());
     }
 
+    // After animation + delay, become active
     private IEnumerator WaitAndBecomeActive()
     {
         yield return new WaitForSeconds(activationClip.length + postTriggerDelay);
         BecomeActive();
     }
 
+    //become active state
     private void BecomeActive()
     {
         currentState = StatueState.Active;
@@ -191,6 +194,7 @@ public class WeepingStatueMovement : MonoBehaviour
         if (debugLogs) Debug.Log("[Statue] Active");
     }
 
+    // tries to molest the player
     private void ActiveMovement()
     {
         if (isIlluminated || isUnfreezeDelayed)
@@ -205,7 +209,7 @@ public class WeepingStatueMovement : MonoBehaviour
         agent.speed = chaseSpeed;
         agent.SetDestination(player.position);
 
-        // If player is too far, start returning
+        // if player is too damn far, go back to standby
         float dist = Vector3.Distance(transform.position, player.position);
         if (dist > activationRadius * 3f) // <-- tune this threshold
         {
@@ -213,7 +217,7 @@ public class WeepingStatueMovement : MonoBehaviour
         }
     }
 
-    // REQUEST a free standby point
+    // free up a standby point that 's not occupied
     private Transform GetFreeStandby()
     {
         foreach (var p in standbyPoints)
@@ -256,7 +260,7 @@ public class WeepingStatueMovement : MonoBehaviour
 
         if (!agent.pathPending && agent.remainingDistance < 0.3f)
         {
-            // Arrive → become statue again
+            // Arrive to become statue again
             standbyOccupied[reservedStandbyPoint] = false;
             reservedStandbyPoint = null;
 
@@ -280,12 +284,13 @@ public class WeepingStatueMovement : MonoBehaviour
         }
     }
 
-    // TORCH LOGIC (unchanged)
+    // this is to check if the collider belongs to self or children
     private bool IsSelf(Collider col)
     {
         return col.transform == transform || col.transform.IsChildOf(transform);
     }
 
+    // if torchlight hits then halt movement
     private void TorchEnter(Collider col)
     {
         if (currentState != StatueState.Active) return;
@@ -295,12 +300,14 @@ public class WeepingStatueMovement : MonoBehaviour
         StopMovement();
     }
 
+    // while torchlight is on/ still within the radius of the torchlight, stay/remain halted
     private void TorchStay(Collider col)
     {
         if (currentState != StatueState.Active) return;
         if (IsSelf(col)) isIlluminated = true;
     }
 
+    // when torchlight leaves, start unfreeze delay
     private void TorchExit(Collider col)
     {
         if (currentState != StatueState.Active) return;
@@ -312,6 +319,7 @@ public class WeepingStatueMovement : MonoBehaviour
         unfreezeRoutine = StartCoroutine(UnfreezeDelayRoutine());
     }
 
+    // after delay, unfreeze and chase again of course duh
     private IEnumerator UnfreezeDelayRoutine()
     {
         isUnfreezeDelayed = true;
