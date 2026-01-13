@@ -35,14 +35,8 @@ public class PlayerMovement : MonoBehaviour
     public float sneakSize = 4f;
     public float zoomSpeed = 5f;
 
-    //floating text hahahhahas
     [Header("UI")]
-    public RectTransform sprintBarFill;
-    public CanvasGroup sprintBarGroup;
-
-    [Header("Sprint Bar Fade Settings")]
-    public float fadeOutDelay = 1.5f;
-    public float fadeDuration = 0.5f;
+    public SprintBarUI sprintBarUI;
 
     [Header("Ground Check")]
     public Transform groundCheck;
@@ -64,8 +58,6 @@ public class PlayerMovement : MonoBehaviour
     private float sprintTimer = 0f;
     private bool isSprinting = false;
     private bool isSneaking = false;
-    private float fadeTimer = 0f;
-    private bool isFading = false;
 
     private Rigidbody rb;
     private Vector3 input;
@@ -92,13 +84,8 @@ public class PlayerMovement : MonoBehaviour
         rb = GetComponent<Rigidbody>();
         rb.freezeRotation = true;
         rb.useGravity = true;
+
         sprintTimer = sprintDuration;
-
-        if (sprintBarGroup != null)
-        {
-            sprintBarGroup.alpha = 1f;
-        }
-
         facingDirection = transform.forward;
     }
 
@@ -112,7 +99,7 @@ public class PlayerMovement : MonoBehaviour
         HandleInput();
         HandleSprintSneakLogic();
         UpdateCameraZoom();
-        UpdateSprintUI();
+        UpdateSprintBarUI();
 
         if (isSprinting && !isStumbling && stumbleCooldownTimer <= 0f)
         {
@@ -129,27 +116,19 @@ public class PlayerMovement : MonoBehaviour
         if (isStumbling) return;
 
         float currentSpeed = moveSpeed;
-        switch (currentMode)
-        {
-            case MovementMode.Sneaking:
-                currentSpeed = sneakSpeed;
-                break;
-            case MovementMode.Sprinting:
-                currentSpeed = sprintSpeed;
-                break;
-        }
+        if (currentMode == MovementMode.Sprinting) currentSpeed = sprintSpeed;
+        if (currentMode == MovementMode.Sneaking) currentSpeed = sneakSpeed;
 
         if (input.sqrMagnitude > 0.001f)
         {
             float angle = Vector3.Angle(facingDirection, input);
             if (angle > forwardAngleForSprint)
-            {
                 currentSpeed *= backwardMultiplier;
-            }
         }
 
         Vector3 horizontalVelocity = new Vector3(input.x * currentSpeed, 0f, input.z * currentSpeed);
         horizontalVelocity = Quaternion.AngleAxis(-44.6f, Vector3.up) * horizontalVelocity;
+
         rb.velocity = new Vector3(horizontalVelocity.x, rb.velocity.y, horizontalVelocity.z);
 
         if (!isGrounded)
@@ -158,7 +137,6 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    //if u press this then this will happen type shii
     void HandleInput()
     {
         if (isStumbling) return;
@@ -173,7 +151,6 @@ public class PlayerMovement : MonoBehaviour
 
         input = new Vector3(x, 0f, z).normalized;
 
-        // --- ADDED FOR ANIMATION ---
         if (input != Vector3.zero)
             lastMoveDir = new Vector2(input.x, input.z).normalized;
 
@@ -198,7 +175,8 @@ public class PlayerMovement : MonoBehaviour
                 movementBlocksSprint = true;
         }
 
-        if (holdingSprint && (!holdingSneak || lastPressedKey == sprintKey) && sprintTimer > 0f && isPhysicallyMoving && !movementBlocksSprint)
+        if (holdingSprint && (!holdingSneak || lastPressedKey == sprintKey) &&
+            sprintTimer > 0f && isPhysicallyMoving && !movementBlocksSprint)
         {
             currentMode = MovementMode.Sprinting;
             sprintTimer -= Time.deltaTime * drainMultiplier;
@@ -219,57 +197,29 @@ public class PlayerMovement : MonoBehaviour
             sprintTimer = Mathf.Min(sprintTimer, sprintDuration);
         }
 
-        isSprinting = (currentMode == MovementMode.Sprinting);
-        isSneaking = (currentMode == MovementMode.Sneaking);
+        isSprinting = currentMode == MovementMode.Sprinting;
+        isSneaking = currentMode == MovementMode.Sneaking;
     }
 
-    //playing with the mm whatever its called the zoom?
     void UpdateCameraZoom()
     {
         if (mainCamera == null) return;
 
         float targetSize = isSneaking ? sneakSize : normalSize;
-        mainCamera.orthographicSize = Mathf.Lerp(mainCamera.orthographicSize, targetSize, Time.deltaTime * zoomSpeed);
+        mainCamera.orthographicSize =
+            Mathf.Lerp(mainCamera.orthographicSize, targetSize, Time.deltaTime * zoomSpeed);
     }
 
-    void UpdateSprintUI()
+    void UpdateSprintBarUI()
     {
-        float percent = Mathf.Clamp01(sprintTimer / sprintDuration);
+        if (sprintBarUI == null) return;
 
-        if (sprintBarFill != null)
-        {
-            sprintBarFill.localScale = new Vector3(percent, 1f, 1f);
-        }
+        float percent = sprintTimer / sprintDuration;
+        bool sprintingNow = isSprinting && rb.velocity.magnitude > 0.05f;
 
-        if (sprintBarGroup == null) return;
-
-        bool isSprintingNow = isSprinting && rb.velocity.magnitude > 0.05f;
-        bool staminaNotFull = !Mathf.Approximately(percent, 1f);
-
-        if (isSprintingNow || staminaNotFull)
-        {
-            fadeTimer = 0f;
-
-            if (isFading)
-            {
-                StopAllCoroutines();
-                StartCoroutine(FadeCanvasGroup(sprintBarGroup, sprintBarGroup.alpha, 1f, fadeDuration));
-                isFading = false;
-            }
-        }
-        else
-        {
-            fadeTimer += Time.deltaTime;
-
-            if (fadeTimer >= fadeOutDelay && !isFading)
-            {
-                StartCoroutine(FadeCanvasGroup(sprintBarGroup, sprintBarGroup.alpha, 0f, fadeDuration));
-                isFading = true;
-            }
-        }
+        sprintBarUI.UpdateSprintBar(percent, sprintingNow);
     }
 
-    //more math shit that is related to draining the stamina of the sprint
     float GetSprintDrainMultiplier()
     {
         float highestMultiplier = 1f;
@@ -278,7 +228,6 @@ public class PlayerMovement : MonoBehaviour
         foreach (GameObject enemy in enemies)
         {
             float dist = Vector3.Distance(transform.position, enemy.transform.position);
-
             if (dist <= mediumDangerRadius)
             {
                 float t = Mathf.InverseLerp(mediumDangerRadius, 0f, dist);
@@ -286,23 +235,9 @@ public class PlayerMovement : MonoBehaviour
                 highestMultiplier = Mathf.Max(highestMultiplier, scaled);
             }
         }
-
         return highestMultiplier;
     }
 
-    IEnumerator FadeCanvasGroup(CanvasGroup group, float startAlpha, float endAlpha, float duration)
-    {
-        float time = 0f;
-        while (time < duration)
-        {
-            group.alpha = Mathf.Lerp(startAlpha, endAlpha, time / duration);
-            time += Time.deltaTime;
-            yield return null;
-        }
-        group.alpha = endAlpha;
-    }
-
-    //aiya i fell down
     IEnumerator DoStumble()
     {
         isStumbling = true;
@@ -316,6 +251,7 @@ public class PlayerMovement : MonoBehaviour
     {
         if (isSneaking) return;
         if (newFacing.sqrMagnitude <= 0.001f) return;
+
         newFacing.y = 0f;
         facingDirection = newFacing.normalized;
         transform.forward = facingDirection;
