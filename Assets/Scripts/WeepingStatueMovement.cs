@@ -300,7 +300,7 @@ public class WeepingStatueMovement : MonoBehaviour
         StopMovement();
     }
 
-    // while torchlight is on/ still within the radius of the torchlight, stay/remain halted
+    // while torchlight is on still within the radius of the torchlight, stay/remain halted
     private void TorchStay(Collider col)
     {
         if (currentState != StatueState.Active) return;

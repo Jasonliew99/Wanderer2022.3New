@@ -15,7 +15,7 @@ public class ThunderEffects : MonoBehaviour
     public float flashIntensity = 2f;         // How bright the flash becomes
     public float flashDuration = 0.1f;        // Time of each flash pulse
     public int flashCount = 2;                // How many flashes for one lightning strike
-    public float timeBetweenFlashes = 0.05f;  // Flicker delay
+    public float timeBetweenFlashes = 0.05f;  // Flicker delay, the delay between each flashes
 
     [Header("Thunder Settings")]
     public AudioClip[] thunderSounds;
@@ -32,6 +32,7 @@ public class ThunderEffects : MonoBehaviour
         StartCoroutine(LightningLoop());
     }
 
+    // Main loop for lightning strikes
     private IEnumerator LightningLoop()
     {
         while (true)
@@ -51,6 +52,7 @@ public class ThunderEffects : MonoBehaviour
         }
     }
 
+    // Handle the lightning flash effect
     private IEnumerator PlayLightningFlash()
     {
         for (int i = 0; i < flashCount; i++)
@@ -67,6 +69,7 @@ public class ThunderEffects : MonoBehaviour
         }
     }
 
+    // Play a random thunder sound
     private void PlayThunderSound()
     {
         if (thunderSounds.Length > 0)
