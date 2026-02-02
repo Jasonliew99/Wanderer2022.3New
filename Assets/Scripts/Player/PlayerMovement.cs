@@ -24,6 +24,9 @@ public class PlayerMovement : MonoBehaviour
     public KeyCode sprintKey = KeyCode.LeftShift;
     public KeyCode sneakKey = KeyCode.LeftControl;
 
+    [Header("Trap / Immobilize")]
+    public bool isImmobilized = false;
+
     [Header("Enemy Proximity Settings")]
     public float mediumDangerRadius = 5f;
     public float closeDrainMultiplier = 4f;
@@ -52,6 +55,7 @@ public class PlayerMovement : MonoBehaviour
     public float stumbleForwardForce = 2f;
     public float stumbleDuration = 1f;
     public float stumbleCooldown = 3f;
+
     private bool isStumbling = false;
     private float stumbleCooldownTimer = 0f;
 
@@ -75,7 +79,7 @@ public class PlayerMovement : MonoBehaviour
     private Vector3 facingDirection = Vector3.forward;
     public Vector3 FacingDirection => facingDirection;
 
-    // --- ADDED FOR ANIMATION ---
+    // --- Animation support ---
     private Vector2 lastMoveDir = Vector2.zero;
     public Vector2 GetLastMoveDirection() => lastMoveDir;
 
@@ -113,7 +117,11 @@ public class PlayerMovement : MonoBehaviour
 
     void FixedUpdate()
     {
-        if (isStumbling) return;
+        if (isStumbling || isImmobilized)
+        {
+            rb.velocity = new Vector3(0f, rb.velocity.y, 0f);
+            return;
+        }
 
         float currentSpeed = moveSpeed;
         if (currentMode == MovementMode.Sprinting) currentSpeed = sprintSpeed;
@@ -137,9 +145,14 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    // ================= INPUT =================
     void HandleInput()
     {
-        if (isStumbling) return;
+        if (isStumbling || isImmobilized)
+        {
+            input = Vector3.zero;
+            return;
+        }
 
         float x = 0f;
         float z = 0f;
@@ -158,9 +171,10 @@ public class PlayerMovement : MonoBehaviour
         if (Input.GetKeyDown(sneakKey)) lastPressedKey = sneakKey;
     }
 
+    // ================= SPRINT / SNEAK =================
     void HandleSprintSneakLogic()
     {
-        if (isStumbling) return;
+        if (isStumbling || isImmobilized) return;
 
         bool holdingSprint = Input.GetKey(sprintKey);
         bool holdingSneak = Input.GetKey(sneakKey);
@@ -201,6 +215,7 @@ public class PlayerMovement : MonoBehaviour
         isSneaking = currentMode == MovementMode.Sneaking;
     }
 
+    // ================= CAMERA =================
     void UpdateCameraZoom()
     {
         if (mainCamera == null) return;
@@ -210,6 +225,7 @@ public class PlayerMovement : MonoBehaviour
             Mathf.Lerp(mainCamera.orthographicSize, targetSize, Time.deltaTime * zoomSpeed);
     }
 
+    // ================= UI =================
     void UpdateSprintBarUI()
     {
         if (sprintBarUI == null) return;
@@ -220,6 +236,26 @@ public class PlayerMovement : MonoBehaviour
         sprintBarUI.UpdateSprintBar(percent, sprintingNow);
     }
 
+    // ================= STUMBLE =================
+    IEnumerator DoStumble()
+    {
+        isStumbling = true;
+        rb.velocity = Vector3.zero;
+        rb.AddForce(transform.forward * stumbleForwardForce, ForceMode.Impulse);
+        yield return new WaitForSeconds(stumbleDuration);
+        isStumbling = false;
+    }
+
+    // ================= IMMOBILIZE =================
+    public IEnumerator Immobilize(float duration)
+    {
+        isImmobilized = true;
+        rb.velocity = new Vector3(0f, rb.velocity.y, 0f);
+        yield return new WaitForSeconds(duration);
+        isImmobilized = false;
+    }
+
+    // ================= HELPERS =================
     float GetSprintDrainMultiplier()
     {
         float highestMultiplier = 1f;
@@ -236,15 +272,6 @@ public class PlayerMovement : MonoBehaviour
             }
         }
         return highestMultiplier;
-    }
-
-    IEnumerator DoStumble()
-    {
-        isStumbling = true;
-        rb.velocity = Vector3.zero;
-        rb.AddForce(transform.forward * stumbleForwardForce, ForceMode.Impulse);
-        yield return new WaitForSeconds(stumbleDuration);
-        isStumbling = false;
     }
 
     public void SetFacingDirection(Vector3 newFacing)
