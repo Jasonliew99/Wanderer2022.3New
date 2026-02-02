@@ -5,7 +5,7 @@ using UnityEngine.AI;
 
 public class RedGhostMovement : MonoBehaviour
 {
-    //this particular ghost charges at the player when within a certain range, just like a spanish bull
+    //this particular stupid ass ghost charges at the player when within a certain range, just like a spanish bull
     public enum State { Patrol, Aim, Charge, Search }
     State currentState;
 
@@ -27,7 +27,7 @@ public class RedGhostMovement : MonoBehaviour
     public float aimTime = 0.5f;
     public float chargeSpeed = 10f;
     [Range(0.1f, 0.6f)] public float overshootPercent = 0.25f;
-    public float minOvershootDistance = 1.2f;   // 🔥 GUARANTEED momentum
+    public float minOvershootDistance = 1.2f;   //Momentum
     public float wallCheckDistance = 0.4f;
 
     [Header("Search")]
@@ -48,8 +48,7 @@ public class RedGhostMovement : MonoBehaviour
 
     List<Transform> searchPoints = new List<Transform>();
 
-    // ================= START =================
-
+    //START
     void Start()
     {
         currentState = State.Patrol;
@@ -100,7 +99,7 @@ public class RedGhostMovement : MonoBehaviour
         }
     }
 
-    // ================= PATROL =================
+    //PATROL
 
     void Patrol()
     {
@@ -114,6 +113,7 @@ public class RedGhostMovement : MonoBehaviour
             GoToNextPatrol();
     }
 
+    //Go to the next patrol point in the array
     void GoToNextPatrol()
     {
         patrolIndex = (patrolIndex + 1) % patrolPoints.Length;
@@ -121,8 +121,7 @@ public class RedGhostMovement : MonoBehaviour
         agent.SetDestination(patrolPoints[patrolIndex].position);
     }
 
-    // ================= DETECTION =================
-
+    //DETECTION
     void DetectPlayer()
     {
         if (!player) return;
@@ -146,7 +145,7 @@ public class RedGhostMovement : MonoBehaviour
         {
             lastKnownPlayerPos = player.position;
 
-            // 🔥 ADAPTIVE + GUARANTEED OVERSHOOT
+            // ADAPTIVE + OVERSHOOT
             float perceptionLimit = inCone ? visionConeRange : visionRadius;
             float baseDistance = Mathf.Min(dist, perceptionLimit);
             float overshoot = Mathf.Max(baseDistance * overshootPercent, minOvershootDistance);
@@ -157,7 +156,7 @@ public class RedGhostMovement : MonoBehaviour
         }
     }
 
-    // ================= AIM =================
+    //AIM
 
     void EnterAim()
     {
@@ -176,7 +175,7 @@ public class RedGhostMovement : MonoBehaviour
             StartCharge();
     }
 
-    // ================= CHARGE =================
+    //CHARGE
 
     void StartCharge()
     {
@@ -202,7 +201,7 @@ public class RedGhostMovement : MonoBehaviour
             EnterSearch();
     }
 
-    // ================= SEARCH =================
+    //SEARCH
 
     void EnterSearch()
     {
@@ -260,7 +259,7 @@ public class RedGhostMovement : MonoBehaviour
         GoToNextPatrol();
     }
 
-    // ================= HELPERS =================
+    //HELPERS
 
     int GetClosestPatrolIndex()
     {
@@ -294,7 +293,7 @@ public class RedGhostMovement : MonoBehaviour
         return Quaternion.Euler(0, snapped, 0) * Vector3.forward;
     }
 
-    // ================= GIZMOS =================
+    //GIZMOS
 
     void OnDrawGizmosSelected()
     {
@@ -309,7 +308,7 @@ public class RedGhostMovement : MonoBehaviour
         Gizmos.DrawRay(transform.position, Quaternion.Euler(0, -half, 0) * transform.forward * visionConeRange);
         Gizmos.DrawRay(transform.position, Quaternion.Euler(0, half, 0) * transform.forward * visionConeRange);
 
-        // 🔵 Last known position (same style as patrol points)
+        // Last known position (same style as patrol points)
         Gizmos.color = Color.cyan;
         Gizmos.DrawSphere(ground, 0.35f);
 
