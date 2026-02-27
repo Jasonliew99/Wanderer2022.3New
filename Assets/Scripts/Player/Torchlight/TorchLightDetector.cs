@@ -4,24 +4,34 @@ using UnityEngine;
 
 public class TorchLightDetector : MonoBehaviour
 {
+    [Header("Torch Reference")]
+    public TorchlightManager torchManager;   
     [Header("Detection Settings")]
     public LayerMask detectableLayers;
-    [Tooltip("Cone angle in degrees.")]
     public float coneAngle = 30f;
-    [Tooltip("Cone distance.")]
     public float coneRange = 10f;
-    [Tooltip("Show cone gizmo for debugging.")]
     public bool showGizmos = true;
 
     [Header("Events")]
-    public System.Action<Collider> onEnter;  // first frame inside
-    public System.Action<Collider> onStay;   // every frame inside
-    public System.Action<Collider> onExit;   // leaves cone
+    public System.Action<Collider> onEnter;
+    public System.Action<Collider> onStay;
+    public System.Action<Collider> onExit;
 
     private List<Collider> objectsInside = new List<Collider>();
 
     void Update()
     {
+        // =========================================
+        // THIS IS THE IMPORTANT PART
+        // Torch OFF = detector DEAD
+        // =========================================
+        if (torchManager == null || !torchManager.IsTorchOn)
+        {
+            ClearAllObjects();   // make sure exit fires
+            return;
+        }
+        // =========================================
+
         Collider[] hits = Physics.OverlapSphere(transform.position, coneRange, detectableLayers);
         List<Collider> currentFrame = new List<Collider>();
 
@@ -37,12 +47,10 @@ public class TorchLightDetector : MonoBehaviour
                     onEnter?.Invoke(col);
                 }
 
-                // Always notify stay for charging
                 onStay?.Invoke(col);
             }
         }
 
-        // Notify exit for objects that left the cone
         for (int i = objectsInside.Count - 1; i >= 0; i--)
         {
             if (!currentFrame.Contains(objectsInside[i]))
@@ -53,6 +61,16 @@ public class TorchLightDetector : MonoBehaviour
         }
     }
 
+    // force exit when torch turns off
+    void ClearAllObjects()
+    {
+        for (int i = objectsInside.Count - 1; i >= 0; i--)
+        {
+            onExit?.Invoke(objectsInside[i]);
+        }
+        objectsInside.Clear();
+    }
+
     private bool IsWithinCone(Vector3 point)
     {
         Vector3 dir = (point - transform.position).normalized;
@@ -61,13 +79,6 @@ public class TorchLightDetector : MonoBehaviour
         return angle <= coneAngle * 0.5f && distance <= coneRange;
     }
 
-
-
-
-
-
-
-    //gizmo stuff doesn't affect codes
 #if UNITY_EDITOR
     private void OnDrawGizmos()
     {
@@ -87,10 +98,13 @@ public class TorchLightDetector : MonoBehaviour
         {
             float t = i / (float)segments;
             float angleStep = -coneAngle * 0.5f + t * coneAngle;
-            Vector3 next = transform.position + Quaternion.Euler(0, angleStep, 0) * (transform.forward * coneRange);
+            Vector3 next = transform.position +
+                Quaternion.Euler(0, angleStep, 0) * (transform.forward * coneRange);
+
             Gizmos.DrawLine(prev, next);
             prev = next;
         }
+
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, coneRange);
     }

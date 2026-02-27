@@ -21,10 +21,6 @@ public class WeepingStatueMovement : MonoBehaviour
     public TorchLightDetector torchDetector;
     public ChaseZoneStatueFish hauntingZone;
 
-    [Header("Triggered Animation")]
-    public AnimationClip activationClip;
-    private Animation activationAnimation;
-
     [Header("Sprites")]
     public SpriteRenderer spriteRenderer;
     public Sprite inactiveSprite;
@@ -36,31 +32,19 @@ public class WeepingStatueMovement : MonoBehaviour
 
     [Header("Movement")]
     public float chaseSpeed = 3.5f;
-    public float stoppingDistance = 1f;
 
     [Header("Torch Freeze")]
     public float unfreezeDelay = 0.2f;
 
-    [Header("Shake Settings")]
-    public bool enableShake = true;
-    public float shakeDuration = 0.15f;
-    public float shakeStrength = 0.05f;
-
-    [Header("Standby Points (Set Many)")]
+    [Header("Standby Points")]
     public Transform[] standbyPoints;
 
     [Header("Debug")]
-    public bool debugLogs = false;
     public bool showActivationGizmo = true;
 
-    // STATIC shared occupancy list
-    private static Dictionary<Transform, bool> standbyOccupied = new Dictionary<Transform, bool>();
-
-    // Internal
     private StatueState currentState = StatueState.Inactive;
     private NavMeshAgent agent;
     private Rigidbody rb;
-    private Animator animator;
 
     private bool isIlluminated = false;
     private bool isUnfreezeDelayed = false;
@@ -69,41 +53,31 @@ public class WeepingStatueMovement : MonoBehaviour
     private Vector3 initialPosition;
     private Quaternion initialRotation;
 
+    private static Dictionary<Transform, bool> standbyOccupied = new Dictionary<Transform, bool>();
     private Transform reservedStandbyPoint = null;
 
     void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
         rb = GetComponent<Rigidbody>();
-        animator = GetComponent<Animator>();
 
         initialPosition = transform.position;
         initialRotation = transform.rotation;
 
         agent.speed = chaseSpeed;
-        agent.stoppingDistance = stoppingDistance;
+        agent.stoppingDistance = 0f;
         agent.isStopped = true;
 
-        // Avoid pushing / clipping
-        agent.obstacleAvoidanceType = ObstacleAvoidanceType.HighQualityObstacleAvoidance;
-        agent.avoidancePriority = Random.Range(20, 80);
+        // ⚠️ MUST BE NON-KINEMATIC FOR OnCollisionEnter
+        rb.isKinematic = false;
+        rb.useGravity = false;
+        rb.constraints = RigidbodyConstraints.FreezeRotation;
 
-        // standby
         foreach (var p in standbyPoints)
         {
             if (!standbyOccupied.ContainsKey(p))
                 standbyOccupied[p] = false;
         }
-
-        // Legacy animation setup
-        activationAnimation = gameObject.AddComponent<Animation>();
-        activationAnimation.playAutomatically = false;
-        activationAnimation.wrapMode = WrapMode.Once;
-
-        if (activationClip != null)
-            activationAnimation.AddClip(activationClip, activationClip.name);
-
-        if (animator != null) animator.enabled = false;
 
         if (torchDetector != null)
         {
@@ -120,7 +94,6 @@ public class WeepingStatueMovement : MonoBehaviour
     {
         if (player == null) return;
 
-        // Outside zone = reset
         if (hauntingZone != null && !hauntingZone.IsInside(player.position))
         {
             ResetToInitial();
@@ -130,7 +103,8 @@ public class WeepingStatueMovement : MonoBehaviour
         switch (currentState)
         {
             case StatueState.Inactive:
-                CheckActivation();
+                if (Vector3.Distance(transform.position, player.position) <= activationRadius)
+                    StartCoroutine(ActivateStatue());
                 break;
 
             case StatueState.Active:
@@ -143,42 +117,14 @@ public class WeepingStatueMovement : MonoBehaviour
         }
     }
 
-    private void CheckActivation()
+    IEnumerator ActivateStatue()
     {
-        if (Vector3.Distance(transform.position, player.position) <= activationRadius)
-        {
-            StartTriggerState();
-        }
-    }
-
-    //if triggered, play animation, shake, then become active
-    private void StartTriggerState()
-    {
-        if (currentState != StatueState.Inactive) return;
-
         currentState = StatueState.Triggered;
-        if (debugLogs) Debug.Log("[Statue] Triggered");
-
-        StopMovement();
-
-        if (activationClip != null)
-            activationAnimation.Play(activationClip.name);
-
-        if (enableShake)
-            StartCoroutine(ShakeRoutine());
-
-        StartCoroutine(WaitAndBecomeActive());
-    }
-
-    // After animation + delay, become active
-    private IEnumerator WaitAndBecomeActive()
-    {
-        yield return new WaitForSeconds(activationClip.length + postTriggerDelay);
+        yield return new WaitForSeconds(postTriggerDelay);
         BecomeActive();
     }
 
-    //become active state
-    private void BecomeActive()
+    void BecomeActive()
     {
         currentState = StatueState.Active;
 
@@ -190,12 +136,9 @@ public class WeepingStatueMovement : MonoBehaviour
             agent.isStopped = false;
             agent.SetDestination(player.position);
         }
-
-        if (debugLogs) Debug.Log("[Statue] Active");
     }
 
-    // tries to molest the player
-    private void ActiveMovement()
+    void ActiveMovement()
     {
         if (isIlluminated || isUnfreezeDelayed)
         {
@@ -206,179 +149,120 @@ public class WeepingStatueMovement : MonoBehaviour
         if (!agent.isOnNavMesh) return;
 
         agent.isStopped = false;
-        agent.speed = chaseSpeed;
         agent.SetDestination(player.position);
 
-        // if player is too damn far, go back to standby
         float dist = Vector3.Distance(transform.position, player.position);
-        if (dist > activationRadius * 3f) // <-- tune this threshold
-        {
+        if (dist > activationRadius * 3f)
             StartReturnToStandby();
-        }
     }
 
-    // free up a standby point that 's not occupied
-    private Transform GetFreeStandby()
+    // 🔥 SAME KILL SYSTEM AS PLAYERTRACKER
+    private void OnCollisionEnter(Collision collision)
     {
-        foreach (var p in standbyPoints)
+        if (currentState != StatueState.Active) return;
+        if (isIlluminated || isUnfreezeDelayed) return;
+
+        if (collision.transform.root == player)
         {
-            if (standbyOccupied.ContainsKey(p) && standbyOccupied[p] == false)
+            RespawnController respawnController = FindObjectOfType<RespawnController>();
+            if (respawnController != null)
             {
-                standbyOccupied[p] = true;
-                return p;
+                respawnController.HandlePlayerDeath();
             }
         }
-
-        return null;
     }
 
-    private void StartReturnToStandby()
+    void StartReturnToStandby()
     {
         if (reservedStandbyPoint == null)
             reservedStandbyPoint = GetFreeStandby();
 
-        if (reservedStandbyPoint == null)
-        {
-            if (debugLogs) Debug.LogWarning("[Statue] No free standby points!");
-            return;
-        }
+        if (reservedStandbyPoint == null) return;
 
         currentState = StatueState.Returning;
 
         agent.isStopped = false;
         agent.speed = chaseSpeed * 0.7f;
         agent.SetDestination(reservedStandbyPoint.position);
-
-        if (debugLogs)
-            Debug.Log("[Statue] Returning to standby: " + reservedStandbyPoint.name);
     }
 
-    private void ReturnToStandby()
+    Transform GetFreeStandby()
     {
-        if (!agent.isOnNavMesh) return;
-        if (reservedStandbyPoint == null) return;
+        foreach (var p in standbyPoints)
+        {
+            if (!standbyOccupied[p])
+            {
+                standbyOccupied[p] = true;
+                return p;
+            }
+        }
+        return null;
+    }
 
+    void ReturnToStandby()
+    {
         if (!agent.pathPending && agent.remainingDistance < 0.3f)
         {
-            // Arrive to become statue again
             standbyOccupied[reservedStandbyPoint] = false;
             reservedStandbyPoint = null;
-
             currentState = StatueState.Inactive;
-
             StopMovement();
-            transform.position = transform.position; // No teleport needed
             spriteRenderer.sprite = inactiveSprite;
-
-            if (debugLogs)
-                Debug.Log("[Statue] Arrived at standby → back to statue mode");
         }
     }
 
-    private void StopMovement()
+    void StopMovement()
     {
-        if (agent != null)
-        {
-            agent.isStopped = true;
-            agent.ResetPath();
-        }
+        agent.isStopped = true;
+        agent.ResetPath();
     }
 
-    // this is to check if the collider belongs to self or children
-    private bool IsSelf(Collider col)
-    {
-        return col.transform == transform || col.transform.IsChildOf(transform);
-    }
-
-    // if torchlight hits then halt movement
-    private void TorchEnter(Collider col)
+    void TorchEnter(Collider col)
     {
         if (currentState != StatueState.Active) return;
-        if (!IsSelf(col)) return;
-
         isIlluminated = true;
         StopMovement();
     }
 
-    // while torchlight is on still within the radius of the torchlight, stay/remain halted
-    private void TorchStay(Collider col)
+    void TorchStay(Collider col)
     {
         if (currentState != StatueState.Active) return;
-        if (IsSelf(col)) isIlluminated = true;
+        isIlluminated = true;
     }
 
-    // when torchlight leaves, start unfreeze delay
-    private void TorchExit(Collider col)
+    void TorchExit(Collider col)
     {
         if (currentState != StatueState.Active) return;
-        if (!IsSelf(col)) return;
-
         isIlluminated = false;
 
         if (unfreezeRoutine != null) StopCoroutine(unfreezeRoutine);
         unfreezeRoutine = StartCoroutine(UnfreezeDelayRoutine());
     }
 
-    // after delay, unfreeze and chase again of course duh
-    private IEnumerator UnfreezeDelayRoutine()
+    IEnumerator UnfreezeDelayRoutine()
     {
         isUnfreezeDelayed = true;
         yield return new WaitForSeconds(unfreezeDelay);
         isUnfreezeDelayed = false;
-
-        if (enableShake)
-            StartCoroutine(ShakeRoutine());
     }
 
-    private IEnumerator ShakeRoutine()
-    {
-        Vector3 original = transform.position;
-        float t = 0f;
-
-        while (t < shakeDuration)
-        {
-            transform.position = original + new Vector3(
-                Random.Range(-shakeStrength, shakeStrength),
-                Random.Range(-shakeStrength, shakeStrength),
-                0f);
-
-            t += Time.deltaTime;
-            yield return null;
-        }
-
-        transform.position = original;
-    }
-
-    private void ResetToInitial()
+    void ResetToInitial()
     {
         transform.position = initialPosition;
         transform.rotation = initialRotation;
-
         currentState = StatueState.Inactive;
         isIlluminated = false;
         isUnfreezeDelayed = false;
-
-        if (inactiveSprite != null)
-            spriteRenderer.sprite = inactiveSprite;
-
+        spriteRenderer.sprite = inactiveSprite;
         StopMovement();
     }
 
     public void ResetToStatueState()
     {
         StopAllCoroutines();
-
         currentState = StatueState.Inactive;
-
         isIlluminated = false;
         isUnfreezeDelayed = false;
-
-        if (reservedStandbyPoint != null &&
-            standbyOccupied.ContainsKey(reservedStandbyPoint))
-        {
-            standbyOccupied[reservedStandbyPoint] = false;
-            reservedStandbyPoint = null;
-        }
 
         if (agent != null)
         {

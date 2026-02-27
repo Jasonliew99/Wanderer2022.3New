@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.AI;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
@@ -24,9 +25,6 @@ public class RespawnController : MonoBehaviour
     [Header("Retry Scene")]
     public string retrySceneName;
 
-    [Header("Enemy Settings")]
-    public string enemyTag = "Enemy";
-
     private int currentLives;
     private bool isRespawning = false;
     private Transform[] currentRespawnPoints;
@@ -38,21 +36,7 @@ public class RespawnController : MonoBehaviour
         deathCanvas.gameObject.SetActive(false);
     }
 
-    void Update()
-    {
-        if (isRespawning) return;
-
-        Collider[] hits = Physics.OverlapSphere(player.transform.position, 0.5f);
-        foreach (var hit in hits)
-        {
-            if (hit.CompareTag(enemyTag))
-            {
-                HandlePlayerDeath();
-                return;
-            }
-        }
-    }
-
+    // CALLED BY LEVELCONTROLLER WHEN ENTER NEW AREA
     public void OnLevelStarted(Transform[] newPoints)
     {
         currentRespawnPoints = newPoints;
@@ -68,6 +52,7 @@ public class RespawnController : MonoBehaviour
                 img.enabled = true;
     }
 
+    // CALLED BY ENEMY WHEN PLAYER CAUGHT
     public void HandlePlayerDeath()
     {
         if (!isRespawning)
@@ -79,7 +64,6 @@ public class RespawnController : MonoBehaviour
         isRespawning = true;
         Time.timeScale = 0f;
 
-        // STILL HAS LIVES → SOFT RESPAWN
         if (currentLives > 1)
         {
             lifeCanvas.gameObject.SetActive(true);
@@ -95,13 +79,11 @@ public class RespawnController : MonoBehaviour
 
             currentLives--;
 
-            // TELEPORT & RESET ENEMIES
             if (levelController != null)
                 levelController.ResetEnemiesForRespawn();
 
             RespawnPlayer();
         }
-        // NO LIVES LEFT → GAME OVER
         else
         {
             deathCanvas.gameObject.SetActive(true);
@@ -117,18 +99,48 @@ public class RespawnController : MonoBehaviour
             return;
 
         int i = Random.Range(0, currentRespawnPoints.Length);
-        player.transform.position = currentRespawnPoints[i].position;
+        Vector3 spawnPos = currentRespawnPoints[i].position;
+
+        NavMeshAgent agent = player.GetComponent<NavMeshAgent>();
+        PlayerMovement movement = player.GetComponent<PlayerMovement>();
+
+        if (movement != null)
+            movement.enabled = false;
+
+        if (agent != null)
+        {
+            agent.ResetPath();
+            agent.Warp(spawnPos);
+        }
+
+        player.transform.position = spawnPos;
+
+        StartCoroutine(ReEnablePlayerMovement(movement));
     }
 
-    //  LOAD SELECTED SCENE
+    private IEnumerator ReEnablePlayerMovement(PlayerMovement movement)
+    {
+        yield return null;
+
+        if (movement != null)
+            movement.enabled = true;
+    }
+
+    // RETRY NOW LOADS CLEANLY
     public void RetryLevel()
     {
+        StartCoroutine(RetryRoutine());
+    }
+
+    private IEnumerator RetryRoutine()
+    {
         Time.timeScale = 1f;
+        yield return null;
 
         if (!string.IsNullOrEmpty(retrySceneName))
             SceneManager.LoadScene(retrySceneName);
         else
-            Debug.LogWarning("Retry Scene Name not set in RespawnController!");
+            Debug.LogWarning("Retry Scene Name not set!");
     }
 
     public void ExitToMenu(string sceneName)

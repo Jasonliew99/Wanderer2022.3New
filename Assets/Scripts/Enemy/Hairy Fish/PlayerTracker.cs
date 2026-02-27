@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.SceneManagement;
@@ -54,6 +55,7 @@ public class PlayerTracker : MonoBehaviour
 
     private int patrolIndex = 0;
     private bool isWaiting = false;
+    public Coroutine currentCoroutine;
 
     private bool playerInSight;
     private Vector3 lastKnownPosition;
@@ -147,15 +149,23 @@ public class PlayerTracker : MonoBehaviour
 
         if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
         {
-            StartCoroutine(IdleThenNextPatrol());
+            Debug.Log(currentCoroutine);
+
+            if (currentCoroutine == null) 
+            {
+                Debug.Log("it is running" + this.gameObject.name);
+                currentCoroutine = StartCoroutine(IdleThenNextPatrol());
+            }
         }
     }
 
     IEnumerator IdleThenNextPatrol()
     {
+        Debug.Log("starting coroutine" + this.gameObject.name);
         isWaiting = true;
         RotateToward(patrolPoints[patrolIndex].position);
         yield return new WaitForSeconds(idleTime);
+        Debug.Log("finish running" + this.gameObject.name);
         isWaiting = false;
 
         patrolIndex = patrolRandom ? Random.Range(0, patrolPoints.Length) : (patrolIndex + 1) % patrolPoints.Length;

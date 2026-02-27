@@ -7,6 +7,12 @@ public class FragmentPickup : MonoBehaviour
     public string itemID;
     public LevelController levelController;
     public PlayerCoinCollector playerCoinCollector;
+    private FragmentSpawnPoint spawnPoint;
+
+    private void Awake()
+    {
+        spawnPoint = GetComponentInParent<FragmentSpawnPoint>();
+    }
 
     private void OnTriggerEnter(Collider other)
     {
@@ -18,6 +24,7 @@ public class FragmentPickup : MonoBehaviour
             //notify LevelController to update progress
             levelController.FragmentCollected(itemID);
 
+            spawnPoint.isCollected = true;
             gameObject.SetActive(false);
         }
     }

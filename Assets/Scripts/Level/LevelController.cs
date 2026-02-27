@@ -60,6 +60,9 @@ public class LevelController : MonoBehaviour
 
     public List<LevelBlock> levels = new List<LevelBlock>();
 
+    [Header("Respawn Controller")]
+    public RespawnController respawnController;
+
     public TextMeshProUGUI objectiveText;
     public float fadeDuration = 0.4f;
     public float displayTime = 1.6f;
@@ -109,12 +112,13 @@ public class LevelController : MonoBehaviour
 
         ShowObjective(lvl.firstObjective);
 
-        FindObjectOfType<RespawnController>()
-            .OnLevelStarted(lvl.respawnPoints);
+        // RESET LIVES + SWITCH RESPAWN POINTS
+        if (respawnController != null)
+            respawnController.OnLevelStarted(lvl.respawnPoints);
     }
 
     // ===========================
-    // 🔥 ENEMY RESET FUNCTION
+    // ENEMY RESET FUNCTION
     // ===========================
     public void ResetEnemiesForRespawn()
     {
@@ -146,6 +150,9 @@ public class LevelController : MonoBehaviour
         }
     }
 
+    // ===========================
+    // FRAGMENT REQUEST
+    // ===========================
     public Sprite RequestNextFragment(string itemID)
     {
         LevelBlock lvl = levels[currentLevelIndex];
@@ -195,6 +202,9 @@ public class LevelController : MonoBehaviour
         }
     }
 
+    // ===========================
+    // LEVEL END
+    // ===========================
     public void EndLevel(int id)
     {
         LevelBlock lvl = levels[id];

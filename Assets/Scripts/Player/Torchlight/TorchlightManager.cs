@@ -37,14 +37,6 @@ public class TorchlightManager : MonoBehaviour
     public float heightOffset = 0.2f;
     public KeyCode toggleKey = KeyCode.F;
 
-    [Header("Torch Cone Collider")]
-    public CapsuleCollider torchCone;
-    public float maxConeLength = 6f;
-    public float minConeLength = 2f;
-
-    public float maxConeWidth = 2f;
-    public float minConeWidth = 0.5f;
-
     [Header("Rotation Settings")]
     public float rotationSpeed = 10f;
 
@@ -153,23 +145,28 @@ public class TorchlightManager : MonoBehaviour
         if (secondaryLight != null)
             secondaryLight.enabled = lightSource.enabled;
 
+        // ======================================================
+        // Player turning MUST always update
+        // Torch ON/OFF should NOT affect body rotation
+        // ======================================================
+        HandleMouseFree();   // <-- MOVED OUTSIDE
+
+        // Light brightness only when torch is on
         if (isTorchOn && battery > 0f)
         {
-            HandleMouseFree();
             HandleBrightness();
-            HandleConeSize();
         }
+        // ======================================================
 
         UpdateUI(torchUsing);
 
         if (batteryFillImage != null && smoothFill)
-            batteryFillImage.fillAmount = Mathf.Lerp(batteryFillImage.fillAmount, targetFill, Time.deltaTime * fillLerpSpeed);
+            batteryFillImage.fillAmount =
+                Mathf.Lerp(batteryFillImage.fillAmount, targetFill, Time.deltaTime * fillLerpSpeed);
         else if (batteryFillImage != null)
             batteryFillImage.fillAmount = targetFill;
 
         HandleUIFade();
-
-
     }
 
     void LateUpdate()
@@ -239,17 +236,6 @@ public class TorchlightManager : MonoBehaviour
             float factor = intensity / baseIntensity;
             secondaryLight.intensity = secondaryBaseIntensity * factor;
         }
-    }
-
-    void HandleConeSize()
-    {
-        if (torchCone == null) return;
-
-        float length = Mathf.Lerp(minConeLength, maxConeLength, battery);
-        float width = Mathf.Lerp(minConeWidth, maxConeWidth, battery);
-
-        torchCone.height = length;
-        torchCone.radius = width * 0.5f;
     }
 
     void HandleMouseFree()

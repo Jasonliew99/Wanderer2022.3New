@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -11,11 +11,10 @@ public class SpiritGuidanceManager : MonoBehaviour
     [Header("References")]
     public GameObject spiritOrbPrefab;
 
-    [Header("Target Settings")]
-    public string targetTag = "HintTarget";
+    [Header("Search Settings")]
     public float searchRadius = 100f;
 
-    private GameObject currentOrb; // keeps track of active orb
+    private GameObject currentOrb;
 
     private void Start()
     {
@@ -26,16 +25,17 @@ public class SpiritGuidanceManager : MonoBehaviour
     {
         while (true)
         {
-            // If there is still an orb, wait until it's gone
+            // wait until current orb is gone
             while (currentOrb != null)
                 yield return null;
 
-            // Delay AFTER orb is gone
+            // delay before spawning next orb
             float delay = Random.Range(minDelay, maxDelay);
             yield return new WaitForSeconds(delay);
 
-            // Find nearest target and spawn orb
+            // FIND NEAREST VALID FRAGMENT
             Transform nearest = FindNearestTarget();
+
             if (nearest != null)
             {
                 currentOrb = SpawnOrb(nearest);
@@ -43,19 +43,29 @@ public class SpiritGuidanceManager : MonoBehaviour
         }
     }
 
+    // NOW USE FragmentSpawnPoint SYSTEM
     Transform FindNearestTarget()
     {
-        GameObject[] targets = GameObject.FindGameObjectsWithTag(targetTag);
+        FragmentSpawnPoint[] targets =
+        FindObjectsOfType<FragmentSpawnPoint>();
+
         Transform nearest = null;
         float shortest = Mathf.Infinity;
 
-        foreach (GameObject obj in targets)
+        foreach (var f in targets)
         {
-            float d = Vector3.Distance(transform.position, obj.transform.position);
+            // IGNORE COLLECTED ONES
+            if (f.isCollected) continue;
+
+            float d = Vector3.Distance(
+                transform.position,
+                f.transform.position
+            );
+
             if (d < shortest && d <= searchRadius)
             {
                 shortest = d;
-                nearest = obj.transform;
+                nearest = f.transform;
             }
         }
         return nearest;
@@ -63,12 +73,15 @@ public class SpiritGuidanceManager : MonoBehaviour
 
     GameObject SpawnOrb(Transform target)
     {
-        GameObject orb = Instantiate(spiritOrbPrefab, transform.position + Vector3.up * 1f, Quaternion.identity);
+        GameObject orb = Instantiate(
+            spiritOrbPrefab,
+            transform.position + Vector3.up * 1f,
+            Quaternion.identity
+        );
 
         var behavior = orb.GetComponent<SpiritOrbBehaviour>();
         behavior.SetTarget(target);
 
-        // When orb is destroyed, clear reference
         StartCoroutine(WatchOrb(orb));
 
         return orb;
@@ -76,7 +89,6 @@ public class SpiritGuidanceManager : MonoBehaviour
 
     IEnumerator WatchOrb(GameObject orb)
     {
-        // Wait until orb is destroyed
         while (orb != null)
             yield return null;
 
