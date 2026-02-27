@@ -34,11 +34,11 @@ public class CoinCollect : MonoBehaviour
         // Add to player's coin total
         PlayerCoinCollector collector = other.GetComponent<PlayerCoinCollector>();
         if (collector != null)
-            collector.AddCoins(value);
+            //collector.AddCoins(value);
 
         // Notify LevelController
         if (levelController != null)
-            levelController.CoinCollected();
+            //levelController.CoinCollected();
 
         // Disable coin
         gameObject.SetActive(false);

@@ -348,4 +348,29 @@ public class PlayerTracker : MonoBehaviour
             }
         }
     }
+
+    public void ResetToPatrolState()
+    {
+        StopAllCoroutines();
+
+        currentState = State.Patrol;
+
+        playerInSight = false;
+        isWaiting = false;
+        isCharging = false;
+        searchTimer = 0f;
+
+        if (agent != null)
+        {
+            agent.ResetPath();
+            agent.velocity = Vector3.zero;
+            agent.isStopped = false;
+            agent.speed = patrolSpeed;
+        }
+
+        patrolIndex = GetClosestPatrolIndex();
+
+        if (patrolPoints.Length > 0)
+            agent.SetDestination(patrolPoints[patrolIndex].position);
+    }
 }

@@ -364,6 +364,33 @@ public class WeepingStatueMovement : MonoBehaviour
         StopMovement();
     }
 
+    public void ResetToStatueState()
+    {
+        StopAllCoroutines();
+
+        currentState = StatueState.Inactive;
+
+        isIlluminated = false;
+        isUnfreezeDelayed = false;
+
+        if (reservedStandbyPoint != null &&
+            standbyOccupied.ContainsKey(reservedStandbyPoint))
+        {
+            standbyOccupied[reservedStandbyPoint] = false;
+            reservedStandbyPoint = null;
+        }
+
+        if (agent != null)
+        {
+            agent.ResetPath();
+            agent.velocity = Vector3.zero;
+            agent.isStopped = true;
+        }
+
+        if (inactiveSprite != null)
+            spriteRenderer.sprite = inactiveSprite;
+    }
+
     private void OnDrawGizmosSelected()
     {
         if (!showActivationGizmo) return;

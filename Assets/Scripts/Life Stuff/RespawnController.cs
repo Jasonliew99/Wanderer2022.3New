@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -9,7 +9,6 @@ public class RespawnController : MonoBehaviour
 {
     [Header("Player Settings")]
     public GameObject player;
-    public Transform[] respawnPoints;
     public int maxLives = 3;
 
     [Header("UI")]
@@ -22,11 +21,15 @@ public class RespawnController : MonoBehaviour
     [Header("Level Controller")]
     public LevelController levelController;
 
+    [Header("Retry Scene")]
+    public string retrySceneName;
+
     [Header("Enemy Settings")]
     public string enemyTag = "Enemy";
 
     private int currentLives;
     private bool isRespawning = false;
+    private Transform[] currentRespawnPoints;
 
     void Start()
     {
@@ -34,7 +37,6 @@ public class RespawnController : MonoBehaviour
         lifeCanvas.gameObject.SetActive(false);
         deathCanvas.gameObject.SetActive(false);
     }
-
 
     void Update()
     {
@@ -51,36 +53,33 @@ public class RespawnController : MonoBehaviour
         }
     }
 
-    //              PUBLIC RESET LIFE FUNCTION
+    public void OnLevelStarted(Transform[] newPoints)
+    {
+        currentRespawnPoints = newPoints;
+        ResetLivesToFull();
+    }
+
     public void ResetLivesToFull()
     {
         currentLives = maxLives;
 
         foreach (var img in lifeImages)
-        {
             if (img != null)
-            {
                 img.enabled = true;
-            }
-        }
-
-        Debug.Log("[RespawnController] Lives reset to full.");
     }
 
-
-    //                ON PLAYER DEATH
     public void HandlePlayerDeath()
     {
-        //if (!levelController.IsAnyLevelRunning()) return;
-        StartCoroutine(RespawnRoutine());
+        if (!isRespawning)
+            StartCoroutine(RespawnRoutine());
     }
-
 
     private IEnumerator RespawnRoutine()
     {
         isRespawning = true;
         Time.timeScale = 0f;
 
+        // STILL HAS LIVES → SOFT RESPAWN
         if (currentLives > 1)
         {
             lifeCanvas.gameObject.SetActive(true);
@@ -95,8 +94,14 @@ public class RespawnController : MonoBehaviour
             Time.timeScale = 1f;
 
             currentLives--;
+
+            // TELEPORT & RESET ENEMIES
+            if (levelController != null)
+                levelController.ResetEnemiesForRespawn();
+
             RespawnPlayer();
         }
+        // NO LIVES LEFT → GAME OVER
         else
         {
             deathCanvas.gameObject.SetActive(true);
@@ -106,24 +111,29 @@ public class RespawnController : MonoBehaviour
         isRespawning = false;
     }
 
-
     private void RespawnPlayer()
     {
-        int i = Random.Range(0, respawnPoints.Length);
-        player.transform.position = respawnPoints[i].position;
+        if (currentRespawnPoints == null || currentRespawnPoints.Length == 0)
+            return;
+
+        int i = Random.Range(0, currentRespawnPoints.Length);
+        player.transform.position = currentRespawnPoints[i].position;
     }
 
-
-    // UI Buttons
+    //  LOAD SELECTED SCENE
     public void RetryLevel()
     {
-        Time.timeScale = 1;
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        Time.timeScale = 1f;
+
+        if (!string.IsNullOrEmpty(retrySceneName))
+            SceneManager.LoadScene(retrySceneName);
+        else
+            Debug.LogWarning("Retry Scene Name not set in RespawnController!");
     }
 
     public void ExitToMenu(string sceneName)
     {
-        Time.timeScale = 1;
+        Time.timeScale = 1f;
         SceneManager.LoadScene(sceneName);
     }
 }

@@ -254,6 +254,16 @@ public class PlayerMovement : MonoBehaviour
         yield return new WaitForSeconds(duration);
         isImmobilized = false;
     }
+    public void TrapImmobilize()
+    {
+        isImmobilized = true;
+    }
+
+    public void TrapRelease()
+    {
+        isImmobilized = false;
+    }
+
 
     // ================= HELPERS =================
     float GetSprintDrainMultiplier()

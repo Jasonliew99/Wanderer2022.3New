@@ -7,80 +7,222 @@ using UnityEngine.UI;
 
 public class LevelController : MonoBehaviour
 {
-    // ---------------------------
-    // DOOR PAIR (Open + Closed)
-    // ---------------------------
+    [System.Serializable]
+    public class FragmentItemData
+    {
+        public string itemID;
+        public Sprite[] revealOrder;
+        public Sprite[] progressSprites;
+
+        [HideInInspector] public int revealed = 0;
+        [HideInInspector] public int collected = 0;
+
+        public int TotalRequired => revealOrder.Length;
+
+        public void ResetRuntime()
+        {
+            revealed = 0;
+            collected = 0;
+        }
+    }
+
     [System.Serializable]
     public class DoorPair
     {
-        public GameObject open;       // Open state sprite/mesh
-        public GameObject closed;     // Closed state sprite/mesh
+        public GameObject open;
+        public GameObject closed;
         public bool startOpened = false;
     }
 
-    // ---------------------------
-    // LEVEL BLOCK
-    // ---------------------------
     [System.Serializable]
     public class LevelBlock
     {
-        [Header("Doors")]
-        public DoorPair entranceDoor;     // For Level 1 = A, Level 2 = B, Level 3 = C
-        public DoorPair exitDoor;         // For Level 1 = B, Level 2 = C, Level 3 = NONE
+        [Header("Player Respawn Points")]
+        public Transform[] respawnPoints;
 
-        [Header("Objects")]
+        [Header("Enemy Reset Points")]
+        public Transform[] enemyResetPoints;
+
+        public DoorPair entranceDoor;
+        public DoorPair exitDoor;
+
+        public List<FragmentItemData> fragmentItems;
+
         public GameObject[] enemies;
         public GameObject[] coins;
 
-        [Header("Triggers")]
         public GameObject activator;
         public GameObject deactivator;
 
-        [Header("Text")]
-        public string firstObjective = "Collect all coins!";
+        public string firstObjective = "Collect all fragments!";
         public string secondObjective = "Find the exit!";
     }
 
-    // ---------------------------
-    // INSPECTOR
-    // ---------------------------
     public List<LevelBlock> levels = new List<LevelBlock>();
 
-    [Header("UI")]
     public TextMeshProUGUI objectiveText;
     public float fadeDuration = 0.4f;
     public float displayTime = 1.6f;
 
-    private int currentLevelIndex = -1;
+    public int currentLevelIndex = -1;
     private Coroutine uiRoutine;
-    private bool levelRunning = false;
 
-
-
-    // ---------------------------------------------------------
-    // INITIAL SETUP
-    // ---------------------------------------------------------
     void Start()
     {
         for (int i = 0; i < levels.Count; i++)
         {
             LevelBlock lvl = levels[i];
 
-            // Set starting door states
             InitializeDoor(lvl.entranceDoor);
             InitializeDoor(lvl.exitDoor);
 
-            // Objects OFF until level is active
             SetActive(lvl.enemies, false);
             SetActive(lvl.coins, false);
             SetActive(lvl.deactivator, false);
 
-            // Level 1 activator ON, others OFF
             lvl.activator.SetActive(i == 0);
         }
 
         if (objectiveText != null)
             objectiveText.alpha = 0;
+    }
+
+    public void StartLevel(int id)
+    {
+        currentLevelIndex = id;
+        LevelBlock lvl = levels[id];
+
+        foreach (var item in lvl.fragmentItems)
+            item.ResetRuntime();
+
+        CloseDoor(lvl.entranceDoor);
+        CloseDoor(lvl.exitDoor);
+
+        SetActive(lvl.enemies, false);
+        SetActive(lvl.coins, false);
+
+        SetActive(lvl.enemies, true);
+        SetActive(lvl.coins, true);
+
+        SetActive(lvl.deactivator, false);
+        lvl.activator.SetActive(false);
+
+        ShowObjective(lvl.firstObjective);
+
+        FindObjectOfType<RespawnController>()
+            .OnLevelStarted(lvl.respawnPoints);
+    }
+
+    // ===========================
+    // 🔥 ENEMY RESET FUNCTION
+    // ===========================
+    public void ResetEnemiesForRespawn()
+    {
+        LevelBlock lvl = levels[currentLevelIndex];
+
+        if (lvl.enemyResetPoints == null ||
+            lvl.enemyResetPoints.Length == 0)
+            return;
+
+        List<Transform> availablePoints =
+            new List<Transform>(lvl.enemyResetPoints);
+
+        foreach (var enemy in lvl.enemies)
+        {
+            if (enemy == null) continue;
+            if (availablePoints.Count == 0) break;
+
+            int i = Random.Range(0, availablePoints.Count);
+            Transform chosenPoint = availablePoints[i];
+            availablePoints.RemoveAt(i);
+
+            enemy.transform.position = chosenPoint.position;
+
+            EnemyStateReset reset =
+                enemy.GetComponent<EnemyStateReset>();
+
+            if (reset != null)
+                reset.ResetToDefaultState();
+        }
+    }
+
+    public Sprite RequestNextFragment(string itemID)
+    {
+        LevelBlock lvl = levels[currentLevelIndex];
+
+        FragmentItemData item =
+            lvl.fragmentItems.Find(i => i.itemID == itemID);
+
+        if (item == null) return null;
+        if (item.revealed >= item.revealOrder.Length)
+            return null;
+
+        Sprite next = item.revealOrder[item.revealed];
+        item.revealed++;
+
+        return next;
+    }
+
+    public void FragmentCollected(string itemID)
+    {
+        LevelBlock lvl = levels[currentLevelIndex];
+
+        FragmentItemData item =
+            lvl.fragmentItems.Find(i => i.itemID == itemID);
+
+        if (item == null) return;
+
+        item.collected++;
+        StartCoroutine(CheckItemsComplete());
+    }
+
+    private IEnumerator CheckItemsComplete()
+    {
+        yield return null;
+
+        LevelBlock lvl = levels[currentLevelIndex];
+        bool allDone = true;
+
+        foreach (var item in lvl.fragmentItems)
+            if (item.collected < item.TotalRequired)
+                allDone = false;
+
+        if (allDone)
+        {
+            OpenDoor(lvl.exitDoor);
+            SetActive(lvl.deactivator, true);
+            ShowObjective(lvl.secondObjective);
+        }
+    }
+
+    public void EndLevel(int id)
+    {
+        LevelBlock lvl = levels[id];
+
+        SetActive(lvl.enemies, false);
+        SetActive(lvl.coins, false);
+        SetActive(lvl.deactivator, false);
+
+        if (id < levels.Count - 1)
+        {
+            LevelBlock nextLvl = levels[id + 1];
+            OpenDoor(nextLvl.entranceDoor);
+            nextLvl.activator.SetActive(true);
+        }
+    }
+
+    private void OpenDoor(DoorPair door)
+    {
+        if (door == null) return;
+        if (door.open) door.open.SetActive(true);
+        if (door.closed) door.closed.SetActive(false);
+    }
+
+    private void CloseDoor(DoorPair door)
+    {
+        if (door == null) return;
+        if (door.open) door.open.SetActive(false);
+        if (door.closed) door.closed.SetActive(true);
     }
 
     private void InitializeDoor(DoorPair door)
@@ -99,142 +241,6 @@ public class LevelController : MonoBehaviour
         }
     }
 
-
-
-    // ---------------------------------------------------------
-    // START LEVEL
-    // ---------------------------------------------------------
-    public void StartLevel(int id)
-    {
-        if (levelRunning) return;
-
-        currentLevelIndex = id;
-        levelRunning = true;
-
-        LevelBlock lvl = levels[id];
-
-        // CLOSE entrance
-        CloseDoor(lvl.entranceDoor);
-
-        // Turn on gameplay
-        SetActive(lvl.enemies, true);
-        SetActive(lvl.coins, true);
-
-        // Disable activator once used
-        lvl.activator.SetActive(false);
-
-        ShowObjective(lvl.firstObjective);
-    }
-
-
-
-    // ---------------------------------------------------------
-    // COIN COLLECTION CHECK
-    // ---------------------------------------------------------
-    public void CoinCollected()
-    {
-        if (!levelRunning) return;
-        StartCoroutine(CheckCoinsRoutine());
-    }
-
-    private IEnumerator CheckCoinsRoutine()
-    {
-        yield return null;
-
-        LevelBlock lvl = levels[currentLevelIndex];
-
-        bool anyLeft = false;
-        foreach (var c in lvl.coins)
-            if (c.activeInHierarchy)
-                anyLeft = true;
-
-        if (!anyLeft)
-        {
-            // OPEN EXIT DOOR
-            OpenDoor(lvl.exitDoor);
-
-            // Enable exit trigger
-            lvl.deactivator.SetActive(true);
-
-            ShowObjective(lvl.secondObjective);
-        }
-    }
-
-
-
-    // ---------------------------------------------------------
-    // END LEVEL
-    // ---------------------------------------------------------
-    public void EndLevel(int id)
-    {
-        levelRunning = false;
-        LevelBlock lvl = levels[id];
-
-        // Disable objects
-        SetActive(lvl.enemies, false);
-        SetActive(lvl.coins, false);
-        lvl.deactivator.SetActive(false);
-
-        // Close exit door (unless it's level 3 end)
-        if (id < levels.Count - 1)
-            CloseDoor(lvl.exitDoor);
-
-        // IF LAST LEVEL → OPEN ALL DOORS FOR ESCAPE
-        if (id == levels.Count - 1)
-        {
-            OpenAllDoorsForEscape();
-            ShowObjective("Escape!");
-            return;
-        }
-
-        // OPEN next level entrance
-        LevelBlock nextLvl = levels[id + 1];
-        OpenDoor(nextLvl.entranceDoor);
-
-        // Enable next level activator
-        nextLvl.activator.SetActive(true);
-    }
-
-
-
-    // ---------------------------------------------------------
-    // DOOR HELPERS
-    // ---------------------------------------------------------
-    private void OpenDoor(DoorPair door)
-    {
-        if (door == null) return;
-        if (door.open) door.open.SetActive(true);
-        if (door.closed) door.closed.SetActive(false);
-    }
-
-    private void CloseDoor(DoorPair door)
-    {
-        if (door == null) return;
-        if (door.open) door.open.SetActive(false);
-        if (door.closed) door.closed.SetActive(true);
-    }
-
-    private void OpenAllDoorsForEscape()
-    {
-        Debug.Log("Opening ALL doors for final escape…");
-
-        foreach (var lvl in levels)
-        {
-            OpenDoor(lvl.entranceDoor);
-            OpenDoor(lvl.exitDoor);
-        }
-    }
-
-
-
-    // ---------------------------------------------------------
-    // VISIBILITY HELPERS
-    // ---------------------------------------------------------
-    private void SetActive(GameObject obj, bool state)
-    {
-        if (obj) obj.SetActive(state);
-    }
-
     private void SetActive(GameObject[] arr, bool state)
     {
         if (arr == null) return;
@@ -242,11 +248,12 @@ public class LevelController : MonoBehaviour
             if (o) o.SetActive(state);
     }
 
+    private void SetActive(GameObject obj, bool state)
+    {
+        if (obj != null)
+            obj.SetActive(state);
+    }
 
-
-    // ---------------------------------------------------------
-    // UI OBJECTIVE HANDLING
-    // ---------------------------------------------------------
     private void ShowObjective(string msg)
     {
         if (uiRoutine != null)
@@ -259,7 +266,6 @@ public class LevelController : MonoBehaviour
     {
         objectiveText.text = msg;
 
-        // Fade in
         float t = 0;
         while (t < fadeDuration)
         {
@@ -270,7 +276,6 @@ public class LevelController : MonoBehaviour
 
         yield return new WaitForSeconds(displayTime);
 
-        // Fade out
         t = 0;
         while (t < fadeDuration)
         {

@@ -37,6 +37,14 @@ public class TorchlightManager : MonoBehaviour
     public float heightOffset = 0.2f;
     public KeyCode toggleKey = KeyCode.F;
 
+    [Header("Torch Cone Collider")]
+    public CapsuleCollider torchCone;
+    public float maxConeLength = 6f;
+    public float minConeLength = 2f;
+
+    public float maxConeWidth = 2f;
+    public float minConeWidth = 0.5f;
+
     [Header("Rotation Settings")]
     public float rotationSpeed = 10f;
 
@@ -50,18 +58,15 @@ public class TorchlightManager : MonoBehaviour
     public Light lightSource;
     public Camera mainCamera;
 
-    [Header("Secondary Light (Visual Follower)")]
-    [Tooltip("Optional secondary spotlight (gradient light) for visuals.")]
+    [Header("Secondary Light")]
     public Light secondaryLight;
-
-    // Base intensity store for proportional flicker
     private float secondaryBaseIntensity;
 
     [Header("Battery Settings")]
     [Range(0f, 1f)] public float battery = 1f;
     public float drainSpeed = 0.05f;
     public float rechargeSpeed = 0.1f;
-    public KeyCode rechargeKey = KeyCode.R;
+    public float rechargeDelay = 1.2f;
 
     [Header("Flicker Settings")]
     public bool enableFlicker = true;
@@ -92,7 +97,6 @@ public class TorchlightManager : MonoBehaviour
     [Header("Battery Thresholds")]
     public List<TorchThreshold> thresholds = new List<TorchThreshold>();
 
-    // Internal
     private Vector3 lastFlashlightDir;
     private float baseIntensity;
     private bool isTorchOn = true;
@@ -101,10 +105,11 @@ public class TorchlightManager : MonoBehaviour
     private TorchThreshold activeThreshold;
     private Coroutine warningPulseRoutine;
     private float snapTimer = 0f;
+    private float rechargeTimer = 0f;
 
     public bool IsTorchOn => isTorchOn;
     public float BatteryPercent => battery;
-    public bool IsRecharging => Input.GetKey(rechargeKey);
+    public bool IsRecharging => !isTorchOn;
 
     void Start()
     {
@@ -140,7 +145,7 @@ public class TorchlightManager : MonoBehaviour
         HandleToggle();
         HandleTorchBattery();
 
-        bool torchUsing = isTorchOn && !Input.GetKey(rechargeKey) && battery > 0f;
+        bool torchUsing = isTorchOn && battery > 0f;
 
         if (lightSource != null)
             lightSource.enabled = isTorchOn && battery > 0f;
@@ -152,6 +157,7 @@ public class TorchlightManager : MonoBehaviour
         {
             HandleMouseFree();
             HandleBrightness();
+            HandleConeSize();
         }
 
         UpdateUI(torchUsing);
@@ -162,6 +168,8 @@ public class TorchlightManager : MonoBehaviour
             batteryFillImage.fillAmount = targetFill;
 
         HandleUIFade();
+
+
     }
 
     void LateUpdate()
@@ -176,14 +184,8 @@ public class TorchlightManager : MonoBehaviour
             Quaternion targetRot = Quaternion.LookRotation(lastFlashlightDir);
             flashlight.rotation = Quaternion.Slerp(flashlight.rotation, targetRot, rotationSpeed * Time.deltaTime);
         }
-
-        // Secondary light no longer needs movement code (it's a child)
-        // Enable/disable is already handled in Update()
     }
 
-    // ------------------------
-    // BATTERY + TOGGLE
-    // ------------------------
     void HandleToggle()
     {
         if (Input.GetKeyDown(toggleKey) && battery > 0f)
@@ -195,26 +197,28 @@ public class TorchlightManager : MonoBehaviour
 
     void HandleTorchBattery()
     {
-        bool charging = Input.GetKey(rechargeKey);
+        if (isTorchOn)
+        {
+            rechargeTimer = 0f;
 
-        if (isTorchOn && !charging)
-            battery -= drainSpeed * Time.deltaTime;
+            if (battery > 0f)
+                battery -= drainSpeed * Time.deltaTime;
+            else
+            {
+                battery = 0f;
+                isTorchOn = false;
+            }
+        }
+        else
+        {
+            rechargeTimer += Time.deltaTime;
 
-        if (charging)
-            battery += rechargeSpeed * Time.deltaTime;
+            if (rechargeTimer >= rechargeDelay && battery < 1f)
+                battery += rechargeSpeed * Time.deltaTime;
+        }
 
         battery = Mathf.Clamp01(battery);
         targetFill = battery;
-
-        if (battery <= 0f)
-        {
-            isTorchOn = false;
-            if (lightSource != null)
-                lightSource.enabled = false;
-
-            if (secondaryLight != null)
-                secondaryLight.enabled = false;
-        }
     }
 
     void HandleBrightness()
@@ -230,7 +234,6 @@ public class TorchlightManager : MonoBehaviour
 
         lightSource.intensity = intensity;
 
-        // Secondary follows brightness proportionally
         if (secondaryLight != null && baseIntensity > 0f)
         {
             float factor = intensity / baseIntensity;
@@ -238,9 +241,17 @@ public class TorchlightManager : MonoBehaviour
         }
     }
 
-    // ------------------------
-    // MOUSE FREE MODE ONLY
-    // ------------------------
+    void HandleConeSize()
+    {
+        if (torchCone == null) return;
+
+        float length = Mathf.Lerp(minConeLength, maxConeLength, battery);
+        float width = Mathf.Lerp(minConeWidth, maxConeWidth, battery);
+
+        torchCone.height = length;
+        torchCone.radius = width * 0.5f;
+    }
+
     void HandleMouseFree()
     {
         Ray ray = (mainCamera != null ? mainCamera : Camera.main).ScreenPointToRay(Input.mousePosition);
@@ -301,13 +312,9 @@ public class TorchlightManager : MonoBehaviour
         return new Vector3(Mathf.Sin(rad), 0f, Mathf.Cos(rad)).normalized;
     }
 
-    // ------------------------
-    // UI SYSTEM
-    // ------------------------
     void SetupBatteryImage()
     {
         if (batteryFillImage == null) return;
-
         batteryFillImage.type = Image.Type.Filled;
         batteryFillImage.fillMethod = Image.FillMethod.Horizontal;
         batteryFillImage.fillAmount = battery;
@@ -342,9 +349,9 @@ public class TorchlightManager : MonoBehaviour
         }
 
         bool thresholdVisible = activeThreshold != null && activeThreshold.showBarWhenReached;
-        bool shouldShowBar = thresholdVisible || Input.GetKey(rechargeKey) || visibleTimer > 0f;
+        bool shouldShowBar = thresholdVisible || !isTorchOn || visibleTimer > 0f;
 
-        if (Input.GetKey(rechargeKey))
+        if (!isTorchOn)
             visibleTimer = Mathf.Max(visibleTimer, uiVisibleDuration);
 
         if (uiCanvasGroup != null)
@@ -354,8 +361,7 @@ public class TorchlightManager : MonoBehaviour
         }
 
         bool shouldShowWarning = torchUsing && activeThreshold != null &&
-                                 activeThreshold.showWarningSign &&
-                                 !Input.GetKey(rechargeKey);
+                                 activeThreshold.showWarningSign;
 
         if (shouldShowWarning)
             StartWarningPulse(activeThreshold.warningPulseSpeed);
@@ -369,7 +375,7 @@ public class TorchlightManager : MonoBehaviour
 
         bool thresholdVisible = activeThreshold != null && activeThreshold.showBarWhenReached;
 
-        if (visibleTimer > 0f && !Input.GetKey(rechargeKey) && !thresholdVisible)
+        if (visibleTimer > 0f && !thresholdVisible)
             visibleTimer -= Time.deltaTime;
     }
 
@@ -408,30 +414,17 @@ public class TorchlightManager : MonoBehaviour
         }
     }
 
-    // ------------------------
-    // BATTERY SETTER (for enemy stun)
-    // ------------------------
     public void SetBatteryPercent(float value)
     {
         battery = Mathf.Clamp01(value);
         targetFill = battery;
 
         if (battery <= 0f)
-        {
             isTorchOn = false;
-            if (lightSource != null)
-                lightSource.enabled = false;
-
-            if (secondaryLight != null)
-                secondaryLight.enabled = false;
-        }
 
         ShowTemporaryUI();
     }
 
-    // ------------------------
-    // UI Helper
-    // ------------------------
     public void ShowTemporaryUI()
     {
         visibleTimer = uiVisibleDuration;
@@ -439,9 +432,6 @@ public class TorchlightManager : MonoBehaviour
             uiCanvasGroup.alpha = 1f;
     }
 
-    // ------------------------
-    // FLICKER SYSTEM (including secondary proportional flicker)
-    // ------------------------
     IEnumerator FlickerRoutine()
     {
         while (true)
@@ -463,21 +453,9 @@ public class TorchlightManager : MonoBehaviour
                     }
 
                     yield return new WaitForSeconds(flickerInterval);
-
-                    // occasional blackout blink
-                    if (Random.value < 0.3f)
-                    {
-                        lightSource.enabled = false;
-                        if (secondaryLight != null) secondaryLight.enabled = false;
-
-                        yield return new WaitForSeconds(flickerInterval);
-
-                        lightSource.enabled = true;
-                        if (secondaryLight != null) secondaryLight.enabled = true;
-                    }
                 }
 
-                HandleBrightness(); // restore after flicker
+                HandleBrightness();
             }
         }
     }

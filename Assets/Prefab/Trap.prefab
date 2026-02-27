@@ -216,4 +216,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b3e3c99589446874898e942b32aa64fc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  immobilizeDuration: 2.5
+  escapeThreshold: 300
+  shakeMultiplier: 2.5
+  decayRate: 12

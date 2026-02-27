@@ -11,24 +11,38 @@ public class ChargeSwapLogic : MonoBehaviour
     public float chargeValue = 0f;
     public bool isCharged = false;
 
+    [Header("Fragment Item")]
+    public string itemID;
+    public LevelController levelController;
+
     [Header("References")]
     public TorchLightDetector torchLightDetector;
     public ParticleSystem particleEffect;
     public SpriteRenderer spriteRenderer;
 
-    [Tooltip("Script that handles collecting the item. Will be disabled until fully charged.")]
-    public MonoBehaviour collectableScript;     // for the collectable behavior, bascially can only be collected when fully charged only if not untouchable
+    [Tooltip("Drag FragmentPickup here (on CHILD object)")]
+    public MonoBehaviour collectableScript;
 
     private bool isBeingShined = false;
+    private Collider pickupCollider;
 
     private void Awake()
     {
-        if (particleEffect != null) particleEffect.gameObject.SetActive(true);
-        if (spriteRenderer != null) spriteRenderer.enabled = false;
+        if (particleEffect != null)
+            particleEffect.gameObject.SetActive(true);
 
-        // Disable collectable script at start maybe if my logic is corrects
+        if (spriteRenderer != null)
+            spriteRenderer.enabled = false;
+
+        // FORCE DISABLE PICKUP AT START
         if (collectableScript != null)
+        {
             collectableScript.enabled = false;
+
+            pickupCollider = collectableScript.GetComponent<Collider>();
+            if (pickupCollider != null)
+                pickupCollider.enabled = false;
+        }
 
         if (torchLightDetector != null)
         {
@@ -41,7 +55,6 @@ public class ChargeSwapLogic : MonoBehaviour
         }
     }
 
-    // wtf why am i even using ondestroy bruh but if its works it works ig
     private void OnDestroy()
     {
         if (torchLightDetector != null)
@@ -78,31 +91,37 @@ public class ChargeSwapLogic : MonoBehaviour
         isBeingShined = false;
     }
 
-    // for when the light is shining on it, like how u got flasshed by a pervert
     private void OnDetectorStay(Collider col)
     {
         if (col == GetComponent<Collider>() || col.transform.IsChildOf(transform))
             isBeingShined = true;
     }
 
-    // for when the light leaves
     private void OnDetectorExit(Collider col)
     {
         if (col == GetComponent<Collider>() || col.transform.IsChildOf(transform))
             isBeingShined = false;
     }
 
-    //for when fully charged up if not this shit doesnt exist
     private void RevealObject()
     {
         if (particleEffect != null)
             particleEffect.Stop(true, ParticleSystemStopBehavior.StopEmitting);
 
-        if (spriteRenderer != null)
-            spriteRenderer.enabled = true;
+        Sprite next =
+        levelController.RequestNextFragment(itemID);
 
-        // now the item becomes collectable when charged fully
+        if (next != null)
+        {
+            spriteRenderer.sprite = next;
+            spriteRenderer.enabled = true;
+        }
+
+        // ENABLE PICKUP AFTER REVEAL
         if (collectableScript != null)
             collectableScript.enabled = true;
+
+        if (pickupCollider != null)
+            pickupCollider.enabled = true;
     }
 }
