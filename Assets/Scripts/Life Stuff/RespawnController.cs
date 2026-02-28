@@ -16,6 +16,7 @@ public class RespawnController : MonoBehaviour
     public Canvas lifeCanvas;
     public Image[] lifeImages;
     public Sprite hurtSprite;
+    public Sprite fullSprite;
     public Canvas deathCanvas;
     public float lifeDisplayTime = 1f;
 
@@ -47,9 +48,14 @@ public class RespawnController : MonoBehaviour
     {
         currentLives = maxLives;
 
-        foreach (var img in lifeImages)
-            if (img != null)
-                img.enabled = true;
+        for (int i = 0; i < lifeImages.Length; i++)
+        {
+            if (lifeImages[i] != null)
+            {
+                lifeImages[i].enabled = true;
+                lifeImages[i].sprite = fullSprite; // THIS FIXES UI RESET
+            }
+        }
     }
 
     // CALLED BY ENEMY WHEN PLAYER CAUGHT

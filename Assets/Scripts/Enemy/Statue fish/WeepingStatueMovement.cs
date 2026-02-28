@@ -21,6 +21,9 @@ public class WeepingStatueMovement : MonoBehaviour
     public TorchLightDetector torchDetector;
     public ChaseZoneStatueFish hauntingZone;
 
+    private RespawnController respawnController;
+    private Animator anim;
+
     [Header("Sprites")]
     public SpriteRenderer spriteRenderer;
     public Sprite inactiveSprite;
@@ -29,6 +32,7 @@ public class WeepingStatueMovement : MonoBehaviour
     [Header("Activation Settings")]
     public float activationRadius = 5f;
     public float postTriggerDelay = 0.05f;
+    public float wakeAnimationLength = 0.4f; // Set this to animation length
 
     [Header("Movement")]
     public float chaseSpeed = 3.5f;
@@ -46,20 +50,26 @@ public class WeepingStatueMovement : MonoBehaviour
     private NavMeshAgent agent;
     private Rigidbody rb;
 
+    private bool hasTriggered = false;
+    private bool isActivating = false;
+    private bool isTransitionPlaying = false;
     private bool isIlluminated = false;
     private bool isUnfreezeDelayed = false;
+
     private Coroutine unfreezeRoutine;
 
     private Vector3 initialPosition;
     private Quaternion initialRotation;
 
-    private static Dictionary<Transform, bool> standbyOccupied = new Dictionary<Transform, bool>();
+    private Dictionary<Transform, bool> standbyOccupied = new Dictionary<Transform, bool>();
     private Transform reservedStandbyPoint = null;
 
     void Awake()
     {
+        respawnController = FindObjectOfType<RespawnController>();
         agent = GetComponent<NavMeshAgent>();
         rb = GetComponent<Rigidbody>();
+        anim = GetComponent<Animator>();
 
         initialPosition = transform.position;
         initialRotation = transform.rotation;
@@ -68,10 +78,12 @@ public class WeepingStatueMovement : MonoBehaviour
         agent.stoppingDistance = 0f;
         agent.isStopped = true;
 
-        // ⚠️ MUST BE NON-KINEMATIC FOR OnCollisionEnter
         rb.isKinematic = false;
         rb.useGravity = false;
         rb.constraints = RigidbodyConstraints.FreezeRotation;
+
+        if (anim != null)
+            anim.enabled = false;
 
         foreach (var p in standbyPoints)
         {
@@ -79,15 +91,15 @@ public class WeepingStatueMovement : MonoBehaviour
                 standbyOccupied[p] = false;
         }
 
+        if (inactiveSprite != null)
+            spriteRenderer.sprite = inactiveSprite;
+
         if (torchDetector != null)
         {
             torchDetector.onEnter += TorchEnter;
             torchDetector.onStay += TorchStay;
             torchDetector.onExit += TorchExit;
         }
-
-        if (inactiveSprite != null)
-            spriteRenderer.sprite = inactiveSprite;
     }
 
     void Update()
@@ -103,8 +115,13 @@ public class WeepingStatueMovement : MonoBehaviour
         switch (currentState)
         {
             case StatueState.Inactive:
-                if (Vector3.Distance(transform.position, player.position) <= activationRadius)
+                if (!hasTriggered && !isActivating &&
+                    Vector3.Distance(transform.position, player.position) <= activationRadius)
+                {
+                    hasTriggered = true;
+                    isActivating = true;
                     StartCoroutine(ActivateStatue());
+                }
                 break;
 
             case StatueState.Active:
@@ -122,20 +139,39 @@ public class WeepingStatueMovement : MonoBehaviour
         currentState = StatueState.Triggered;
         yield return new WaitForSeconds(postTriggerDelay);
         BecomeActive();
+        isActivating = false;
     }
 
     void BecomeActive()
     {
         currentState = StatueState.Active;
 
-        if (activeSprite != null)
-            spriteRenderer.sprite = activeSprite;
+        if (anim != null)
+        {
+            anim.enabled = true;
+            anim.SetTrigger("WakeUp");
+            isTransitionPlaying = true;
+            StartCoroutine(FinishTransition());
+        }
 
         if (!isIlluminated)
         {
             agent.isStopped = false;
             agent.SetDestination(player.position);
         }
+    }
+
+    IEnumerator FinishTransition()
+    {
+        yield return new WaitForSeconds(wakeAnimationLength);
+
+        if (anim != null)
+            anim.enabled = false;
+
+        if (activeSprite != null)
+            spriteRenderer.sprite = activeSprite;
+
+        isTransitionPlaying = false;
     }
 
     void ActiveMovement()
@@ -156,19 +192,16 @@ public class WeepingStatueMovement : MonoBehaviour
             StartReturnToStandby();
     }
 
-    // 🔥 SAME KILL SYSTEM AS PLAYERTRACKER
     private void OnCollisionEnter(Collision collision)
     {
         if (currentState != StatueState.Active) return;
         if (isIlluminated || isUnfreezeDelayed) return;
 
-        if (collision.transform.root == player)
+        PlayerMovement pm = collision.collider.GetComponentInParent<PlayerMovement>();
+
+        if (pm != null && respawnController != null)
         {
-            RespawnController respawnController = FindObjectOfType<RespawnController>();
-            if (respawnController != null)
-            {
-                respawnController.HandlePlayerDeath();
-            }
+            respawnController.HandlePlayerDeath();
         }
     }
 
@@ -206,8 +239,15 @@ public class WeepingStatueMovement : MonoBehaviour
             standbyOccupied[reservedStandbyPoint] = false;
             reservedStandbyPoint = null;
             currentState = StatueState.Inactive;
+            hasTriggered = false;
+
+            if (anim != null)
+                anim.enabled = false;
+
+            if (inactiveSprite != null && !isTransitionPlaying)
+                spriteRenderer.sprite = inactiveSprite;
+
             StopMovement();
-            spriteRenderer.sprite = inactiveSprite;
         }
     }
 
@@ -248,18 +288,37 @@ public class WeepingStatueMovement : MonoBehaviour
 
     void ResetToInitial()
     {
-        transform.position = initialPosition;
-        transform.rotation = initialRotation;
+        StopAllCoroutines();
+        hasTriggered = false;
+        isActivating = false;
+        isTransitionPlaying = false;
+
+        if (anim != null)
+            anim.enabled = false;
+
         currentState = StatueState.Inactive;
         isIlluminated = false;
         isUnfreezeDelayed = false;
-        spriteRenderer.sprite = inactiveSprite;
+
+        transform.position = initialPosition;
+        transform.rotation = initialRotation;
+
+        if (inactiveSprite != null)
+            spriteRenderer.sprite = inactiveSprite;
+
         StopMovement();
     }
 
     public void ResetToStatueState()
     {
         StopAllCoroutines();
+        hasTriggered = false;
+        isActivating = false;
+        isTransitionPlaying = false;
+
+        if (anim != null)
+            anim.enabled = false;
+
         currentState = StatueState.Inactive;
         isIlluminated = false;
         isUnfreezeDelayed = false;
@@ -278,7 +337,6 @@ public class WeepingStatueMovement : MonoBehaviour
     private void OnDrawGizmosSelected()
     {
         if (!showActivationGizmo) return;
-
         Gizmos.color = Color.cyan;
         Gizmos.DrawWireSphere(transform.position, activationRadius);
     }

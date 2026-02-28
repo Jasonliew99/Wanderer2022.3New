@@ -5,7 +5,8 @@ using UnityEngine;
 public class TorchLightDetector : MonoBehaviour
 {
     [Header("Torch Reference")]
-    public TorchlightManager torchManager;   
+    public TorchlightManager torchManager;
+
     [Header("Detection Settings")]
     public LayerMask detectableLayers;
     public float coneAngle = 30f;
@@ -21,16 +22,14 @@ public class TorchLightDetector : MonoBehaviour
 
     void Update()
     {
-        // =========================================
-        // THIS IS THE IMPORTANT PART
-        // Torch OFF = detector DEAD
-        // =========================================
-        if (torchManager == null || !torchManager.IsTorchOn)
+        // ===============================
+        // Torch OFF = detector disabled
+        // ===============================
+        if (torchManager == null || !torchManager.IsTorchOn || torchManager.BatteryPercent <= 0f)
         {
-            ClearAllObjects();   // make sure exit fires
+            ClearAllObjects();
             return;
         }
-        // =========================================
 
         Collider[] hits = Physics.OverlapSphere(transform.position, coneRange, detectableLayers);
         List<Collider> currentFrame = new List<Collider>();
@@ -61,7 +60,6 @@ public class TorchLightDetector : MonoBehaviour
         }
     }
 
-    // force exit when torch turns off
     void ClearAllObjects()
     {
         for (int i = objectsInside.Count - 1; i >= 0; i--)
@@ -84,7 +82,22 @@ public class TorchLightDetector : MonoBehaviour
     {
         if (!showGizmos) return;
 
-        Gizmos.color = new Color(1f, 1f, 0f, 0.25f);
+        // ============================
+        // GIZMO COLOR BASED ON TORCH
+        // ============================
+        if (torchManager == null)
+        {
+            Gizmos.color = new Color(0.5f, 0.5f, 0.5f, 0.25f); // grey
+        }
+        else if (torchManager.IsTorchOn && torchManager.BatteryPercent > 0f)
+        {
+            Gizmos.color = new Color(1f, 1f, 0f, 0.25f); // yellow
+        }
+        else
+        {
+            Gizmos.color = new Color(1f, 0f, 0f, 0.25f); // red
+        }
+
         Vector3 forward = transform.forward * coneRange;
         Vector3 leftDir = Quaternion.Euler(0, -coneAngle * 0.5f, 0) * forward;
         Vector3 rightDir = Quaternion.Euler(0, coneAngle * 0.5f, 0) * forward;
@@ -105,7 +118,6 @@ public class TorchLightDetector : MonoBehaviour
             prev = next;
         }
 
-        Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, coneRange);
     }
 #endif
