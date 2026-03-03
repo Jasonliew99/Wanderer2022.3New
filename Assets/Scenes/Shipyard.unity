@@ -5129,7 +5129,7 @@ MonoBehaviour:
   activationRadius: 25
   postTriggerDelay: 0.1
   wakeAnimationLength: 0.4
-  chaseSpeed: 16
+  chaseSpeed: 15
   unfreezeDelay: 0.1
   standbyPoints:
   - {fileID: 252830928}
@@ -16649,7 +16649,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 8
   patrolSpeed: 8
-  chaseSpeed: 15
+  chaseSpeed: 13
   searchSpeed: 9
   visionRadius: 19
   visionConeAngle: 40
@@ -86368,7 +86368,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 8
   patrolSpeed: 8
-  chaseSpeed: 15
+  chaseSpeed: 13
   searchSpeed: 9
   visionRadius: 19
   visionConeAngle: 40
@@ -103926,7 +103926,7 @@ MonoBehaviour:
   activationRadius: 25
   postTriggerDelay: 0.1
   wakeAnimationLength: 0.4
-  chaseSpeed: 16
+  chaseSpeed: 15
   unfreezeDelay: 0.1
   standbyPoints:
   - {fileID: 252830928}
@@ -174532,7 +174532,7 @@ MonoBehaviour:
   activationRadius: 25
   postTriggerDelay: 0.1
   wakeAnimationLength: 0.4
-  chaseSpeed: 16
+  chaseSpeed: 15
   unfreezeDelay: 0.1
   standbyPoints:
   - {fileID: 252830928}
@@ -202507,7 +202507,7 @@ MonoBehaviour:
   activationRadius: 25
   postTriggerDelay: 0.1
   wakeAnimationLength: 0.4
-  chaseSpeed: 16
+  chaseSpeed: 15
   unfreezeDelay: 0.1
   standbyPoints:
   - {fileID: 252830928}
