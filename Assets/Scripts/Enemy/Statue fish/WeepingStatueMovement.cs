@@ -23,6 +23,7 @@ public class WeepingStatueMovement : MonoBehaviour
 
     private RespawnController respawnController;
     private Animator anim;
+    private TorchlightManager torch;
 
     [Header("Sprites")]
     public SpriteRenderer spriteRenderer;
@@ -66,6 +67,7 @@ public class WeepingStatueMovement : MonoBehaviour
 
     void Awake()
     {
+        torch = FindObjectOfType<TorchlightManager>();
         respawnController = FindObjectOfType<RespawnController>();
         agent = GetComponent<NavMeshAgent>();
         rb = GetComponent<Rigidbody>();
@@ -273,10 +275,20 @@ public class WeepingStatueMovement : MonoBehaviour
     void TorchExit(Collider col)
     {
         if (currentState != StatueState.Active) return;
-        isIlluminated = false;
 
-        if (unfreezeRoutine != null) StopCoroutine(unfreezeRoutine);
-        unfreezeRoutine = StartCoroutine(UnfreezeDelayRoutine());
+        bool beamStillHits = false;
+
+        if (torch != null)
+            beamStillHits = torch.IsBeamHittingEnemy(transform);
+
+        // ONLY unfreeze if beam also misses
+        if (!beamStillHits)
+        {
+            isIlluminated = false;
+
+            if (unfreezeRoutine != null) StopCoroutine(unfreezeRoutine);
+            unfreezeRoutine = StartCoroutine(UnfreezeDelayRoutine());
+        }
     }
 
     IEnumerator UnfreezeDelayRoutine()

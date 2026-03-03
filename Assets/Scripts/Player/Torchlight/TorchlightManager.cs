@@ -37,6 +37,12 @@ public class TorchlightManager : MonoBehaviour
     public float heightOffset = 0.2f;
     public KeyCode toggleKey = KeyCode.F;
 
+    [Header("Torch Beam Raycast")]
+    public float beamDistance = 15f;
+    public LayerMask beamBlockMask;     // walls
+    public LayerMask enemyMask;         // enemy layer
+    public bool showBeamGizmo = true;
+
     [Header("Rotation Settings")]
     public float rotationSpeed = 10f;
 
@@ -446,6 +452,44 @@ public class TorchlightManager : MonoBehaviour
         }
     }
 
+    public bool IsBeamHittingEnemy(Transform enemy)
+    {
+        if (!IsTorchOn || battery <= 0f)
+            return false;
+
+        if (flashlight == null)
+            return false;
+
+        Vector3 origin = flashlight.position;
+        Vector3 direction = lastFlashlightDir.normalized;
+
+        RaycastHit[] hits = Physics.RaycastAll(origin,
+                                               direction,
+                                               beamDistance,
+                                               beamBlockMask | enemyMask);
+
+        if (hits.Length == 0)
+            return false;
+
+        // SORT BY DISTANCE (nearest first)
+        System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+
+        foreach (var hit in hits)
+        {
+            int hitLayer = hit.collider.gameObject.layer;
+
+            // WALL HIT FIRST → blocked → MOVE
+            if (((1 << hitLayer) & beamBlockMask) != 0)
+                return false;
+
+            // ENEMY HIT FIRST → FREEZE
+            if (hit.transform.root == enemy.root)
+                return true;
+        }
+
+        return false;
+    }
+
     void OnDrawGizmosSelected()
     {
         if (player == null) return;
@@ -490,5 +534,19 @@ public class TorchlightManager : MonoBehaviour
 
         Gizmos.DrawRay(origin, (leftSnap * facing).normalized * length * 1.1f);
         Gizmos.DrawRay(origin, (rightSnap * facing).normalized * length * 1.1f);
+
+        // TORCH BEAM DEBUG RAY
+        if (showBeamGizmo && flashlight != null)
+        {
+            Vector3 beamOrigin = flashlight.position;
+            Vector3 beamDir = lastFlashlightDir.normalized;
+
+            if (IsTorchOn)
+                Gizmos.color = Color.green;
+            else
+                Gizmos.color = Color.red;
+
+            Gizmos.DrawRay(beamOrigin, beamDir * beamDistance);
+        }
     }
 }
