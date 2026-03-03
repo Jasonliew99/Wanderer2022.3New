@@ -272,7 +272,7 @@ public class WeepingStatueMovement : MonoBehaviour
         isIlluminated = true;
     }
 
-    void TorchExit(Collider col)
+    void TorchExit(Collider col)    
     {
         if (currentState != StatueState.Active) return;
 

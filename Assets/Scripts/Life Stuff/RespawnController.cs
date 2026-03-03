@@ -107,21 +107,36 @@ public class RespawnController : MonoBehaviour
         int i = Random.Range(0, currentRespawnPoints.Length);
         Vector3 spawnPos = currentRespawnPoints[i].position;
 
-        NavMeshAgent agent = player.GetComponent<NavMeshAgent>();
+        Rigidbody rb = player.GetComponent<Rigidbody>();
         PlayerMovement movement = player.GetComponent<PlayerMovement>();
 
         if (movement != null)
             movement.enabled = false;
 
-        if (agent != null)
+        if (rb != null)
         {
-            agent.ResetPath();
-            agent.Warp(spawnPos);
+            rb.velocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+
+            rb.position = spawnPos;
+            rb.rotation = Quaternion.identity;
+
+            rb.Sleep();
+            rb.WakeUp();
+        }
+        else
+        {
+            player.transform.position = spawnPos;
         }
 
-        player.transform.position = spawnPos;
+        StartCoroutine(ReEnableMovement(movement));
+    }
 
-        StartCoroutine(ReEnablePlayerMovement(movement));
+    private IEnumerator ReEnableMovement(PlayerMovement movement)
+    {
+        yield return null;
+        if (movement != null)
+            movement.enabled = true;
     }
 
     private IEnumerator ReEnablePlayerMovement(PlayerMovement movement)

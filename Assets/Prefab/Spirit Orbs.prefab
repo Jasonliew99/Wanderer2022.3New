@@ -98,13 +98,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7bb3aa31696858b4da93a9e61cf4b9e7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 9
+  moveSpeed: 11
   floatAmplitude: 0.79
   floatSpeed: 3
   stopDistance: 0.5
   waitAtTargetDuration: 2
   fadeInDuration: 0.4
-  fadeOutDuration: 0.6
+  fadeOutDuration: 0.4
   maxLifeTime: 20
 --- !u!114 &5852505455949127347
 MonoBehaviour:
@@ -118,4 +118,3 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 23c13b532ef70474181ea48a3c9c9e38, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cameraTransform: {fileID: 0}

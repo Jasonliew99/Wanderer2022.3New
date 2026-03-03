@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-//using static System.Net.Mime.MediaTypeNames;
 
 [System.Serializable]
 public class TorchThreshold
@@ -162,7 +161,6 @@ public class TorchlightManager : MonoBehaviour
         {
             HandleBrightness();
         }
-        // ======================================================
 
         UpdateUI(torchUsing);
 

@@ -18,7 +18,7 @@ public class PlayerTracker : MonoBehaviour
 
     public NavMeshAgent agent;
     public Transform player;
-    public LayerMask obstructionMask;
+    public LayerMask obstructionMask; //for walls
 
     [Header("Movement Speeds")]
     public float patrolSpeed = 3.5f;
@@ -67,10 +67,11 @@ public class PlayerTracker : MonoBehaviour
     private bool isCharging = false; // prevents overlapping charges
 
     // --- Temporary death logic ---
-    private bool hasKilledPlayer = false;
+    private bool hasKilledPlayer = false;  //aint using it anymore but imma keep it here just in case
 
     void Start()
     {
+        //Initialize state and set first patrol destination
         currentState = State.Patrol;
         if (patrolPoints.Length > 0)
         {
@@ -82,6 +83,7 @@ public class PlayerTracker : MonoBehaviour
 
     void Update()
     {
+        //state machine logic for detecting player and switching between patrol, chase, and search states
         DetectPlayer();
 
         switch (currentState)
@@ -145,6 +147,7 @@ public class PlayerTracker : MonoBehaviour
 
     void Patrol()
     {
+        //Patrol logic that moves between points and idles at each point before moving to the next one, also handles random patrol if enabled
         if (patrolPoints.Length == 0 || isWaiting) return;
 
         if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
@@ -161,6 +164,7 @@ public class PlayerTracker : MonoBehaviour
 
     IEnumerator IdleThenNextPatrol()
     {
+        // This coroutine handles the idle time at each patrol point before moving to the next one
         Debug.Log("starting coroutine" + this.gameObject.name);
         isWaiting = true;
         RotateToward(patrolPoints[patrolIndex].position);
@@ -174,12 +178,14 @@ public class PlayerTracker : MonoBehaviour
 
     void Chase()
     {
+        //if the player is in sight, keep chasing them, if not, go to last known position and switch to search state
         if (!isCharging)
             agent.SetDestination(player.position);
     }
 
     void Search()
     {
+        // how does this even work bro, this is so scuffed, i want to die
         if (!SmartSearchMode)
         {
             currentState = State.Patrol;
@@ -188,6 +194,8 @@ public class PlayerTracker : MonoBehaviour
 
         searchTimer += Time.deltaTime;
 
+        //some pathfinding stuff to make enemy move to random points aroud last known postion
+        //if enemy reaches search point and player is not found after certain amount of time, go back to patrol state, if player is found, go to chase state
         if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
         {
             if (searchTimer >= searchDuration)
@@ -203,6 +211,7 @@ public class PlayerTracker : MonoBehaviour
         }
     }
 
+    //so this shit is just pick random point within the search sphere la basically
     Vector3 GetRandomPointNear(Vector3 origin, float radius)
     {
         Vector3 randomDir = Random.insideUnitSphere * radius;
@@ -227,6 +236,7 @@ public class PlayerTracker : MonoBehaviour
         }
     }
 
+    //get to the closest patrol point
     int GetClosestPatrolIndex()
     {
         float minDist = Mathf.Infinity;
@@ -243,6 +253,7 @@ public class PlayerTracker : MonoBehaviour
         return closest;
     }
 
+    // This method checks if the player is within the charge cone and initiates the charge if conditions are met
     void HandleCharge()
     {
         if (isCharging || currentState != State.Chase || player == null) return;
@@ -257,6 +268,8 @@ public class PlayerTracker : MonoBehaviour
         }
     }
 
+    // so this thingy just give a tempo speed boost for the enemy to charge forward
+    //the condition is check in the HandleCharge method, if player within charge cone, then do it
     IEnumerator ChargeForward()
     {
         isCharging = true;
@@ -270,6 +283,7 @@ public class PlayerTracker : MonoBehaviour
         isCharging = false;
     }
 
+    //the gizmo for vision cone, vision radius, search radius, patrol points, and line to player if in sight, also changes color of vision cone if player is sneaking
     void OnDrawGizmosSelected()
     {
         Vector3 origin = transform.position + Vector3.up * 0.5f;
@@ -334,7 +348,7 @@ public class PlayerTracker : MonoBehaviour
         Gizmos.DrawLine(transform.position + leftDirC, transform.position + rightDirC);
     }
 
-    // --- PLAYER CATCH LOGIC (uses respawn manager) ---
+    // Player catch logic that uses respawn manager
     private void OnCollisionEnter(Collision collision)
     {
         if (collision.transform == player)
@@ -347,6 +361,7 @@ public class PlayerTracker : MonoBehaviour
         }
     }
 
+    // also catch trigger just in case, since sometimes the agent might be moving too fast and miss the collision
     private void OnTriggerEnter(Collider other)
     {
         if (other.transform == player)
@@ -359,6 +374,7 @@ public class PlayerTracker : MonoBehaviour
         }
     }
 
+    // This method can be called by other scripts (like the statue fish) to reset this enemy back to patrol state
     public void ResetToPatrolState()
     {
         StopAllCoroutines();
@@ -370,6 +386,7 @@ public class PlayerTracker : MonoBehaviour
         isCharging = false;
         searchTimer = 0f;
 
+        //if the agent was in the middle of a charge, reset its speed back to normal
         if (agent != null)
         {
             agent.ResetPath();
