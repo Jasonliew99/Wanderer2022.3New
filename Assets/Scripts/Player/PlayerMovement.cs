@@ -7,6 +7,8 @@ using UnityEngine.UI;
 //bro this script is like teachign a baby how to walk
 public class PlayerMovement : MonoBehaviour
 {
+    public float worldRotationOffset = -44.6f;
+
     [Header("Movement Speeds")]
     public float moveSpeed = 5f;
     public float sprintSpeed = 8f;
@@ -87,6 +89,11 @@ public class PlayerMovement : MonoBehaviour
     void Update()
     {
         isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
+
+        HandleInput();
+        HandleSprintSneakLogic();
+        UpdateCameraZoom();
+        UpdateSprintBarUI();
     }
 
     void FixedUpdate()
@@ -108,8 +115,13 @@ public class PlayerMovement : MonoBehaviour
                 currentSpeed *= backwardMultiplier;
         }
 
-        Vector3 horizontalVelocity = new Vector3(input.x * currentSpeed, 0f, input.z * currentSpeed);
-        horizontalVelocity = Quaternion.AngleAxis(-44.6f, Vector3.up) * horizontalVelocity;
+        Vector3 rotatedInput = Quaternion.AngleAxis(-44.6f, Vector3.up) * input;
+
+        Vector3 horizontalVelocity = new Vector3(
+            rotatedInput.x * currentSpeed,
+            0f,
+            rotatedInput.z * currentSpeed
+        );
 
         rb.velocity = new Vector3(horizontalVelocity.x, rb.velocity.y, horizontalVelocity.z);
 
@@ -136,10 +148,21 @@ public class PlayerMovement : MonoBehaviour
         if (Input.GetKey(moveDownKey)) z -= 1f;
         if (Input.GetKey(moveUpKey)) z += 1f;
 
-        input = new Vector3(x, 0f, z).normalized;
+        Vector3 rawInput = new Vector3(x, 0f, z);
 
-        if (input != Vector3.zero)
-            lastMoveDir = new Vector2(input.x, input.z).normalized;
+        if (rawInput.sqrMagnitude > 0.01f)
+        {
+            rawInput.Normalize();
+
+            // Snap movement only
+            input = SnapTo8Directions(rawInput);
+
+            lastMoveDir = new Vector2(input.x, input.z);
+        }
+        else
+        {
+            input = Vector3.zero;
+        }
 
         if (Input.GetKeyDown(sprintKey)) lastPressedKey = sprintKey;
         if (Input.GetKeyDown(sneakKey)) lastPressedKey = sneakKey;
@@ -255,7 +278,19 @@ public class PlayerMovement : MonoBehaviour
 
         newFacing.y = 0f;
         facingDirection = newFacing.normalized;
+
         transform.forward = facingDirection;
+    }
+
+    Vector3 SnapTo8Directions(Vector3 dir)
+    {
+        float angle = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg;
+
+        float snapped = Mathf.Round(angle / 45f) * 45f;
+
+        float rad = snapped * Mathf.Deg2Rad;
+
+        return new Vector3(Mathf.Sin(rad), 0, Mathf.Cos(rad)).normalized;
     }
 
     void OnDrawGizmosSelected()

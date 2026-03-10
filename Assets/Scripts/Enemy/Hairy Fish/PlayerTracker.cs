@@ -67,7 +67,7 @@ public class PlayerTracker : MonoBehaviour
     private bool isCharging = false; // prevents overlapping charges
 
     // --- Temporary death logic ---
-    private bool hasKilledPlayer = false;  //aint using it anymore but imma keep it here just in case
+    //rivate bool hasKilledPlayer = false;  //aint using it anymore but imma keep it here just in case
 
     void Start()
     {

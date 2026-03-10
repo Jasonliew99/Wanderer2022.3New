@@ -7,6 +7,7 @@ using UnityEngine;
 public class PlayerSpriteAnimation : MonoBehaviour
 {
     [Header("References")]
+    private PlayerMovement player;
     public Animator animator;
     public SpriteRenderer spriteRenderer;
     public Transform meshTransform;   // Invisible 3D mesh/capsule
@@ -14,6 +15,11 @@ public class PlayerSpriteAnimation : MonoBehaviour
 
     [Header("Settings")]
     public float idleThreshold = 0.05f;
+
+    void Start()
+    {
+        player = GetComponentInParent<PlayerMovement>();
+    }
 
     void Update()
     {
@@ -23,61 +29,41 @@ public class PlayerSpriteAnimation : MonoBehaviour
 
     void UpdateSpriteByFacing(bool isMoving)
     {
-        // USE TRUE GAMEPLAY FACING
-        Vector3 f = GetComponentInParent<PlayerMovement>().FacingDirection;
+        Vector3 f = player.FacingDirection;
+        f.y = 0f;
 
-        f.y = 0;
+        if (f.sqrMagnitude < 0.001f)
+            return;
+
+        // Undo the isometric rotation used in movement
+        f = Quaternion.AngleAxis(44.6f, Vector3.up) * f;
+
         f.Normalize();
 
-        // Round to nearest 8-dir AFTER gameplay snap
-        Vector3 d = new Vector3(
-            Mathf.Round(f.x),
-            0,
-            Mathf.Round(f.z)
-        );
+        float angle = Mathf.Atan2(f.x, f.z) * Mathf.Rad2Deg;
 
         string anim = "";
         bool flipX = false;
 
-        if (d == new Vector3(1, 0, 0))
+        if (angle >= 67.5f && angle < 112.5f) // RIGHT
         {
             anim = "Right3pm";
             flipX = false;
         }
-        else if (d == new Vector3(-1, 0, 0))
+        else if (angle >= -112.5f && angle < -67.5f) // LEFT
         {
             anim = "Right3pm";
             flipX = true;
         }
-        else if (d == new Vector3(1, 0, 1))
+        else if (angle >= -67.5f && angle < 67.5f) // UP / UPRIGHT / UPLEFT
         {
             anim = "UpRight2pm";
-            flipX = false;
+            flipX = angle < 0;
         }
-        else if (d == new Vector3(-1, 0, 1))
-        {
-            anim = "UpRight2pm";
-            flipX = true;
-        }
-        else if (d == new Vector3(1, 0, -1))
+        else // DOWN / DOWNRIGHT / DOWNLEFT
         {
             anim = "DownRight5pm";
-            flipX = false;
-        }
-        else if (d == new Vector3(-1, 0, -1))
-        {
-            anim = "DownRight5pm";
-            flipX = true;
-        }
-        else if (d == new Vector3(0, 0, 1))
-        {
-            anim = "UpRight2pm";
-            flipX = false;
-        }
-        else if (d == new Vector3(0, 0, -1))
-        {
-            anim = "DownRight5pm";
-            flipX = false;
+            flipX = angle < 0;
         }
 
         spriteRenderer.flipX = flipX;
@@ -92,6 +78,7 @@ public class PlayerSpriteAnimation : MonoBehaviour
         }
 
         animator.speed = 1f;
+
         if (!animator.GetCurrentAnimatorStateInfo(0).IsName(anim))
             animator.Play(anim);
     }
