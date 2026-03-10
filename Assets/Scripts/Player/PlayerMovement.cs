@@ -50,15 +50,6 @@ public class PlayerMovement : MonoBehaviour
     [Header("Gravity")]
     public float gravityMultiplier = 2.5f;
 
-    [Header("Tripping Settings")]
-    [Range(0f, 1f)] public float stumbleChancePerSecond = 0.05f;
-    public float stumbleForwardForce = 2f;
-    public float stumbleDuration = 1f;
-    public float stumbleCooldown = 3f;
-
-    private bool isStumbling = false;
-    private float stumbleCooldownTimer = 0f;
-
     private float sprintTimer = 0f;
     private bool isSprinting = false;
     private bool isSneaking = false;
@@ -96,28 +87,11 @@ public class PlayerMovement : MonoBehaviour
     void Update()
     {
         isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
-
-        if (stumbleCooldownTimer > 0f)
-            stumbleCooldownTimer -= Time.deltaTime;
-
-        HandleInput();
-        HandleSprintSneakLogic();
-        UpdateCameraZoom();
-        UpdateSprintBarUI();
-
-        if (isSprinting && !isStumbling && stumbleCooldownTimer <= 0f)
-        {
-            if (Random.value < stumbleChancePerSecond * Time.deltaTime)
-            {
-                StartCoroutine(DoStumble());
-                stumbleCooldownTimer = stumbleCooldown;
-            }
-        }
     }
 
     void FixedUpdate()
     {
-        if (isStumbling || isImmobilized)
+        if (isImmobilized)
         {
             rb.velocity = new Vector3(0f, rb.velocity.y, 0f);
             return;
@@ -148,7 +122,7 @@ public class PlayerMovement : MonoBehaviour
     // ================= INPUT =================
     void HandleInput()
     {
-        if (isStumbling || isImmobilized)
+        if (isImmobilized)
         {
             input = Vector3.zero;
             return;
@@ -174,7 +148,7 @@ public class PlayerMovement : MonoBehaviour
     // ================= SPRINT / SNEAK =================
     void HandleSprintSneakLogic()
     {
-        if (isStumbling || isImmobilized) return;
+        if (isImmobilized) return;
 
         bool holdingSprint = Input.GetKey(sprintKey);
         bool holdingSneak = Input.GetKey(sneakKey);
@@ -234,16 +208,6 @@ public class PlayerMovement : MonoBehaviour
         bool sprintingNow = isSprinting && rb.velocity.magnitude > 0.05f;
 
         sprintBarUI.UpdateSprintBar(percent, sprintingNow);
-    }
-
-    // ================= STUMBLE =================
-    IEnumerator DoStumble()
-    {
-        isStumbling = true;
-        rb.velocity = Vector3.zero;
-        rb.AddForce(transform.forward * stumbleForwardForce, ForceMode.Impulse);
-        yield return new WaitForSeconds(stumbleDuration);
-        isStumbling = false;
     }
 
     // ================= IMMOBILIZE =================
