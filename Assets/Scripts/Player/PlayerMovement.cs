@@ -5,6 +5,8 @@ using UnityEngine.UI;
 
 
 //bro this script is like teachign a baby how to walk
+// after all this shit and balls you tell me the best is just walk and sprint in the most basic matter????
+//hell nah overthinking is crazyyyyyy.
 public class PlayerMovement : MonoBehaviour
 {
     public float worldRotationOffset = -44.6f;
@@ -65,7 +67,7 @@ public class PlayerMovement : MonoBehaviour
 
     public bool IsSneaking => isSneaking;
 
-    [Header("Facing / Backward Settings")]
+    [Header("Facing / Backward Settings (Unused now)")]
     [Range(0f, 1f)] public float backwardMultiplier = 0.6f;
     [Range(0f, 180f)] public float forwardAngleForSprint = 45f;
 
@@ -105,17 +107,14 @@ public class PlayerMovement : MonoBehaviour
         }
 
         float currentSpeed = moveSpeed;
-        if (currentMode == MovementMode.Sprinting) currentSpeed = sprintSpeed;
-        if (currentMode == MovementMode.Sneaking) currentSpeed = sneakSpeed;
 
-        if (input.sqrMagnitude > 0.001f)
-        {
-            float angle = Vector3.Angle(facingDirection, input);
-            if (angle > forwardAngleForSprint)
-                currentSpeed *= backwardMultiplier;
-        }
+        if (currentMode == MovementMode.Sprinting)
+            currentSpeed = sprintSpeed;
+        else if (currentMode == MovementMode.Sneaking)
+            currentSpeed = sneakSpeed;
 
-        Vector3 rotatedInput = Quaternion.AngleAxis(-44.6f, Vector3.up) * input;
+        // Rotate input into isometric space
+        Vector3 rotatedInput = Quaternion.AngleAxis(worldRotationOffset, Vector3.up) * input;
 
         Vector3 horizontalVelocity = new Vector3(
             rotatedInput.x * currentSpeed,
@@ -154,10 +153,11 @@ public class PlayerMovement : MonoBehaviour
         {
             rawInput.Normalize();
 
-            // Snap movement only
             input = SnapTo8Directions(rawInput);
 
-            lastMoveDir = new Vector2(input.x, input.z);
+            // ✅ FIX: Use rotated direction for animation
+            Vector3 rotated = Quaternion.AngleAxis(worldRotationOffset, Vector3.up) * input;
+            lastMoveDir = new Vector2(rotated.x, rotated.z);
         }
         else
         {
@@ -178,16 +178,9 @@ public class PlayerMovement : MonoBehaviour
         bool isPhysicallyMoving = rb.velocity.magnitude > 0.05f;
         float drainMultiplier = GetSprintDrainMultiplier();
 
-        bool movementBlocksSprint = false;
-        if (input.sqrMagnitude > 0.001f)
-        {
-            float angle = Vector3.Angle(facingDirection, input);
-            if (angle > forwardAngleForSprint)
-                movementBlocksSprint = true;
-        }
-
+        // ✅ SIMPLIFIED: No direction restriction
         if (holdingSprint && (!holdingSneak || lastPressedKey == sprintKey) &&
-            sprintTimer > 0f && isPhysicallyMoving && !movementBlocksSprint)
+            sprintTimer > 0f && isPhysicallyMoving)
         {
             currentMode = MovementMode.Sprinting;
             sprintTimer -= Time.deltaTime * drainMultiplier;
@@ -241,6 +234,7 @@ public class PlayerMovement : MonoBehaviour
         yield return new WaitForSeconds(duration);
         isImmobilized = false;
     }
+
     public void TrapImmobilize()
     {
         isImmobilized = true;
@@ -250,7 +244,6 @@ public class PlayerMovement : MonoBehaviour
     {
         isImmobilized = false;
     }
-
 
     // ================= HELPERS =================
     float GetSprintDrainMultiplier()
@@ -285,9 +278,7 @@ public class PlayerMovement : MonoBehaviour
     Vector3 SnapTo8Directions(Vector3 dir)
     {
         float angle = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg;
-
         float snapped = Mathf.Round(angle / 45f) * 45f;
-
         float rad = snapped * Mathf.Deg2Rad;
 
         return new Vector3(Mathf.Sin(rad), 0, Mathf.Cos(rad)).normalized;
