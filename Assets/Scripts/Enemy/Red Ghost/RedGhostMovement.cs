@@ -17,6 +17,7 @@ public class RedGhostMovement : MonoBehaviour
     [Header("Patrol")]
     public Transform[] patrolPoints;
     public float patrolSpeed = 3.5f;
+    public float patrolWaitTime = 1.0f;
 
     [Header("Detection")]
     public float visionRadius = 8f;
@@ -25,15 +26,26 @@ public class RedGhostMovement : MonoBehaviour
 
     [Header("Charge")]
     public float aimTime = 0.5f;
-    public float chargeSpeed = 10f;
-    [Range(0.1f, 0.6f)] public float overshootPercent = 0.25f;
-    public float minOvershootDistance = 1.2f;   //Momentum
+    public float chargeSpeed = 12f;
+    [Range(0.1f, 0.6f)] public float overshootPercent = 0.2f;
+    public float minOvershootDistance = 1.0f;
+    public float maxOvershootDistance = 3.0f;
     public float wallCheckDistance = 0.4f;
+
+    [Header("Drift")]
+    public float driftDuration = 0.25f;
+    public float driftTurnSpeed = 8f;
 
     [Header("Search")]
     public float searchSpeed = 5f;
     public float searchRadius = 6f;
     public float searchDuration = 5f;
+
+    [Header("Recovery")]
+    public float recoveryTime = 1.0f;
+
+    [Header("Aim Settings")]
+    public float lostSightThreshold = 0.7f;
 
     int patrolIndex;
     int searchIndex;
@@ -45,31 +57,30 @@ public class RedGhostMovement : MonoBehaviour
     float chargeTravelled;
     float aimTimer;
     float searchTimer;
+    float lostSightTimer;
+
+    float patrolWaitTimer;
+    bool isWaiting;
+
+    float lookTimer;
+    int lookDirection = 1;
+
+    float currentSpeed;
+
+    float recoveryTimer;
+    bool isRecovering;
+
+    float driftTimer;
+    bool isDriftingTurn;
 
     List<Transform> searchPoints = new List<Transform>();
 
-    //START
     void Start()
     {
         currentState = State.Patrol;
 
         agent.updateRotation = false;
-        agent.isStopped = false;
         agent.speed = patrolSpeed;
-        agent.stoppingDistance = 0.05f;
-
-        if (!agent.isOnNavMesh)
-        {
-            NavMeshHit hit;
-            if (NavMesh.SamplePosition(transform.position, out hit, 5f, NavMesh.AllAreas))
-                agent.Warp(hit.position);
-            else
-            {
-                Debug.LogError("RedGhost not on NavMesh");
-                enabled = false;
-                return;
-            }
-        }
 
         patrolIndex = GetClosestPatrolIndex();
         GoToNextPatrol();
@@ -99,33 +110,76 @@ public class RedGhostMovement : MonoBehaviour
         }
     }
 
-    //PATROL
+    // ---------------- PATROL ----------------
 
     void Patrol()
     {
-        if (!agent.isOnNavMesh) return;
+        if (isWaiting)
+        {
+            patrolWaitTimer -= Time.deltaTime;
+            lookTimer -= Time.deltaTime;
+
+            if (lookTimer <= 0f)
+            {
+                lookTimer = Random.Range(0.4f, 0.8f);
+                lookDirection = Random.value > 0.5f ? 1 : -1;
+            }
+
+            transform.Rotate(0, lookDirection * 40f * Time.deltaTime, 0);
+
+            if (patrolWaitTimer <= 0f)
+            {
+                isWaiting = false;
+                GoToNextPatrol();
+            }
+            return;
+        }
 
         SnapFacing(agent.velocity);
 
         if (agent.pathPending) return;
 
         if (agent.remainingDistance <= agent.stoppingDistance)
-            GoToNextPatrol();
+        {
+            isWaiting = true;
+            patrolWaitTimer = patrolWaitTime;
+            agent.velocity = Vector3.zero;
+        }
     }
 
-    //Go to the next patrol point in the array
     void GoToNextPatrol()
     {
         patrolIndex = (patrolIndex + 1) % patrolPoints.Length;
         agent.speed = patrolSpeed;
+        agent.isStopped = false;
         agent.SetDestination(patrolPoints[patrolIndex].position);
     }
 
-    //DETECTION
+    // ---------------- DETECTION ----------------
+
     void DetectPlayer()
     {
         if (!player) return;
+        if (!CanCurrentlySeePlayer()) return;
 
+        lastKnownPlayerPos = player.position;
+
+        float dist = Vector3.Distance(transform.position, player.position);
+
+        // ✅ FIX: use FULL distance (no more short charge)
+        float perceptionLimit = dist;
+
+        float rawOvershoot = Mathf.Max(perceptionLimit * overshootPercent, minOvershootDistance);
+        float overshoot = Mathf.Min(rawOvershoot, maxOvershootDistance);
+
+        chargeDistance = perceptionLimit + overshoot;
+
+        if (currentState != State.Aim && currentState != State.Charge)
+            EnterAim();
+    }
+
+    bool CanCurrentlySeePlayer()
+    {
         Vector3 dir = player.position - transform.position;
         float dist = dir.magnitude;
         dir.Normalize();
@@ -141,97 +195,179 @@ public class RedGhostMovement : MonoBehaviour
             obstructionMask
         );
 
-        if ((inRadius || inCone) && hasLOS)
-        {
-            lastKnownPlayerPos = player.position;
-
-            // ADAPTIVE + OVERSHOOT
-            float perceptionLimit = inCone ? visionConeRange : visionRadius;
-            float baseDistance = Mathf.Min(dist, perceptionLimit);
-            float overshoot = Mathf.Max(baseDistance * overshootPercent, minOvershootDistance);
-
-            chargeDistance = baseDistance + overshoot;
-
-            EnterAim();
-        }
+        return (inRadius || inCone) && hasLOS;
     }
 
-    //AIM
+    // ---------------- AIM ----------------
 
     void EnterAim()
     {
         currentState = State.Aim;
+
         agent.isStopped = true;
         agent.velocity = Vector3.zero;
 
-        SnapFacing(lastKnownPlayerPos - transform.position);
         aimTimer = aimTime;
+        lostSightTimer = 0f;
     }
 
     void Aim()
     {
-        aimTimer -= Time.deltaTime;
+        Vector3 toPlayer = player.position - transform.position;
+        toPlayer.y = 0;
+
+        float angleToPlayer = Vector3.Angle(transform.forward, toPlayer);
+
+        bool inCone = angleToPlayer <= visionConeAngle * 0.5f;
+
+        if (CanCurrentlySeePlayer() && inCone)
+        {
+            // keep updating target
+            lastKnownPlayerPos = player.position;
+            lostSightTimer = 0f;
+
+            // 🔥 STRONG tracking (like lock-on)
+            Quaternion targetRot = Quaternion.LookRotation(toPlayer);
+            transform.rotation = Quaternion.RotateTowards(
+                transform.rotation,
+                targetRot,
+                360f * Time.deltaTime // fast turning
+            );
+
+            aimTimer -= Time.deltaTime;
+        }
+        else
+        {
+            // player escaped cone
+            lostSightTimer += Time.deltaTime;
+
+            if (lostSightTimer >= lostSightThreshold)
+            {
+                ReturnToPatrol();
+                return;
+            }
+        }
+
         if (aimTimer <= 0f)
             StartCharge();
     }
 
-    //CHARGE
+    // ---------------- CHARGE ----------------
 
     void StartCharge()
     {
         currentState = State.Charge;
-        chargeDirection = SnapDirection(lastKnownPlayerPos - transform.position);
+
+        chargeDirection = (lastKnownPlayerPos - transform.position).normalized;
         chargeTravelled = 0f;
+
+        currentSpeed = chargeSpeed;
+        isDriftingTurn = false;
+
+        agent.isStopped = true;
     }
 
     void Charge()
     {
-        float step = chargeSpeed * Time.deltaTime;
+        Vector3 origin = transform.position + Vector3.up * 0.3f;
 
-        if (Physics.Raycast(transform.position, chargeDirection, wallCheckDistance, obstructionMask))
+        if (Physics.Raycast(origin, chargeDirection, wallCheckDistance, obstructionMask))
         {
-            EnterSearch();
+            StartDrift();
             return;
         }
+
+        float step = currentSpeed * Time.deltaTime;
 
         transform.position += chargeDirection * step;
         chargeTravelled += step;
 
-        if (chargeTravelled >= chargeDistance)
-            EnterSearch();
+        SnapFacing(chargeDirection);
+
+        // ✅ straight line until full distance
+        if (!isDriftingTurn && chargeTravelled >= chargeDistance)
+        {
+            StartDrift();
+        }
+
+        // drift phase
+        if (isDriftingTurn)
+        {
+            driftTimer -= Time.deltaTime;
+
+            currentSpeed = Mathf.Lerp(currentSpeed, 0f, 12f * Time.deltaTime);
+
+            Vector3 dirToPlayer = SnapDirection(player.position - transform.position);
+            transform.rotation = Quaternion.Slerp(
+                transform.rotation,
+                Quaternion.LookRotation(dirToPlayer),
+                Time.deltaTime * driftTurnSpeed
+            );
+
+            if (driftTimer <= 0f)
+                EnterSearch();
+        }
     }
 
-    //SEARCH
+    void StartDrift()
+    {
+        isDriftingTurn = true;
+        driftTimer = driftDuration;
+
+        // small push forward for impact
+        transform.position += chargeDirection * 0.2f;
+    }
+
+    // ---------------- SEARCH ----------------
 
     void EnterSearch()
     {
         currentState = State.Search;
 
-        agent.isStopped = false;
-        agent.speed = searchSpeed;
+        agent.isStopped = true;
 
-        searchTimer = searchDuration;
-        searchPoints.Clear();
-
-        foreach (Transform p in patrolPoints)
-        {
-            if (Vector3.Distance(lastKnownPlayerPos, p.position) <= searchRadius)
-                searchPoints.Add(p);
-        }
-
-        searchIndex = 0;
-
-        if (searchPoints.Count > 0)
-            agent.SetDestination(searchPoints[0].position);
-        else
-            ReturnToPatrol();
+        recoveryTimer = recoveryTime;
+        isRecovering = true;
     }
 
     void Search()
     {
-        if (!agent.isOnNavMesh) return;
+        if (isRecovering)
+        {
+            recoveryTimer -= Time.deltaTime;
+
+            transform.Rotate(0, Mathf.Sin(Time.time * 10f) * 2f, 0);
+
+            if (recoveryTimer <= 0f)
+            {
+                isRecovering = false;
+
+                agent.isStopped = false;
+                agent.speed = searchSpeed;
+
+                searchTimer = searchDuration;
+                searchPoints.Clear();
+
+                foreach (Transform p in patrolPoints)
+                {
+                    if (Vector3.Distance(lastKnownPlayerPos, p.position) <= searchRadius)
+                        searchPoints.Add(p);
+                }
+
+                searchIndex = 0;
+
+                if (searchPoints.Count > 0)
+                    agent.SetDestination(searchPoints[0].position);
+                else
+                    ReturnToPatrol();
+            }
+            return;
+        }
+
+        if (agent.pathPending) return;
 
         SnapFacing(agent.velocity);
+
         searchTimer -= Time.deltaTime;
 
         if (searchTimer <= 0f)
@@ -239,8 +375,6 @@ public class RedGhostMovement : MonoBehaviour
             ReturnToPatrol();
             return;
         }
-
-        if (agent.pathPending) return;
 
         if (agent.remainingDistance <= agent.stoppingDistance)
         {
@@ -255,11 +389,16 @@ public class RedGhostMovement : MonoBehaviour
     void ReturnToPatrol()
     {
         currentState = State.Patrol;
+
+        agent.isStopped = false;
         agent.speed = patrolSpeed;
+
+        isWaiting = false;
+
         GoToNextPatrol();
     }
 
-    //HELPERS
+    // ---------------- HELPERS ----------------
 
     int GetClosestPatrolIndex()
     {
@@ -293,13 +432,12 @@ public class RedGhostMovement : MonoBehaviour
         return Quaternion.Euler(0, snapped, 0) * Vector3.forward;
     }
 
-    //GIZMOS
+    // ---------------- GIZMOS ----------------
 
     void OnDrawGizmosSelected()
     {
         Vector3 ground = new Vector3(lastKnownPlayerPos.x, transform.position.y, lastKnownPlayerPos.z);
 
-        // Vision
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, visionRadius);
 
@@ -308,15 +446,12 @@ public class RedGhostMovement : MonoBehaviour
         Gizmos.DrawRay(transform.position, Quaternion.Euler(0, -half, 0) * transform.forward * visionConeRange);
         Gizmos.DrawRay(transform.position, Quaternion.Euler(0, half, 0) * transform.forward * visionConeRange);
 
-        // Last known position (same style as patrol points)
         Gizmos.color = Color.cyan;
         Gizmos.DrawSphere(ground, 0.35f);
 
-        // Search radius
         Gizmos.color = new Color(1f, 0.5f, 0f);
         Gizmos.DrawWireSphere(ground, searchRadius);
 
-        // Search patrol points
         Gizmos.color = new Color(1f, 0.6f, 0f);
         foreach (Transform p in patrolPoints)
         {
@@ -327,7 +462,6 @@ public class RedGhostMovement : MonoBehaviour
             }
         }
 
-        // Charge target (circle + X)
         if (currentState == State.Aim || currentState == State.Charge)
         {
             Vector3 end = transform.position + chargeDirection * chargeDistance;
@@ -340,12 +474,10 @@ public class RedGhostMovement : MonoBehaviour
             Gizmos.DrawLine(end + Vector3.right * 0.35f, end - Vector3.right * 0.35f);
         }
 
-        // Patrol points
         Gizmos.color = Color.blue;
         foreach (Transform p in patrolPoints)
             if (p) Gizmos.DrawSphere(p.position, 0.3f);
 
-        // Current patrol target
         if (Application.isPlaying && patrolPoints.Length > 0)
             Gizmos.DrawLine(transform.position, patrolPoints[patrolIndex].position);
     }

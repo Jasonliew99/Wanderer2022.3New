@@ -5,10 +5,18 @@ using UnityEngine;
 public class TrapScriptLogic : MonoBehaviour
 {
     [Header("Escape Tuning")]
-    public float escapeThreshold = 300f;          // TOTAL effort needed
-    public float shakePowerMultiplier = 0.8f;     // How much intensity helps
-    public float maxContributionPerShake = 8f;    // HARD CAP per shake
-    public float decayRate = 25f;                 // Progress loss per second
+    public float escapeThreshold = 300f;
+    public float shakePowerMultiplier = 0.8f;
+    public float maxContributionPerShake = 8f;
+    public float decayRate = 25f;
+
+    [Header("Visuals")]
+    public SpriteRenderer spriteRenderer;
+    public Sprite idleSprite;
+    public Sprite triggeredSprite;
+
+    [Header("Fade Settings")]
+    public float fadeDuration = 0.5f;
 
     private TeddyBearController owner;
     private PlayerMovement trappedPlayer;
@@ -19,6 +27,8 @@ public class TrapScriptLogic : MonoBehaviour
     private float lastMouseX;
     private float lastShakeDirection;
 
+    private bool isFading = false;
+
     // ---------------- SETUP ----------------
     public void Init(TeddyBearController trapper)
     {
@@ -26,17 +36,27 @@ public class TrapScriptLogic : MonoBehaviour
         Debug.Log("[Trap] Owner set: " + trapper.name);
     }
 
+    void Awake()
+    {
+        if (spriteRenderer == null)
+            spriteRenderer = GetComponent<SpriteRenderer>();
+    }
+
     void Start()
     {
         Debug.Log("[Trap] Spawned at: " + transform.position);
+
+        if (spriteRenderer != null && idleSprite != null)
+        {
+            spriteRenderer.sprite = idleSprite;
+        }
     }
 
     // ---------------- TRIGGER ----------------
     private void OnTriggerEnter(Collider other)
     {
-        if (trappingPlayer) return;
+        if (trappingPlayer || isFading) return;
 
-        // Ignore enemy
         if (other.GetComponent<TeddyBearController>() != null)
             return;
 
@@ -44,7 +64,6 @@ public class TrapScriptLogic : MonoBehaviour
         if (player == null)
             return;
 
-        // Trap player
         trappingPlayer = true;
         trappedPlayer = player;
 
@@ -55,6 +74,12 @@ public class TrapScriptLogic : MonoBehaviour
         lastShakeDirection = 0f;
 
         TrapEscapeUI.Instance.Show();
+
+        // 🔥 Swap sprite
+        if (spriteRenderer != null && triggeredSprite != null)
+        {
+            spriteRenderer.sprite = triggeredSprite;
+        }
 
         Debug.Log("[Trap] Player trapped → shake to escape");
     }
@@ -77,19 +102,15 @@ public class TrapScriptLogic : MonoBehaviour
         float direction = Mathf.Sign(delta);
         float absDelta = Mathf.Abs(delta);
 
-        // Only count meaningful movement
         if (absDelta > 3f && direction != 0 && direction != lastShakeDirection)
         {
             float contribution = absDelta * shakePowerMultiplier;
-
-            // Clamp so 1 flick can't win
             contribution = Mathf.Min(contribution, maxContributionPerShake);
 
             escapeProgress += contribution;
             lastShakeDirection = direction;
         }
 
-        // Decay when not shaking
         escapeProgress -= decayRate * Time.deltaTime;
         escapeProgress = Mathf.Clamp(escapeProgress, 0f, escapeThreshold);
 
@@ -110,13 +131,55 @@ public class TrapScriptLogic : MonoBehaviour
 
         trappingPlayer = false;
 
-        trappedPlayer.TrapRelease();
-        trappedPlayer = null;
+        if (trappedPlayer != null)
+        {
+            trappedPlayer.TrapRelease();
+            trappedPlayer = null;
+        }
 
         TrapEscapeUI.Instance.Hide();
 
-        // Notify enemy that trap was triggered
         owner?.OnTrapTriggered(transform.position, gameObject);
+
+        // 🔥 Start fade instead of instant destroy
+        if (!isFading)
+        {
+            StartCoroutine(FadeAndDestroy());
+        }
+    }
+
+    // ---------------- FADE LOGIC ----------------
+    IEnumerator FadeAndDestroy()
+    {
+        isFading = true;
+
+        float time = 0f;
+        Color originalColor = spriteRenderer.color;
+
+        while (time < fadeDuration)
+        {
+            float t = time / fadeDuration;
+
+            float alpha = Mathf.Lerp(1f, 0f, t);
+
+            spriteRenderer.color = new Color(
+                originalColor.r,
+                originalColor.g,
+                originalColor.b,
+                alpha
+            );
+
+            time += Time.deltaTime;
+            yield return null;
+        }
+
+        // Ensure fully transparent at end
+        spriteRenderer.color = new Color(
+            originalColor.r,
+            originalColor.g,
+            originalColor.b,
+            0f
+        );
 
         Destroy(gameObject);
     }
