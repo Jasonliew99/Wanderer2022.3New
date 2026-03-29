@@ -214468,7 +214468,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.00000046193594, z: -0, w: 1}
   m_LocalPosition: {x: -475.9391, y: -25.1438, z: -512.31036}
-  m_LocalScale: {x: 763.21686, y: 43.704773, z: 552.4188}
+  m_LocalScale: {x: 1402.2583, y: 43.704773, z: 1258.6863}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 982993625}
