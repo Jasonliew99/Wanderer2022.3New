@@ -7,6 +7,15 @@ using UnityEngine.UI;
 
 public class LevelController : MonoBehaviour
 {
+    // ===========================
+    // ESCAPE MODE STATE
+    // ===========================
+    public bool EscapeMode { get; private set; } = false;
+    public System.Action OnEscapeMode;
+
+    // ===========================
+    // FRAGMENT DATA
+    // ===========================
     [System.Serializable]
     public class FragmentItemData
     {
@@ -26,6 +35,9 @@ public class LevelController : MonoBehaviour
         }
     }
 
+    // ===========================
+    // DOOR SYSTEM
+    // ===========================
     [System.Serializable]
     public class DoorPair
     {
@@ -34,6 +46,9 @@ public class LevelController : MonoBehaviour
         public bool startOpened = false;
     }
 
+    // ===========================
+    // LEVEL BLOCK
+    // ===========================
     [System.Serializable]
     public class LevelBlock
     {
@@ -70,6 +85,9 @@ public class LevelController : MonoBehaviour
     public int currentLevelIndex = -1;
     private Coroutine uiRoutine;
 
+    // ===========================
+    // INITIAL SETUP
+    // ===========================
     void Start()
     {
         for (int i = 0; i < levels.Count; i++)
@@ -90,8 +108,13 @@ public class LevelController : MonoBehaviour
             objectiveText.alpha = 0;
     }
 
+    // ===========================
+    // START LEVEL
+    // ===========================
     public void StartLevel(int id)
     {
+        if (EscapeMode) return; // prevent starting levels during escape
+
         currentLevelIndex = id;
         LevelBlock lvl = levels[id];
 
@@ -112,20 +135,19 @@ public class LevelController : MonoBehaviour
 
         ShowObjective(lvl.firstObjective);
 
-        // RESET LIVES + SWITCH RESPAWN POINTS
+        // Reset player lives + respawn
         if (respawnController != null)
             respawnController.OnLevelStarted(lvl.respawnPoints);
     }
 
     // ===========================
-    // ENEMY RESET FUNCTION
+    // ENEMY RESET (RESPAWN)
     // ===========================
     public void ResetEnemiesForRespawn()
     {
         LevelBlock lvl = levels[currentLevelIndex];
 
-        if (lvl.enemyResetPoints == null ||
-            lvl.enemyResetPoints.Length == 0)
+        if (lvl.enemyResetPoints == null || lvl.enemyResetPoints.Length == 0)
             return;
 
         List<Transform> availablePoints =
@@ -151,7 +173,7 @@ public class LevelController : MonoBehaviour
     }
 
     // ===========================
-    // FRAGMENT REQUEST
+    // FRAGMENT SYSTEM
     // ===========================
     public Sprite RequestNextFragment(string itemID)
     {
@@ -203,7 +225,7 @@ public class LevelController : MonoBehaviour
     }
 
     // ===========================
-    // LEVEL END
+    // END LEVEL
     // ===========================
     public void EndLevel(int id)
     {
@@ -213,14 +235,57 @@ public class LevelController : MonoBehaviour
         SetActive(lvl.coins, false);
         SetActive(lvl.deactivator, false);
 
-        if (id < levels.Count - 1)
+        // ⭐ FINAL LEVEL → ESCAPE MODE
+        if (id == levels.Count - 1)
         {
-            LevelBlock nextLvl = levels[id + 1];
-            OpenDoor(nextLvl.entranceDoor);
-            nextLvl.activator.SetActive(true);
+            StartEscapeMode();
+            return;
         }
+
+        // Normal progression
+        LevelBlock nextLvl = levels[id + 1];
+        OpenDoor(nextLvl.entranceDoor);
+        nextLvl.activator.SetActive(true);
     }
 
+    // ===========================
+    // ESCAPE MODE
+    // ===========================
+    private void StartEscapeMode()
+    {
+        Debug.Log("ESCAPE MODE STARTED");
+
+        EscapeMode = true;
+
+        // Open ALL doors
+        foreach (var lvl in levels)
+        {
+            OpenDoor(lvl.entranceDoor);
+            OpenDoor(lvl.exitDoor);
+        }
+
+        // Reactivate ALL enemies
+        foreach (var lvl in levels)
+        {
+            SetActive(lvl.enemies, true);
+        }
+
+        // Disable ALL triggers
+        foreach (var lvl in levels)
+        {
+            if (lvl.activator) lvl.activator.SetActive(false);
+            if (lvl.deactivator) lvl.deactivator.SetActive(false);
+        }
+
+        ShowObjective("ESCAPE!");
+
+        // Notify other systems
+        OnEscapeMode?.Invoke();
+    }
+
+    // ===========================
+    // DOOR HELPERS
+    // ===========================
     private void OpenDoor(DoorPair door)
     {
         if (door == null) return;
@@ -251,6 +316,9 @@ public class LevelController : MonoBehaviour
         }
     }
 
+    // ===========================
+    // UTILITIES
+    // ===========================
     private void SetActive(GameObject[] arr, bool state)
     {
         if (arr == null) return;
@@ -264,6 +332,9 @@ public class LevelController : MonoBehaviour
             obj.SetActive(state);
     }
 
+    // ===========================
+    // UI
+    // ===========================
     private void ShowObjective(string msg)
     {
         if (uiRoutine != null)
