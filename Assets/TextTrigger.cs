@@ -2,12 +2,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public class TextTrigger : MonoBehaviour
 {
     [Header("UI")]
     public CanvasGroup textCanvasGroup;
-    public Text textUI;
+    public TMP_Text textUI;
 
     [TextArea]
     public string message;
@@ -25,7 +26,11 @@ public class TextTrigger : MonoBehaviour
 
     void OnTriggerEnter(Collider other)
     {
+        Debug.Log("Triggered by: " + other.name);
+
         if (!other.CompareTag("Player")) return;
+
+        Debug.Log("Player entered trigger!");
 
         if (triggerOnce && hasTriggered) return;
         if (isOnCooldown) return;
@@ -40,18 +45,11 @@ public class TextTrigger : MonoBehaviour
 
         textUI.text = message;
 
-        // Fade In
         yield return StartCoroutine(Fade(0, 1));
-
-        // Stay
         yield return new WaitForSeconds(displayDuration);
-
-        // Fade Out
         yield return StartCoroutine(Fade(1, 0));
 
-        // Cooldown
         yield return new WaitForSeconds(cooldown);
-
         isOnCooldown = false;
     }
 
