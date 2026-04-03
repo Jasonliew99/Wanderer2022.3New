@@ -38,8 +38,8 @@ public class TorchlightManager : MonoBehaviour
 
     [Header("Torch Beam Raycast")]
     public float beamDistance = 15f;
-    public LayerMask beamBlockMask;     // walls
-    public LayerMask enemyMask;         // enemy layer
+    public LayerMask beamBlockMask;
+    public LayerMask enemyMask;
     public bool showBeamGizmo = true;
 
     [Header("Rotation Settings")]
@@ -104,15 +104,18 @@ public class TorchlightManager : MonoBehaviour
     private float snapTimer = 0f;
     private float rechargeTimer = 0f;
 
+    // --- NEW PROPERTY FOR ANIMATION ---
+    // 0: UpRight, 1: UpLeft, 2: DownRight, 3: DownLeft
+    public int CurrentSpriteZone { get; private set; }
+    public Vector3 LastFlashlightDir => lastFlashlightDir;
+
     public bool IsTorchOn => isTorchOn;
     public float BatteryPercent => battery;
     public bool IsRecharging => !isTorchOn;
 
     void Start()
     {
-        if (mainCamera == null)
-            mainCamera = Camera.main;
-
+        if (mainCamera == null) mainCamera = Camera.main;
         if (lightSource != null)
         {
             baseIntensity = lightSource.intensity;
@@ -122,19 +125,12 @@ public class TorchlightManager : MonoBehaviour
             SetupBatteryImage();
             StartCoroutine(FlickerRoutine());
         }
-
-        if (secondaryLight != null)
-            secondaryBaseIntensity = secondaryLight.intensity;
-
-        if (uiCanvasGroup != null)
-            uiCanvasGroup.alpha = 0f;
-
-        if (warningIcon != null)
-            warningIcon.gameObject.SetActive(false);
+        if (secondaryLight != null) secondaryBaseIntensity = secondaryLight.intensity;
+        if (uiCanvasGroup != null) uiCanvasGroup.alpha = 0f;
+        if (warningIcon != null) warningIcon.gameObject.SetActive(false);
 
         lastFlashlightDir = player.FacingDirection;
-        if (lastFlashlightDir == Vector3.zero)
-            lastFlashlightDir = transform.forward;
+        if (lastFlashlightDir == Vector3.zero) lastFlashlightDir = transform.forward;
     }
 
     void Update()
@@ -150,13 +146,11 @@ public class TorchlightManager : MonoBehaviour
         if (secondaryLight != null)
             secondaryLight.enabled = lightSource.enabled;
 
-        // ======================================================
-        // Player turning MUST always update
-        // Torch ON/OFF should NOT affect body rotation
-        // ======================================================
-        HandleMouseFree();   // <-- MOVED OUTSIDE
+        HandleMouseFree();
 
-        // Light brightness only when torch is on
+        // --- NEW: UPDATE SPRITE ZONE LOGIC ---
+        CalculateSpriteZone();
+
         if (isTorchOn && battery > 0f)
         {
             HandleBrightness();
@@ -165,18 +159,33 @@ public class TorchlightManager : MonoBehaviour
         UpdateUI(torchUsing);
 
         if (batteryFillImage != null && smoothFill)
-            batteryFillImage.fillAmount =
-                Mathf.Lerp(batteryFillImage.fillAmount, targetFill, Time.deltaTime * fillLerpSpeed);
+            batteryFillImage.fillAmount = Mathf.Lerp(batteryFillImage.fillAmount, targetFill, Time.deltaTime * fillLerpSpeed);
         else if (batteryFillImage != null)
             batteryFillImage.fillAmount = targetFill;
 
         HandleUIFade();
     }
 
+    void CalculateSpriteZone()
+    {
+        Vector3 f = lastFlashlightDir;
+        f.y = 0f;
+        if (f.sqrMagnitude < 0.001f) return;
+
+        // Apply isometric offset
+        f = Quaternion.AngleAxis(44.6f, Vector3.up) * f;
+        float angle = Mathf.Atan2(f.x, f.z) * Mathf.Rad2Deg;
+
+        // 4-Way Diagonal Logic (The New Zone X-Pattern)
+        if (angle > 0 && angle <= 90) CurrentSpriteZone = 0; // Up-Right
+        else if (angle > -90 && angle <= 0) CurrentSpriteZone = 1; // Up-Left
+        else if (angle > 90 && angle <= 180) CurrentSpriteZone = 2; // Down-Right
+        else CurrentSpriteZone = 3; // Down-Left
+    }
+
     void LateUpdate()
     {
         if (flashlight == null) return;
-
         Vector3 targetPos = transform.position + lastFlashlightDir.normalized * offsetDistance + Vector3.up * heightOffset;
         flashlight.position = targetPos;
 
@@ -201,23 +210,14 @@ public class TorchlightManager : MonoBehaviour
         if (isTorchOn)
         {
             rechargeTimer = 0f;
-
-            if (battery > 0f)
-                battery -= drainSpeed * Time.deltaTime;
-            else
-            {
-                battery = 0f;
-                isTorchOn = false;
-            }
+            if (battery > 0f) battery -= drainSpeed * Time.deltaTime;
+            else { battery = 0f; isTorchOn = false; }
         }
         else
         {
             rechargeTimer += Time.deltaTime;
-
-            if (rechargeTimer >= rechargeDelay && battery < 1f)
-                battery += rechargeSpeed * Time.deltaTime;
+            if (rechargeTimer >= rechargeDelay && battery < 1f) battery += rechargeSpeed * Time.deltaTime;
         }
-
         battery = Mathf.Clamp01(battery);
         targetFill = battery;
     }
@@ -225,14 +225,9 @@ public class TorchlightManager : MonoBehaviour
     void HandleBrightness()
     {
         if (lightSource == null) return;
-
         float intensity = baseIntensity;
-
-        if (battery <= criticalThreshold)
-            intensity *= maxBrightnessAtCritical;
-        else if (battery <= warningThreshold)
-            intensity *= maxBrightnessAtWarning;
-
+        if (battery <= criticalThreshold) intensity *= maxBrightnessAtCritical;
+        else if (battery <= warningThreshold) intensity *= maxBrightnessAtWarning;
         lightSource.intensity = intensity;
 
         if (secondaryLight != null && baseIntensity > 0f)
@@ -254,8 +249,7 @@ public class TorchlightManager : MonoBehaviour
         if (aimDir.sqrMagnitude < 0.0001f) return;
 
         Vector3 facing = player.FacingDirection;
-        if (facing.sqrMagnitude < 0.0001f)
-            facing = transform.forward;
+        if (facing.sqrMagnitude < 0.0001f) facing = transform.forward;
 
         float angleDiff = Vector3.SignedAngle(facing, aimDir, Vector3.up);
         float absAngle = Mathf.Abs(angleDiff);
@@ -298,7 +292,6 @@ public class TorchlightManager : MonoBehaviour
         float angle = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg;
         float snapped = Mathf.Round(angle / 45f) * 45f;
         float rad = snapped * Mathf.Deg2Rad;
-
         return new Vector3(Mathf.Sin(rad), 0f, Mathf.Cos(rad)).normalized;
     }
 
@@ -314,7 +307,6 @@ public class TorchlightManager : MonoBehaviour
     void UpdateUI(bool torchUsing)
     {
         float b = Mathf.Clamp01(battery);
-
         TorchThreshold newActive = null;
         foreach (var t in thresholds)
         {
@@ -341,8 +333,7 @@ public class TorchlightManager : MonoBehaviour
         bool thresholdVisible = activeThreshold != null && activeThreshold.showBarWhenReached;
         bool shouldShowBar = thresholdVisible || !isTorchOn || visibleTimer > 0f;
 
-        if (!isTorchOn)
-            visibleTimer = Mathf.Max(visibleTimer, uiVisibleDuration);
+        if (!isTorchOn) visibleTimer = Mathf.Max(visibleTimer, uiVisibleDuration);
 
         if (uiCanvasGroup != null)
         {
@@ -350,32 +341,23 @@ public class TorchlightManager : MonoBehaviour
             uiCanvasGroup.alpha = Mathf.MoveTowards(uiCanvasGroup.alpha, target, uiFadeSpeed * Time.deltaTime);
         }
 
-        bool shouldShowWarning = torchUsing && activeThreshold != null &&
-                                 activeThreshold.showWarningSign;
+        bool shouldShowWarning = torchUsing && activeThreshold != null && activeThreshold.showWarningSign;
 
-        if (shouldShowWarning)
-            StartWarningPulse(activeThreshold.warningPulseSpeed);
-        else
-            StopWarningPulse();
+        if (shouldShowWarning) StartWarningPulse(activeThreshold.warningPulseSpeed);
+        else StopWarningPulse();
     }
 
     void HandleUIFade()
     {
         if (uiCanvasGroup == null) return;
-
         bool thresholdVisible = activeThreshold != null && activeThreshold.showBarWhenReached;
-
-        if (visibleTimer > 0f && !thresholdVisible)
-            visibleTimer -= Time.deltaTime;
+        if (visibleTimer > 0f && !thresholdVisible) visibleTimer -= Time.deltaTime;
     }
 
     void StartWarningPulse(float speed)
     {
         if (warningIcon == null) return;
-
-        if (warningPulseRoutine != null)
-            StopCoroutine(warningPulseRoutine);
-
+        if (warningPulseRoutine != null) StopCoroutine(warningPulseRoutine);
         warningIcon.gameObject.SetActive(true);
         warningPulseRoutine = StartCoroutine(WarningPulseCoroutine(speed));
     }
@@ -383,10 +365,7 @@ public class TorchlightManager : MonoBehaviour
     void StopWarningPulse()
     {
         if (warningIcon == null) return;
-
-        if (warningPulseRoutine != null)
-            StopCoroutine(warningPulseRoutine);
-
+        if (warningPulseRoutine != null) StopCoroutine(warningPulseRoutine);
         warningPulseRoutine = null;
         warningIcon.gameObject.SetActive(false);
     }
@@ -394,7 +373,6 @@ public class TorchlightManager : MonoBehaviour
     IEnumerator WarningPulseCoroutine(float speed)
     {
         Color baseColor = warningIcon.color;
-
         while (true)
         {
             float alpha = (Mathf.Sin(Time.time * speed) + 1f) * 0.5f;
@@ -408,18 +386,14 @@ public class TorchlightManager : MonoBehaviour
     {
         battery = Mathf.Clamp01(value);
         targetFill = battery;
-
-        if (battery <= 0f)
-            isTorchOn = false;
-
+        if (battery <= 0f) isTorchOn = false;
         ShowTemporaryUI();
     }
 
     public void ShowTemporaryUI()
     {
         visibleTimer = uiVisibleDuration;
-        if (uiCanvasGroup != null)
-            uiCanvasGroup.alpha = 1f;
+        if (uiCanvasGroup != null) uiCanvasGroup.alpha = 1f;
     }
 
     IEnumerator FlickerRoutine()
@@ -428,23 +402,19 @@ public class TorchlightManager : MonoBehaviour
         {
             yield return new WaitForSeconds(1f);
             if (!enableFlicker || !isTorchOn || lightSource == null) continue;
-
             if (Random.value < flickerEventChance)
             {
                 for (int i = 0; i < flickerCount; i++)
                 {
                     float flickerValue = Random.Range(minIntensity, maxIntensity);
                     lightSource.intensity = flickerValue;
-
                     if (secondaryLight != null && baseIntensity > 0f)
                     {
                         float factor = flickerValue / baseIntensity;
                         secondaryLight.intensity = secondaryBaseIntensity * factor;
                     }
-
                     yield return new WaitForSeconds(flickerInterval);
                 }
-
                 HandleBrightness();
             }
         }
@@ -452,39 +422,18 @@ public class TorchlightManager : MonoBehaviour
 
     public bool IsBeamHittingEnemy(Transform enemy)
     {
-        if (!IsTorchOn || battery <= 0f)
-            return false;
-
-        if (flashlight == null)
-            return false;
-
+        if (!IsTorchOn || battery <= 0f || flashlight == null) return false;
         Vector3 origin = flashlight.position;
         Vector3 direction = lastFlashlightDir.normalized;
-
-        RaycastHit[] hits = Physics.RaycastAll(origin,
-                                               direction,
-                                               beamDistance,
-                                               beamBlockMask | enemyMask);
-
-        if (hits.Length == 0)
-            return false;
-
-        // SORT BY DISTANCE (nearest first)
+        RaycastHit[] hits = Physics.RaycastAll(origin, direction, beamDistance, beamBlockMask | enemyMask);
+        if (hits.Length == 0) return false;
         System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
-
         foreach (var hit in hits)
         {
             int hitLayer = hit.collider.gameObject.layer;
-
-            // WALL HIT FIRST → blocked → MOVE
-            if (((1 << hitLayer) & beamBlockMask) != 0)
-                return false;
-
-            // ENEMY HIT FIRST → FREEZE
-            if (hit.transform.root == enemy.root)
-                return true;
+            if (((1 << hitLayer) & beamBlockMask) != 0) return false;
+            if (hit.transform.root == enemy.root) return true;
         }
-
         return false;
     }
 
@@ -492,58 +441,52 @@ public class TorchlightManager : MonoBehaviour
     {
         if (player == null) return;
 
+        // --- NEW GIZMO ZONE (X-PATTERN) ---
+        Gizmos.color = Color.magenta;
+        Vector3 zoneCenter = transform.position + Vector3.up * 0.1f;
+        Quaternion isoInv = Quaternion.AngleAxis(-44.6f, Vector3.up);
+        Vector3 line1 = isoInv * new Vector3(1, 0, 1).normalized * 3f;
+        Vector3 line2 = isoInv * new Vector3(-1, 0, 1).normalized * 3f;
+        Gizmos.DrawLine(zoneCenter - line1, zoneCenter + line1);
+        Gizmos.DrawLine(zoneCenter - line2, zoneCenter + line2);
+        // ----------------------------------
+
         Gizmos.color = Color.yellow;
-
         Vector3 origin = transform.position;
-        Vector3 facing = (player != null ? player.FacingDirection : transform.forward);
-
-        if (facing.sqrMagnitude < 0.001f)
-            facing = transform.forward;
+        Vector3 facing = player.FacingDirection;
+        if (facing.sqrMagnitude < 0.001f) facing = transform.forward;
 
         Quaternion leftRot = Quaternion.AngleAxis(-freeAimRadius, Vector3.up);
         Quaternion rightRot = Quaternion.AngleAxis(freeAimRadius, Vector3.up);
-
         Vector3 leftDir = (leftRot * facing).normalized;
         Vector3 rightDir = (rightRot * facing).normalized;
-
         float length = 2.0f;
-
         Gizmos.DrawRay(origin, leftDir * length);
         Gizmos.DrawRay(origin, rightDir * length);
 
         int steps = 24;
         Vector3 prev = leftDir * length;
-
         for (int i = 1; i <= steps; i++)
         {
             float t = (float)i / steps;
             float angle = Mathf.Lerp(-freeAimRadius, freeAimRadius, t);
             Vector3 dir = Quaternion.AngleAxis(angle, Vector3.up) * facing;
             Vector3 cur = dir.normalized * length;
-
             Gizmos.DrawLine(origin + prev, origin + cur);
             prev = cur;
         }
 
         Gizmos.color = Color.cyan;
-
         Quaternion leftSnap = Quaternion.AngleAxis(-(freeAimRadius + snapTolerance), Vector3.up);
         Quaternion rightSnap = Quaternion.AngleAxis((freeAimRadius + snapTolerance), Vector3.up);
-
         Gizmos.DrawRay(origin, (leftSnap * facing).normalized * length * 1.1f);
         Gizmos.DrawRay(origin, (rightSnap * facing).normalized * length * 1.1f);
 
-        // TORCH BEAM DEBUG RAY
         if (showBeamGizmo && flashlight != null)
         {
             Vector3 beamOrigin = flashlight.position;
             Vector3 beamDir = lastFlashlightDir.normalized;
-
-            if (IsTorchOn)
-                Gizmos.color = Color.green;
-            else
-                Gizmos.color = Color.red;
-
+            Gizmos.color = IsTorchOn ? Color.green : Color.red;
             Gizmos.DrawRay(beamOrigin, beamDir * beamDistance);
         }
     }

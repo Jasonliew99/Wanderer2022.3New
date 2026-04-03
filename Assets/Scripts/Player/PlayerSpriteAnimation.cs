@@ -10,8 +10,9 @@ public class PlayerSpriteAnimation : MonoBehaviour
     private PlayerMovement player;
     public Animator animator;
     public SpriteRenderer spriteRenderer;
-    public Transform meshTransform;   // Invisible 3D mesh/capsule
-    public Rigidbody rb;              // Player RB for movement detection
+    public Transform meshTransform;
+    public Rigidbody rb;
+    public TorchlightManager torchManager; // ASSIGN THIS IN INSPECTOR
 
     [Header("Settings")]
     public float idleThreshold = 0.05f;
@@ -19,6 +20,8 @@ public class PlayerSpriteAnimation : MonoBehaviour
     void Start()
     {
         player = GetComponentInParent<PlayerMovement>();
+        if (torchManager == null)
+            torchManager = GetComponentInParent<TorchlightManager>();
     }
 
     void Update()
@@ -29,41 +32,32 @@ public class PlayerSpriteAnimation : MonoBehaviour
 
     void UpdateSpriteByFacing(bool isMoving)
     {
-        Vector3 f = player.FacingDirection;
-        f.y = 0f;
+        if (torchManager == null) return;
 
-        if (f.sqrMagnitude < 0.001f)
-            return;
-
-        // Undo the isometric rotation used in movement
-        f = Quaternion.AngleAxis(44.6f, Vector3.up) * f;
-
-        f.Normalize();
-
-        float angle = Mathf.Atan2(f.x, f.z) * Mathf.Rad2Deg;
+        // READ DIRECTLY FROM THE NEW GIZMO ZONE LOGIC
+        int zone = torchManager.CurrentSpriteZone;
 
         string anim = "";
         bool flipX = false;
 
-        if (angle >= 67.5f && angle < 112.5f) // RIGHT
+        switch (zone)
         {
-            anim = "Right3pm";
-            flipX = false;
-        }
-        else if (angle >= -112.5f && angle < -67.5f) // LEFT
-        {
-            anim = "Right3pm";
-            flipX = true;
-        }
-        else if (angle >= -67.5f && angle < 67.5f) // UP / UPRIGHT / UPLEFT
-        {
-            anim = "UpRight2pm";
-            flipX = angle < 0;
-        }
-        else // DOWN / DOWNRIGHT / DOWNLEFT
-        {
-            anim = "DownRight5pm";
-            flipX = angle < 0;
+            case 0: // Up-Right
+                anim = "UpRight2pm";
+                flipX = false;
+                break;
+            case 1: // Up-Left
+                anim = "UpRight2pm";
+                flipX = true;
+                break;
+            case 2: // Down-Right
+                anim = "DownRight5pm";
+                flipX = false;
+                break;
+            case 3: // Down-Left
+                anim = "DownRight5pm";
+                flipX = true;
+                break;
         }
 
         spriteRenderer.flipX = flipX;
@@ -78,7 +72,6 @@ public class PlayerSpriteAnimation : MonoBehaviour
         }
 
         animator.speed = 1f;
-
         if (!animator.GetCurrentAnimatorStateInfo(0).IsName(anim))
             animator.Play(anim);
     }

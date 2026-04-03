@@ -25,6 +25,8 @@ public class TeddyBearController : MonoBehaviour
 
     [Header("Detection")]
     public string playerTag = "Player";
+    public float soundRadius = 8f; // The circular "hearing" range
+    public LayerMask obstructionMask; // Set this to your 'World' or 'Obstacle' layer
 
     [Header("Trap Prefab")]
     public GameObject trapPrefab;
@@ -56,10 +58,11 @@ public class TeddyBearController : MonoBehaviour
     // -------- UNITY --------
     void Start()
     {
-        player = GameObject.FindGameObjectWithTag(playerTag)?.transform;
+        // Find player by tag as before
+        GameObject playerObj = GameObject.FindGameObjectWithTag(playerTag);
+        if (playerObj != null) player = playerObj.transform;
 
-        agent.updateRotation = false;
-        agent.updateUpAxis = false;
+        agent.updateRotation = true; // Changed to true usually for 3D, set to false if 2D
         agent.speed = patrolSpeed;
 
         if (patrolPoints.Length > 0)
@@ -71,6 +74,10 @@ public class TeddyBearController : MonoBehaviour
 
     void Update()
     {
+        // 1. Run the new Detection Logic
+        DetectPlayerBySound();
+
+        // 2. Run the State Machine
         switch (currentState)
         {
             case State.Patrol:
@@ -84,6 +91,44 @@ public class TeddyBearController : MonoBehaviour
             case State.MovingToPlaceTrap:
                 CheckReachedPlacementPoint();
                 break;
+        }
+    }
+
+    // -------- DETECTION (NEW SOUND RADIUS WAY) --------
+    void DetectPlayerBySound()
+    {
+        if (player == null) return;
+
+        float distance = Vector3.Distance(transform.position, player.position);
+
+        // Check if player is inside the "hearing" circle
+        if (distance <= soundRadius)
+        {
+            // Check if there is a wall between Bear and Player
+            Vector3 dirToPlayer = (player.position - transform.position).normalized;
+            bool hasLOS = !Physics.Raycast(transform.position + Vector3.up, dirToPlayer, distance, obstructionMask);
+
+            if (hasLOS)
+            {
+                // If we aren't chasing yet, start chasing!
+                if (currentState != State.Chase)
+                {
+                    StopAllCoroutines();
+                    busy = false;
+                    currentState = State.Chase;
+                    agent.speed = chaseSpeed;
+                    agent.isStopped = false;
+                }
+                return; // Exit here so we don't trigger the "Lost Player" logic below
+            }
+        }
+
+        // If player is out of range or behind a wall AND we were chasing...
+        if (currentState == State.Chase)
+        {
+            currentState = State.Patrol;
+            agent.speed = patrolSpeed;
+            ResumePatrol();
         }
     }
 
@@ -107,19 +152,10 @@ public class TeddyBearController : MonoBehaviour
         agent.SetDestination(player.position);
     }
 
-    // -------- DETECTION --------
+    // -------- TRIGGER (NOW ONLY FOR TRAP ZONES) --------
     void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag(playerTag))
-        {
-            StopAllCoroutines();
-            busy = false;
-            currentState = State.Chase;
-
-            agent.speed = chaseSpeed;
-            agent.isStopped = false;
-            return;
-        }
+        // Player detection removed from here to prevent conflicts
 
         TrapPlacementZone zone = other.GetComponent<TrapPlacementZone>();
         if (zone != null && currentState == State.Patrol)
@@ -128,17 +164,7 @@ public class TeddyBearController : MonoBehaviour
         }
     }
 
-    void OnTriggerExit(Collider other)
-    {
-        if (other.CompareTag(playerTag))
-        {
-            currentState = State.Patrol;
-            agent.speed = patrolSpeed;
-            ResumePatrol();
-        }
-    }
-
-    // -------- TRAP LOGIC --------
+    // -------- TRAP LOGIC (UNTOUCHED) --------
     void TryStartTrapPlacement(TrapPlacementZone zone)
     {
         if (busy) return;
@@ -222,7 +248,7 @@ public class TeddyBearController : MonoBehaviour
         ResumePatrol();
     }
 
-    // -------- TRAP CALLBACK --------
+    // -------- TRAP CALLBACK (UNTOUCHED) --------
     public void OnTrapTriggered(Vector3 trapPosition, GameObject trap)
     {
         if (activeTraps.Contains(trap))
@@ -259,5 +285,12 @@ public class TeddyBearController : MonoBehaviour
     {
         if (patrolPoints.Length == 0) return;
         agent.SetDestination(patrolPoints[patrolIndex].position);
+    }
+
+    // Visualizes the "Sound" range in the editor
+    void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(transform.position, soundRadius);
     }
 }
