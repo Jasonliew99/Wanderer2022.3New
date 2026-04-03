@@ -432,6 +432,38 @@ public class RedGhostMovement : MonoBehaviour
         return Quaternion.Euler(0, snapped, 0) * Vector3.forward;
     }
 
+    // --- KILL LOGIC ---
+    private void OnCollisionEnter(Collision collision)
+    {
+        // Check if the thing we hit is the player
+        if (collision.transform == player)
+        {
+            KillPlayer();
+        }
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        // Double check for triggers in case the player has a trigger collider
+        if (other.transform == player)
+        {
+            KillPlayer();
+        }
+    }
+
+    void KillPlayer()
+    {
+        RespawnController respawnController = FindObjectOfType<RespawnController>();
+        if (respawnController != null)
+        {
+            respawnController.HandlePlayerDeath();
+        }
+        else
+        {
+            Debug.LogError("No RespawnController found in the scene! The player should be dead but I don't know how to kill them.");
+        }
+    }
+
     // ---------------- GIZMOS ----------------
 
     void OnDrawGizmosSelected()

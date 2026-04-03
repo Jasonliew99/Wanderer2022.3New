@@ -37,7 +37,6 @@ public class RespawnController : MonoBehaviour
         deathCanvas.gameObject.SetActive(false);
     }
 
-    // CALLED BY LEVELCONTROLLER WHEN ENTER NEW AREA
     public void OnLevelStarted(Transform[] newPoints)
     {
         currentRespawnPoints = newPoints;
@@ -53,12 +52,14 @@ public class RespawnController : MonoBehaviour
             if (lifeImages[i] != null)
             {
                 lifeImages[i].enabled = true;
-                lifeImages[i].sprite = fullSprite; // THIS FIXES UI RESET
+                lifeImages[i].sprite = fullSprite;
             }
         }
+
+        // Ensure death canvas is hidden if we are refilling
+        if (deathCanvas != null) deathCanvas.gameObject.SetActive(false);
     }
 
-    // CALLED BY ENEMY WHEN PLAYER CAUGHT
     public void HandlePlayerDeath()
     {
         if (!isRespawning)
@@ -73,11 +74,9 @@ public class RespawnController : MonoBehaviour
         if (currentLives > 1)
         {
             lifeCanvas.gameObject.SetActive(true);
-
             yield return new WaitForSecondsRealtime(lifeDisplayTime);
 
             lifeImages[currentLives - 1].sprite = hurtSprite;
-
             yield return new WaitForSecondsRealtime(lifeDisplayTime);
 
             lifeCanvas.gameObject.SetActive(false);
@@ -110,17 +109,14 @@ public class RespawnController : MonoBehaviour
         Rigidbody rb = player.GetComponent<Rigidbody>();
         PlayerMovement movement = player.GetComponent<PlayerMovement>();
 
-        if (movement != null)
-            movement.enabled = false;
+        if (movement != null) movement.enabled = false;
 
         if (rb != null)
         {
             rb.velocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero;
-
             rb.position = spawnPos;
             rb.rotation = Quaternion.identity;
-
             rb.Sleep();
             rb.WakeUp();
         }
@@ -135,19 +131,9 @@ public class RespawnController : MonoBehaviour
     private IEnumerator ReEnableMovement(PlayerMovement movement)
     {
         yield return null;
-        if (movement != null)
-            movement.enabled = true;
+        if (movement != null) movement.enabled = true;
     }
 
-    private IEnumerator ReEnablePlayerMovement(PlayerMovement movement)
-    {
-        yield return null;
-
-        if (movement != null)
-            movement.enabled = true;
-    }
-
-    // RETRY NOW LOADS CLEANLY
     public void RetryLevel()
     {
         StartCoroutine(RetryRoutine());
