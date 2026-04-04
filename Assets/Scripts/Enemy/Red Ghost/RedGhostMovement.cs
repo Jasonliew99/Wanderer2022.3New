@@ -464,6 +464,27 @@ public class RedGhostMovement : MonoBehaviour
         }
     }
 
+    public void ResetToPatrolState()
+    {
+        StopAllCoroutines();
+        currentState = State.Patrol;
+
+        // Reset NavMesh and physics
+        agent.isStopped = false;
+        agent.speed = patrolSpeed;
+        agent.velocity = Vector3.zero;
+
+        // Reset internal charge/aim variables
+        isWaiting = false;
+        isRecovering = false;
+        isDriftingTurn = false;
+
+        // Pick up where it left off
+        patrolIndex = GetClosestPatrolIndex();
+        GoToNextPatrol();
+    }
+
+
     // ---------------- GIZMOS ----------------
 
     void OnDrawGizmosSelected()

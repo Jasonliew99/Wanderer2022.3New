@@ -28,6 +28,13 @@ public class PlayerMovement : MonoBehaviour
     public KeyCode sprintKey = KeyCode.LeftShift;
     public KeyCode sneakKey = KeyCode.LeftControl;
 
+    [Header("SFX")]
+    public AudioSource movementAudioSource;
+    public AudioClip footstepClip;
+    public float walkStepInterval = 0.5f;
+    public float sprintStepInterval = 0.3f;
+    private float stepTimer;
+
     [Header("Trap / Immobilize")]
     public bool isImmobilized = false;
 
@@ -113,20 +120,27 @@ public class PlayerMovement : MonoBehaviour
         else if (currentMode == MovementMode.Sneaking)
             currentSpeed = sneakSpeed;
 
-        // Rotate input into isometric space
         Vector3 rotatedInput = Quaternion.AngleAxis(worldRotationOffset, Vector3.up) * input;
-
-        Vector3 horizontalVelocity = new Vector3(
-            rotatedInput.x * currentSpeed,
-            0f,
-            rotatedInput.z * currentSpeed
-        );
-
+        Vector3 horizontalVelocity = new Vector3(rotatedInput.x * currentSpeed, 0f, rotatedInput.z * currentSpeed);
         rb.velocity = new Vector3(horizontalVelocity.x, rb.velocity.y, horizontalVelocity.z);
 
         if (!isGrounded)
         {
             rb.AddForce(Physics.gravity * (gravityMultiplier - 1f), ForceMode.Acceleration);
+        }
+
+        // --- NEW: FOOTSTEP LOGIC ---
+        if (isGrounded && input.sqrMagnitude > 0.01f && currentMode != MovementMode.Sneaking)
+        {
+            stepTimer -= Time.fixedDeltaTime;
+            if (stepTimer <= 0)
+            {
+                // Pitch up slightly if sprinting to make it feel "faster"
+                movementAudioSource.pitch = (currentMode == MovementMode.Sprinting) ? 1.2f : 1.0f;
+                movementAudioSource.PlayOneShot(footstepClip);
+
+                stepTimer = (currentMode == MovementMode.Sprinting) ? sprintStepInterval : walkStepInterval;
+            }
         }
     }
 

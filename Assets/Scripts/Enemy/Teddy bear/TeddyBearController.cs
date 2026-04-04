@@ -18,6 +18,7 @@ public class TeddyBearController : MonoBehaviour
     public NavMeshAgent agent;
     public float patrolSpeed = 2f;
     public float chaseSpeed = 4.5f;
+    public float trapRushSpeed = 6.5f;
 
     [Header("Patrol")]
     public Transform[] patrolPoints;
@@ -74,22 +75,28 @@ public class TeddyBearController : MonoBehaviour
 
     void Update()
     {
-        // 1. Run the new Detection Logic
+        // 1. Detection always runs
         DetectPlayerBySound();
 
-        // 2. Run the State Machine
+        // 2. Only run the state machine if we AREN'T chasing
+        // This prevents Patrol or Trap logic from "fighting" the Chase
+        if (currentState == State.Chase)
+        {
+            ChasePlayer();
+            return;
+        }
+
         switch (currentState)
         {
             case State.Patrol:
                 Patrol();
                 break;
-
-            case State.Chase:
-                ChasePlayer();
-                break;
-
             case State.MovingToPlaceTrap:
                 CheckReachedPlacementPoint();
+                break;
+            // Adding the missing states to the switch for safety
+            case State.InvestigateTrap:
+                // Logic handled by Coroutine, do nothing here
                 break;
         }
     }
@@ -101,29 +108,27 @@ public class TeddyBearController : MonoBehaviour
 
         float distance = Vector3.Distance(transform.position, player.position);
 
-        // Check if player is inside the "hearing" circle
         if (distance <= soundRadius)
         {
-            // Check if there is a wall between Bear and Player
-            Vector3 dirToPlayer = (player.position - transform.position).normalized;
-            bool hasLOS = !Physics.Raycast(transform.position + Vector3.up, dirToPlayer, distance, obstructionMask);
-
-            if (hasLOS)
+            if (currentState != State.Chase)
             {
-                // If we aren't chasing yet, start chasing!
-                if (currentState != State.Chase)
-                {
-                    StopAllCoroutines();
-                    busy = false;
-                    currentState = State.Chase;
-                    agent.speed = chaseSpeed;
-                    agent.isStopped = false;
-                }
-                return; // Exit here so we don't trigger the "Lost Player" logic below
+                StopAllCoroutines();
+                busy = false;
+                currentState = State.Chase;
+
+                // --- INSTANT SPEED BOOST ---
+                agent.isStopped = true;
+                agent.velocity = Vector3.zero;
+                agent.isStopped = false;
+                agent.speed = chaseSpeed;
+                // ---------------------------
             }
+
+            agent.SetDestination(player.position);
+            return;
         }
 
-        // If player is out of range or behind a wall AND we were chasing...
+        // 2. If player escapes the radius, go back to patrolling
         if (currentState == State.Chase)
         {
             currentState = State.Patrol;
@@ -155,12 +160,36 @@ public class TeddyBearController : MonoBehaviour
     // -------- TRIGGER (NOW ONLY FOR TRAP ZONES) --------
     void OnTriggerEnter(Collider other)
     {
-        // Player detection removed from here to prevent conflicts
+        // 1. KILL LOGIC: Check if it's the player
+        // We use the playerTag string defined at the top of your script ("Player")
+        if (other.CompareTag(playerTag))
+        {
+            ExecuteDeath();
+            return; // Stop here so we don't look for traps if we just killed the player
+        }
 
+        // 2. TRAP ZONE LOGIC: (Your original code)
         TrapPlacementZone zone = other.GetComponent<TrapPlacementZone>();
         if (zone != null && currentState == State.Patrol)
         {
             TryStartTrapPlacement(zone);
+        }
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.gameObject.CompareTag(playerTag))
+        {
+            ExecuteDeath();
+        }
+    }
+
+    void ExecuteDeath()
+    {
+        RespawnController respawnController = FindObjectOfType<RespawnController>();
+        if (respawnController != null)
+        {
+            respawnController.HandlePlayerDeath();
         }
     }
 
@@ -254,29 +283,50 @@ public class TeddyBearController : MonoBehaviour
         if (activeTraps.Contains(trap))
             activeTraps.Remove(trap);
 
+        // If we are ALREADY chasing the player, don't stop chasing to look at a trap.
         if (currentState == State.Chase)
             return;
+
+        // FORCE the bear to care immediately
+        StopAllCoroutines(); // Kill any "Placing Trap" or "Patrol" wait timers
+        busy = false;        // Unblock the bear
 
         StartCoroutine(RushToTrap(trapPosition));
     }
 
     IEnumerator RushToTrap(Vector3 pos)
     {
+        if (currentState == State.Chase) yield break;
+
         busy = true;
         currentState = State.InvestigateTrap;
 
-        agent.speed = chaseSpeed;
-        agent.SetDestination(pos);
+        // --- THE INSTANT SPRINT FIX ---
+        agent.isStopped = true;
+        agent.ResetPath();
 
-        while (!agent.pathPending && agent.remainingDistance > 0.2f)
+        // 1. Set the high speed first
+        agent.speed = trapRushSpeed;
+
+        // 2. FORCE the velocity to be the max speed toward the trap
+        // This removes the "slow start" entirely
+        Vector3 direction = (pos - transform.position).normalized;
+        agent.velocity = direction * trapRushSpeed;
+
+        agent.SetDestination(pos);
+        agent.isStopped = false;
+        // ------------------------------
+
+        while (agent.pathPending || agent.remainingDistance > 0.5f)
+        {
             yield return null;
+        }
 
         yield return new WaitForSeconds(investigateTrapTime);
 
         busy = false;
         currentState = State.Patrol;
         agent.speed = patrolSpeed;
-
         ResumePatrol();
     }
 
@@ -292,5 +342,25 @@ public class TeddyBearController : MonoBehaviour
     {
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, soundRadius);
+    }
+
+    public void ResetToPatrolState()
+    {
+        StopAllCoroutines(); // Stops the "Placing Trap" or "Investigating" timers
+        busy = false;
+        currentState = State.Patrol;
+
+        agent.isStopped = false;
+        agent.speed = patrolSpeed;
+        agent.velocity = Vector3.zero;
+
+        // CLEANUP: Destroy old traps so the level isn't a mess on respawn
+        foreach (GameObject trap in activeTraps)
+        {
+            if (trap != null) Destroy(trap);
+        }
+        activeTraps.Clear();
+
+        ResumePatrol();
     }
 }

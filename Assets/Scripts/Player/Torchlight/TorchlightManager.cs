@@ -36,6 +36,11 @@ public class TorchlightManager : MonoBehaviour
     public float heightOffset = 0.2f;
     public KeyCode toggleKey = KeyCode.F;
 
+    [Header("Torch SFX")]
+    public AudioSource torchAudioSource;
+    public AudioClip torchOnSound;
+    public AudioClip torchOffSound;
+
     [Header("Torch Beam Raycast")]
     public float beamDistance = 15f;
     public LayerMask beamBlockMask;
@@ -201,6 +206,14 @@ public class TorchlightManager : MonoBehaviour
         if (Input.GetKeyDown(toggleKey) && battery > 0f)
         {
             isTorchOn = !isTorchOn;
+
+            // --- NEW: PLAY TOGGLE SOUND ---
+            if (torchAudioSource != null)
+            {
+                AudioClip clipToPlay = isTorchOn ? torchOnSound : torchOffSound;
+                torchAudioSource.PlayOneShot(clipToPlay);
+            }
+
             ShowTemporaryUI();
         }
     }
@@ -210,14 +223,31 @@ public class TorchlightManager : MonoBehaviour
         if (isTorchOn)
         {
             rechargeTimer = 0f;
-            if (battery > 0f) battery -= drainSpeed * Time.deltaTime;
-            else { battery = 0f; isTorchOn = false; }
+            if (battery > 0f)
+            {
+                battery -= drainSpeed * Time.deltaTime;
+            }
+            else
+            {
+                // --- THIS ONLY RUNS ONCE WHEN BATTERY HITS 0 ---
+                battery = 0f;
+                isTorchOn = false;
+
+                // Play the "Off" sound here!
+                if (torchAudioSource != null && torchOffSound != null)
+                {
+                    torchAudioSource.PlayOneShot(torchOffSound);
+                }
+            }
+            // If you put the sound here, it plays EVERY FRAME. Don't do that!
         }
         else
         {
             rechargeTimer += Time.deltaTime;
-            if (rechargeTimer >= rechargeDelay && battery < 1f) battery += rechargeSpeed * Time.deltaTime;
+            if (rechargeTimer >= rechargeDelay && battery < 1f)
+                battery += rechargeSpeed * Time.deltaTime;
         }
+
         battery = Mathf.Clamp01(battery);
         targetFill = battery;
     }

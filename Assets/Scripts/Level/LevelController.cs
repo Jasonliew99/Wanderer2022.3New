@@ -175,8 +175,18 @@ public class LevelController : MonoBehaviour
 
     public void ResetEnemiesForRespawn()
     {
-        if (currentLevelIndex < 0 || currentLevelIndex >= levels.Count) return;
-        ResetSpecificLevelEnemies(currentLevelIndex);
+        if (EscapeMode)
+        {
+            for (int i = 0; i < levels.Count; i++)
+            {
+                ResetSpecificLevelEnemies(i);
+            }
+        }
+        else
+        {
+            if (currentLevelIndex < 0 || currentLevelIndex >= levels.Count) return;
+            ResetSpecificLevelEnemies(currentLevelIndex);
+        }
     }
 
     private void ResetSpecificLevelEnemies(int id)
@@ -276,11 +286,14 @@ public class LevelController : MonoBehaviour
 
     public void EndLevel(int id)
     {
-        if (EscapeMode && id == 0)
+        if (EscapeMode && id == levels.Count - 1)
         {
             WinGame();
             return;
         }
+
+        // Prevents old level triggers from firing during the escape
+        if (EscapeMode) return;
 
         if (id != currentLevelIndex) return;
 
@@ -303,46 +316,34 @@ public class LevelController : MonoBehaviour
         if (EscapeMode) return;
         EscapeMode = true;
 
-        Debug.Log("<color=red>ESCAPE MODE: Level 3 complete. Activating Facility Lockdown!</color>");
-
         if (respawnController != null)
             respawnController.ResetLivesToFull();
 
-        // Enable alarms/red lights
         SetActive(objectsToEnableOnEscape, true);
         SetActive(objectsToDisableOnEscape, false);
-
-        // Spawn special escape-only enemies if you have any
         SetActive(escapeEnemies, true);
 
         for (int i = 0; i < levels.Count; i++)
         {
             LevelBlock lvl = levels[i];
-
-            // 1. OPEN ALL DOORS for the run back
             OpenDoor(lvl.entranceDoor);
             OpenDoor(lvl.exitDoor);
 
-            // 2. ENEMY LOGIC:
-            // If it's Level 1 or Level 2 (index 0 or 1), spawn them back in.
             if (i < levels.Count - 1)
             {
-                Debug.Log($"<color=orange>Escape Mode: Re-spawning enemies for {lvl.areaName}</color>");
                 SetActive(lvl.enemies, true);
-                ResetSpecificLevelEnemies(i); // Put them at their start points
-            }
-            else
-            {
-                // Level 3 enemies are already active, so we do nothing to them.
-                Debug.Log("<color=orange>Escape Mode: Keeping Level 3 enemies as they are.</color>");
+                ResetSpecificLevelEnemies(i);
+
+                // IMPORTANT: Turn off Lvl 1 & 2 deactivators so they don't block the path
+                if (lvl.deactivator) lvl.deactivator.SetActive(false);
             }
 
-            // 3. CLEANUP: Disable start triggers so they don't interfere
             if (lvl.activator) lvl.activator.SetActive(false);
-
-            // Ensure Level 1's "End" trigger is ready to catch the player for the win
-            if (i == 0 && lvl.deactivator) lvl.deactivator.SetActive(true);
         }
+
+        // Ensure only the Finale Trigger (Level 3 Deactivator) is active
+        if (levels[levels.Count - 1].deactivator)
+            levels[levels.Count - 1].deactivator.SetActive(true);
 
         if (uiRoutine != null) StopCoroutine(uiRoutine);
         uiRoutine = StartCoroutine(SequenceRoutine(escapeDialogues));
