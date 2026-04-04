@@ -91,7 +91,7 @@ public class RespawnController : MonoBehaviour
         if (bloodAnimator != null) bloodAnimator.SetTrigger("PlayBlood");
 
         // 2. Short delay for physics impact
-        yield return new WaitForSeconds(0.2f);
+        yield return new WaitForSeconds(0.1f);
 
         // 3. Pause the game
         Time.timeScale = 0f;

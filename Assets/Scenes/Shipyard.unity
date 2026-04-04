@@ -170978,7 +170978,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &628643026
 Transform:
   m_ObjectHideFlags: 0
@@ -179981,7 +179981,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &673268619
 Transform:
   m_ObjectHideFlags: 0
@@ -257085,7 +257085,8 @@ MonoBehaviour:
   - "That\u2019s all of them! Now i need to go back..."
   winDialogues:
   - I made it out...
-  - Can i
+  - Can i go back home now?
+  - Stay tune to full release.....
   respawnController: {fileID: 1766797481}
   objectiveText: {fileID: 767226738}
   fadeDuration: 0.3
@@ -300015,7 +300016,7 @@ AudioSource:
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 8300000, guid: c0095817b89ba2143a27ceadbe71d150, type: 3}
   m_PlayOnAwake: 1
-  m_Volume: 0.7
+  m_Volume: 0.5
   m_Pitch: 1
   Loop: 1
   Mute: 0
@@ -518474,7 +518475,7 @@ Transform:
   m_GameObject: {fileID: 2037893985}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -585.4, y: 0, z: -357.3}
+  m_LocalPosition: {x: -606.2, y: 0, z: -365.2}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -525387,7 +525388,7 @@ AudioSource:
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 8300000, guid: 1f64d91dd7dc9e2428ffc0e82028baab, type: 3}
   m_PlayOnAwake: 0
-  m_Volume: 0.85
+  m_Volume: 0.7
   m_Pitch: 1
   Loop: 0
   Mute: 0
