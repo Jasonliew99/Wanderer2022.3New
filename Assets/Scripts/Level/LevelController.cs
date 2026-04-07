@@ -395,6 +395,7 @@ public class LevelController : MonoBehaviour
 
     private void ShowObjective(string msg)
     {
+        objectiveText.gameObject.SetActive(true);
         if (uiRoutine != null) StopCoroutine(uiRoutine);
         uiRoutine = StartCoroutine(ObjectiveRoutine(msg, displayTime));
     }

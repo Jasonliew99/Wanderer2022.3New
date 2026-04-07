@@ -220,6 +220,7 @@ MonoBehaviour:
   shakePowerMultiplier: 0.8
   maxContributionPerShake: 8
   decayRate: 12
+  idleAlpha: 0.15
   spriteRenderer: {fileID: 3417117762567610214}
   idleSprite: {fileID: 21300000, guid: b75dc824010faae428c35abcbe1a712b, type: 3}
   triggeredSprite: {fileID: 21300000, guid: 7ab5c94dad420e048a1df9c690d7dfac, type: 3}

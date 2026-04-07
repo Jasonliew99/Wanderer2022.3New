@@ -9,6 +9,7 @@ public class TorchLightDetector : MonoBehaviour
 
     [Header("Detection Settings")]
     public LayerMask detectableLayers;
+    // These are now modified by the TorchlightManager in real-time
     public float coneAngle = 30f;
     public float coneRange = 10f;
     public bool showGizmos = true;
@@ -22,15 +23,13 @@ public class TorchLightDetector : MonoBehaviour
 
     void Update()
     {
-        // ===============================
-        // Torch OFF = detector disabled
-        // ===============================
         if (torchManager == null || !torchManager.IsTorchOn || torchManager.BatteryPercent <= 0f)
         {
             ClearAllObjects();
             return;
         }
 
+        // Uses the dynamic coneRange and coneAngle scaled by battery
         Collider[] hits = Physics.OverlapSphere(transform.position, coneRange, detectableLayers);
         List<Collider> currentFrame = new List<Collider>();
 
@@ -82,43 +81,40 @@ public class TorchLightDetector : MonoBehaviour
     {
         if (!showGizmos) return;
 
-        // ============================
-        // GIZMO COLOR BASED ON TORCH
-        // ============================
-        if (torchManager == null)
-        {
-            Gizmos.color = new Color(0.5f, 0.5f, 0.5f, 0.25f); // grey
-        }
-        else if (torchManager.IsTorchOn && torchManager.BatteryPercent > 0f)
-        {
-            Gizmos.color = new Color(1f, 1f, 0f, 0.25f); // yellow
-        }
-        else
-        {
-            Gizmos.color = new Color(1f, 0f, 0f, 0.25f); // red
-        }
+        // Color based on state
+        if (torchManager == null) Gizmos.color = Color.gray;
+        else if (torchManager.IsTorchOn && torchManager.BatteryPercent > 0f) Gizmos.color = new Color(1f, 0.9f, 0f, 0.4f);
+        else Gizmos.color = new Color(1f, 0f, 0f, 0.2f);
 
-        Vector3 forward = transform.forward * coneRange;
-        Vector3 leftDir = Quaternion.Euler(0, -coneAngle * 0.5f, 0) * forward;
-        Vector3 rightDir = Quaternion.Euler(0, coneAngle * 0.5f, 0) * forward;
+        // Draw the Arc on the horizontal plane
+        Vector3 pos = transform.position;
+        Vector3 forward = transform.forward;
 
-        Gizmos.DrawLine(transform.position, transform.position + leftDir);
-        Gizmos.DrawLine(transform.position, transform.position + rightDir);
+        // Draw the Range Sphere
+        Gizmos.DrawWireSphere(pos, coneRange);
 
+        // Draw the Cone Edges (4 lines to show volume)
+        float halfAngle = coneAngle * 0.5f;
+        Quaternion upRay = Quaternion.AngleAxis(-halfAngle, transform.right);
+        Quaternion downRay = Quaternion.AngleAxis(halfAngle, transform.right);
+        Quaternion leftRay = Quaternion.AngleAxis(-halfAngle, transform.up);
+        Quaternion rightRay = Quaternion.AngleAxis(halfAngle, transform.up);
+
+        Gizmos.DrawLine(pos, pos + (leftRay * forward * coneRange));
+        Gizmos.DrawLine(pos, pos + (rightRay * forward * coneRange));
+        Gizmos.DrawLine(pos, pos + (upRay * forward * coneRange));
+        Gizmos.DrawLine(pos, pos + (downRay * forward * coneRange));
+
+        // Draw the End Cap Circle
         int segments = 20;
-        Vector3 prev = transform.position + leftDir;
+        Vector3 previousPoint = pos + (leftRay * forward * coneRange);
         for (int i = 1; i <= segments; i++)
         {
-            float t = i / (float)segments;
-            float angleStep = -coneAngle * 0.5f + t * coneAngle;
-            Vector3 next = transform.position +
-                Quaternion.Euler(0, angleStep, 0) * (transform.forward * coneRange);
-
-            Gizmos.DrawLine(prev, next);
-            prev = next;
+            float angle = -halfAngle + (coneAngle / segments) * i;
+            Vector3 nextPoint = pos + (Quaternion.AngleAxis(angle, transform.up) * forward * coneRange);
+            Gizmos.DrawLine(previousPoint, nextPoint);
+            previousPoint = nextPoint;
         }
-
-        Gizmos.DrawWireSphere(transform.position, coneRange);
     }
 #endif
 }

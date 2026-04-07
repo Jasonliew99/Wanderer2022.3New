@@ -100,12 +100,12 @@ TextureImporter:
       name: PauseMenu_ALL_Lit_SpriteSheet_0
       rect:
         serializedVersion: 2
-        x: 0
+        x: 491
         y: 453
-        width: 2483
+        width: 1500
         height: 151
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -121,12 +121,12 @@ TextureImporter:
       name: PauseMenu_ALL_Lit_SpriteSheet_1
       rect:
         serializedVersion: 2
-        x: 0
+        x: 491
         y: 302
-        width: 2483
+        width: 1500
         height: 151
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -142,12 +142,12 @@ TextureImporter:
       name: PauseMenu_ALL_Lit_SpriteSheet_2
       rect:
         serializedVersion: 2
-        x: 0
+        x: 491
         y: 151
-        width: 2483
+        width: 1500
         height: 151
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -163,12 +163,12 @@ TextureImporter:
       name: PauseMenu_ALL_Lit_SpriteSheet_3
       rect:
         serializedVersion: 2
-        x: 0
+        x: 491
         y: 0
-        width: 2483
+        width: 1500
         height: 151
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []

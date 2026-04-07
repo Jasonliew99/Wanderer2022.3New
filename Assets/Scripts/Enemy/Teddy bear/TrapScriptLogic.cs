@@ -10,6 +10,9 @@ public class TrapScriptLogic : MonoBehaviour
     public float maxContributionPerShake = 8f;
     public float decayRate = 25f;
 
+    [Header("Visibility Settings")]
+    [Range(0f, 1f)] public float idleAlpha = 0.3f;
+
     [Header("Visuals")]
     public SpriteRenderer spriteRenderer;
     public Sprite idleSprite;
@@ -49,6 +52,10 @@ public class TrapScriptLogic : MonoBehaviour
         if (spriteRenderer != null && idleSprite != null)
         {
             spriteRenderer.sprite = idleSprite;
+
+            Color c = spriteRenderer.color;
+            c.a = idleAlpha;
+            spriteRenderer.color = c;
         }
     }
 
@@ -75,13 +82,18 @@ public class TrapScriptLogic : MonoBehaviour
 
         TrapEscapeUI.Instance.Show();
 
-        // 🔥 Swap sprite
-        if (spriteRenderer != null && triggeredSprite != null)
+        // Make fully visible when triggered
+        if (spriteRenderer != null)
         {
-            spriteRenderer.sprite = triggeredSprite;
+            Color c = spriteRenderer.color;
+            c.a = 1f;
+            spriteRenderer.color = c;
+
+            if (triggeredSprite != null)
+                spriteRenderer.sprite = triggeredSprite;
         }
 
-        Debug.Log("[Trap] Player trapped → shake to escape");
+        Debug.Log("[Trap] Player trapped → fully visible");
     }
 
     // ---------------- UPDATE ----------------

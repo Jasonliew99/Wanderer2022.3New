@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.InputSystem;
 
 [System.Serializable]
 public class TorchThreshold
@@ -25,6 +26,8 @@ public class TorchThreshold
     public bool enabled = true;
 }
 
+//alright another stupid ass script.
+//this one controls the torhclight and its the main script for it
 public class TorchlightManager : MonoBehaviour
 {
     public enum TorchMode { MouseFree }
@@ -59,16 +62,20 @@ public class TorchlightManager : MonoBehaviour
     public PlayerMovement player;
     public Light lightSource;
     public Camera mainCamera;
+    public TorchLightDetector detector;
 
     [Header("Secondary Light")]
     public Light secondaryLight;
     private float secondaryBaseIntensity;
+    private float rangeRatio;    // Captured at start
+    private float angleOffset;   // Captured at start
 
     [Header("Battery Settings")]
     [Range(0f, 1f)] public float battery = 1f;
     public float drainSpeed = 0.05f;
     public float rechargeSpeed = 0.1f;
     public float rechargeDelay = 1.2f;
+    [Range(0f, 1f)] public float sizeDrainThreshold = 0.5f;
 
     [Header("Flicker Settings")]
     public bool enableFlicker = true;
@@ -78,11 +85,15 @@ public class TorchlightManager : MonoBehaviour
     [Range(0f, 2f)] public float minIntensity = 0.7f;
     [Range(0f, 2f)] public float maxIntensity = 1.2f;
 
+    [Header("Battery Scaling (Horror)")]
+    public float minRange = 3f;
+    public float minSpotAngle = 20f;
+
     [Header("Brightness Thresholds")]
-    [Range(0f, 1f)] public float warningThreshold = 0.4f;
-    [Range(0f, 1f)] public float criticalThreshold = 0.15f;
-    [Range(0f, 1f)] public float maxBrightnessAtWarning = 0.7f;
-    [Range(0f, 1f)] public float maxBrightnessAtCritical = 0.5f;
+    [Range(0f, 1f)] float warningThreshold = 0.4f;
+    [Range(0f, 1f)] float criticalThreshold = 0.15f;
+    public float maxBrightnessAtWarning = 0.7f;
+    public float maxBrightnessAtCritical = 0.5f;
 
     [Header("UI References")]
     public Image batteryFillImage;
@@ -101,6 +112,8 @@ public class TorchlightManager : MonoBehaviour
 
     private Vector3 lastFlashlightDir;
     private float baseIntensity;
+    private float baseRange;
+    private float baseSpotAngle;
     private bool isTorchOn = true;
     private float targetFill = 1f;
     private float visibleTimer = 0f;
@@ -109,11 +122,10 @@ public class TorchlightManager : MonoBehaviour
     private float snapTimer = 0f;
     private float rechargeTimer = 0f;
 
-    // --- NEW PROPERTY FOR ANIMATION ---
-    // 0: UpRight, 1: UpLeft, 2: DownRight, 3: DownLeft
+    private Vector2 gamepadLookInput;
+
     public int CurrentSpriteZone { get; private set; }
     public Vector3 LastFlashlightDir => lastFlashlightDir;
-
     public bool IsTorchOn => isTorchOn;
     public float BatteryPercent => battery;
     public bool IsRecharging => !isTorchOn;
@@ -121,16 +133,28 @@ public class TorchlightManager : MonoBehaviour
     void Start()
     {
         if (mainCamera == null) mainCamera = Camera.main;
+
         if (lightSource != null)
         {
             baseIntensity = lightSource.intensity;
+            baseRange = lightSource.range;
+            baseSpotAngle = lightSource.spotAngle;
+
+            // Capture Secondary Ratios if light exists
+            if (secondaryLight != null)
+            {
+                secondaryBaseIntensity = secondaryLight.intensity;
+                rangeRatio = secondaryLight.range / baseRange;
+                angleOffset = secondaryLight.spotAngle - baseSpotAngle;
+            }
+
             battery = 1f;
             isTorchOn = true;
             lightSource.enabled = true;
             SetupBatteryImage();
             StartCoroutine(FlickerRoutine());
         }
-        if (secondaryLight != null) secondaryBaseIntensity = secondaryLight.intensity;
+
         if (uiCanvasGroup != null) uiCanvasGroup.alpha = 0f;
         if (warningIcon != null) warningIcon.gameObject.SetActive(false);
 
@@ -145,30 +169,49 @@ public class TorchlightManager : MonoBehaviour
 
         bool torchUsing = isTorchOn && battery > 0f;
 
-        if (lightSource != null)
-            lightSource.enabled = isTorchOn && battery > 0f;
-
-        if (secondaryLight != null)
-            secondaryLight.enabled = lightSource.enabled;
+        if (lightSource != null) lightSource.enabled = torchUsing;
+        if (secondaryLight != null) secondaryLight.enabled = torchUsing;
 
         HandleMouseFree();
-
-        // --- NEW: UPDATE SPRITE ZONE LOGIC ---
         CalculateSpriteZone();
 
-        if (isTorchOn && battery > 0f)
-        {
-            HandleBrightness();
-        }
+        if (torchUsing) HandleBrightness();
 
         UpdateUI(torchUsing);
 
-        if (batteryFillImage != null && smoothFill)
-            batteryFillImage.fillAmount = Mathf.Lerp(batteryFillImage.fillAmount, targetFill, Time.deltaTime * fillLerpSpeed);
-        else if (batteryFillImage != null)
-            batteryFillImage.fillAmount = targetFill;
+        if (batteryFillImage != null)
+        {
+            float fillVal = smoothFill ? Mathf.Lerp(batteryFillImage.fillAmount, targetFill, Time.deltaTime * fillLerpSpeed) : targetFill;
+            batteryFillImage.fillAmount = fillVal;
+        }
 
         HandleUIFade();
+    }
+
+    public void OnLookEvent(InputValue value) => gamepadLookInput = value.Get<Vector2>();
+
+    public void OnToggleTorchEvent(InputValue value)
+    {
+        if (value.isPressed) ToggleTorchState();
+    }
+
+    void HandleToggle()
+    {
+        if (Input.GetKeyDown(toggleKey)) ToggleTorchState();
+    }
+
+    void ToggleTorchState()
+    {
+        if (battery > 0f)
+        {
+            isTorchOn = !isTorchOn;
+            if (torchAudioSource != null)
+            {
+                AudioClip clipToPlay = isTorchOn ? torchOnSound : torchOffSound;
+                torchAudioSource.PlayOneShot(clipToPlay);
+            }
+            ShowTemporaryUI();
+        }
     }
 
     void CalculateSpriteZone()
@@ -176,16 +219,13 @@ public class TorchlightManager : MonoBehaviour
         Vector3 f = lastFlashlightDir;
         f.y = 0f;
         if (f.sqrMagnitude < 0.001f) return;
-
-        // Apply isometric offset
         f = Quaternion.AngleAxis(44.6f, Vector3.up) * f;
         float angle = Mathf.Atan2(f.x, f.z) * Mathf.Rad2Deg;
 
-        // 4-Way Diagonal Logic (The New Zone X-Pattern)
-        if (angle > 0 && angle <= 90) CurrentSpriteZone = 0; // Up-Right
-        else if (angle > -90 && angle <= 0) CurrentSpriteZone = 1; // Up-Left
-        else if (angle > 90 && angle <= 180) CurrentSpriteZone = 2; // Down-Right
-        else CurrentSpriteZone = 3; // Down-Left
+        if (angle > 0 && angle <= 90) CurrentSpriteZone = 0;
+        else if (angle > -90 && angle <= 0) CurrentSpriteZone = 1;
+        else if (angle > 90 && angle <= 180) CurrentSpriteZone = 2;
+        else CurrentSpriteZone = 3;
     }
 
     void LateUpdate()
@@ -201,45 +241,19 @@ public class TorchlightManager : MonoBehaviour
         }
     }
 
-    void HandleToggle()
-    {
-        if (Input.GetKeyDown(toggleKey) && battery > 0f)
-        {
-            isTorchOn = !isTorchOn;
-
-            // --- NEW: PLAY TOGGLE SOUND ---
-            if (torchAudioSource != null)
-            {
-                AudioClip clipToPlay = isTorchOn ? torchOnSound : torchOffSound;
-                torchAudioSource.PlayOneShot(clipToPlay);
-            }
-
-            ShowTemporaryUI();
-        }
-    }
-
     void HandleTorchBattery()
     {
         if (isTorchOn)
         {
             rechargeTimer = 0f;
-            if (battery > 0f)
-            {
-                battery -= drainSpeed * Time.deltaTime;
-            }
+            if (battery > 0f) battery -= drainSpeed * Time.deltaTime;
             else
             {
-                // --- THIS ONLY RUNS ONCE WHEN BATTERY HITS 0 ---
                 battery = 0f;
                 isTorchOn = false;
-
-                // Play the "Off" sound here!
                 if (torchAudioSource != null && torchOffSound != null)
-                {
                     torchAudioSource.PlayOneShot(torchOffSound);
-                }
             }
-            // If you put the sound here, it plays EVERY FRAME. Don't do that!
         }
         else
         {
@@ -247,7 +261,6 @@ public class TorchlightManager : MonoBehaviour
             if (rechargeTimer >= rechargeDelay && battery < 1f)
                 battery += rechargeSpeed * Time.deltaTime;
         }
-
         battery = Mathf.Clamp01(battery);
         targetFill = battery;
     }
@@ -255,26 +268,63 @@ public class TorchlightManager : MonoBehaviour
     void HandleBrightness()
     {
         if (lightSource == null) return;
+
+        // 1. Intensity Scaling
         float intensity = baseIntensity;
-        if (battery <= criticalThreshold) intensity *= maxBrightnessAtCritical;
-        else if (battery <= warningThreshold) intensity *= maxBrightnessAtWarning;
+        if (battery <= 0.15f) intensity *= maxBrightnessAtCritical;
+        else if (battery <= 0.4f) intensity *= maxBrightnessAtWarning;
         lightSource.intensity = intensity;
 
+        // 2. Scale Factor (The Threshold)
+        float sizeFactor = 1f;
+        if (battery < sizeDrainThreshold)
+        {
+            sizeFactor = battery / sizeDrainThreshold;
+        }
+
+        // 3. Apply to Primary
+        lightSource.range = Mathf.Lerp(minRange, baseRange, sizeFactor);
+        lightSource.spotAngle = Mathf.Lerp(minSpotAngle, baseSpotAngle, sizeFactor);
+
+        // 4. Sync Detector
+        if (detector != null)
+        {
+            detector.coneRange = lightSource.range;
+            detector.coneAngle = lightSource.spotAngle;
+        }
+
+        // 5. Proportional Secondary Sync
         if (secondaryLight != null && baseIntensity > 0f)
         {
-            float factor = intensity / baseIntensity;
-            secondaryLight.intensity = secondaryBaseIntensity * factor;
+            // Dimming
+            float intensityRatio = intensity / baseIntensity;
+            secondaryLight.intensity = secondaryBaseIntensity * intensityRatio;
+
+            // Range (stays proportional to primary)
+            secondaryLight.range = lightSource.range * rangeRatio;
+
+            // Angle (maintains your manual offset)
+            secondaryLight.spotAngle = lightSource.spotAngle + angleOffset;
         }
     }
 
     void HandleMouseFree()
     {
-        Ray ray = (mainCamera != null ? mainCamera : Camera.main).ScreenPointToRay(Input.mousePosition);
-        Plane groundPlane = new Plane(Vector3.up, transform.position);
-        if (!groundPlane.Raycast(ray, out float hitDist)) return;
+        Vector3 aimDir = Vector3.zero;
+        if (gamepadLookInput.sqrMagnitude > 0.1f)
+        {
+            aimDir = new Vector3(gamepadLookInput.x, 0f, gamepadLookInput.y).normalized;
+        }
+        else
+        {
+            Ray ray = (mainCamera != null ? mainCamera : Camera.main).ScreenPointToRay(Input.mousePosition);
+            Plane groundPlane = new Plane(Vector3.up, transform.position);
+            if (groundPlane.Raycast(ray, out float hitDist))
+            {
+                aimDir = (ray.GetPoint(hitDist) - transform.position).normalized;
+            }
+        }
 
-        Vector3 hitPoint = ray.GetPoint(hitDist);
-        Vector3 aimDir = (hitPoint - transform.position).normalized;
         aimDir.y = 0f;
         if (aimDir.sqrMagnitude < 0.0001f) return;
 
@@ -286,43 +336,35 @@ public class TorchlightManager : MonoBehaviour
 
         if (absAngle <= freeAimRadius)
         {
-            lastFlashlightDir = Quaternion.AngleAxis(angleDiff, Vector3.up) * facing;
+            lastFlashlightDir = aimDir;
             snapTimer = 0f;
-            return;
-        }
-
-        float snapZone = freeAimRadius + snapTolerance;
-
-        if (absAngle > snapZone)
-        {
-            snapTimer += Time.deltaTime;
-            if (snapTimer >= snapHoldTime)
-            {
-                Vector3 snapped = Nearest8Direction(aimDir);
-                player.SetFacingDirection(snapped);
-                lastFlashlightDir = snapped;
-                snapTimer = 0f;
-            }
-            else
-            {
-                float sign = Mathf.Sign(angleDiff);
-                lastFlashlightDir = Quaternion.AngleAxis(freeAimRadius * sign, Vector3.up) * facing;
-            }
         }
         else
         {
-            snapTimer = 0f;
-            float sign = Mathf.Sign(angleDiff);
-            lastFlashlightDir = Quaternion.AngleAxis(freeAimRadius * sign, Vector3.up) * facing;
+            if (absAngle > freeAimRadius + snapTolerance)
+            {
+                snapTimer += Time.deltaTime;
+                if (snapTimer >= snapHoldTime)
+                {
+                    Vector3 snapped = Nearest8Direction(aimDir);
+                    player.SetFacingDirection(snapped);
+                    lastFlashlightDir = snapped;
+                    snapTimer = 0f;
+                }
+                else lastFlashlightDir = Quaternion.AngleAxis(freeAimRadius * Mathf.Sign(angleDiff), Vector3.up) * facing;
+            }
+            else
+            {
+                snapTimer = 0f;
+                lastFlashlightDir = Quaternion.AngleAxis(freeAimRadius * Mathf.Sign(angleDiff), Vector3.up) * facing;
+            }
         }
     }
 
     Vector3 Nearest8Direction(Vector3 dir)
     {
         float angle = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg;
-        float snapped = Mathf.Round(angle / 45f) * 45f;
-        float rad = snapped * Mathf.Deg2Rad;
-        return new Vector3(Mathf.Sin(rad), 0f, Mathf.Cos(rad)).normalized;
+        return new Vector3(Mathf.Sin(Mathf.Round(angle / 45f) * 45f * Mathf.Deg2Rad), 0f, Mathf.Cos(Mathf.Round(angle / 45f) * 45f * Mathf.Deg2Rad)).normalized;
     }
 
     void SetupBatteryImage()
@@ -360,20 +402,14 @@ public class TorchlightManager : MonoBehaviour
             batteryFillImage.color = Color.Lerp(batteryFillImage.color, targetColor, Time.deltaTime * 6f);
         }
 
-        bool thresholdVisible = activeThreshold != null && activeThreshold.showBarWhenReached;
-        bool shouldShowBar = thresholdVisible || !isTorchOn || visibleTimer > 0f;
+        bool shouldShowBar = (activeThreshold != null && activeThreshold.showBarWhenReached) || !isTorchOn || visibleTimer > 0f;
 
         if (!isTorchOn) visibleTimer = Mathf.Max(visibleTimer, uiVisibleDuration);
 
         if (uiCanvasGroup != null)
-        {
-            float target = shouldShowBar ? 1f : 0f;
-            uiCanvasGroup.alpha = Mathf.MoveTowards(uiCanvasGroup.alpha, target, uiFadeSpeed * Time.deltaTime);
-        }
+            uiCanvasGroup.alpha = Mathf.MoveTowards(uiCanvasGroup.alpha, shouldShowBar ? 1f : 0f, uiFadeSpeed * Time.deltaTime);
 
-        bool shouldShowWarning = torchUsing && activeThreshold != null && activeThreshold.showWarningSign;
-
-        if (shouldShowWarning) StartWarningPulse(activeThreshold.warningPulseSpeed);
+        if (torchUsing && activeThreshold != null && activeThreshold.showWarningSign) StartWarningPulse(activeThreshold.warningPulseSpeed);
         else StopWarningPulse();
     }
 
@@ -405,64 +441,55 @@ public class TorchlightManager : MonoBehaviour
         Color baseColor = warningIcon.color;
         while (true)
         {
-            float alpha = (Mathf.Sin(Time.time * speed) + 1f) * 0.5f;
-            float mapped = Mathf.Lerp(0.25f, 1f, alpha);
+            float mapped = Mathf.Lerp(0.25f, 1f, (Mathf.Sin(Time.time * speed) + 1f) * 0.5f);
             warningIcon.color = new Color(baseColor.r, baseColor.g, baseColor.b, mapped);
             yield return null;
         }
     }
 
-    public void SetBatteryPercent(float value)
-    {
-        battery = Mathf.Clamp01(value);
-        targetFill = battery;
-        if (battery <= 0f) isTorchOn = false;
-        ShowTemporaryUI();
-    }
-
-    public void ShowTemporaryUI()
-    {
-        visibleTimer = uiVisibleDuration;
-        if (uiCanvasGroup != null) uiCanvasGroup.alpha = 1f;
-    }
+    public void ShowTemporaryUI() { visibleTimer = uiVisibleDuration; if (uiCanvasGroup != null) uiCanvasGroup.alpha = 1f; }
 
     IEnumerator FlickerRoutine()
     {
         while (true)
         {
-            yield return new WaitForSeconds(1f);
-            if (!enableFlicker || !isTorchOn || lightSource == null) continue;
-            if (Random.value < flickerEventChance)
+            yield return new WaitForSeconds(Random.Range(0.5f, 5.0f));
+            if (!enableFlicker || !isTorchOn || lightSource == null || battery <= 0f) continue;
+
+            float flickerChance = flickerEventChance + (1f - battery) * 0.3f;
+            if (Random.value < flickerChance)
             {
-                for (int i = 0; i < flickerCount; i++)
+                int count = Random.Range(2, flickerCount + 2);
+                for (int i = 0; i < count; i++)
                 {
-                    float flickerValue = Random.Range(minIntensity, maxIntensity);
-                    lightSource.intensity = flickerValue;
-                    if (secondaryLight != null && baseIntensity > 0f)
-                    {
-                        float factor = flickerValue / baseIntensity;
-                        secondaryLight.intensity = secondaryBaseIntensity * factor;
-                    }
-                    yield return new WaitForSeconds(flickerInterval);
+                    lightSource.enabled = !lightSource.enabled;
+                    yield return new WaitForSeconds(Random.Range(0.02f, 0.08f));
                 }
+                lightSource.enabled = true;
+
+                float originalInten = lightSource.intensity;
+                float targetInten = originalInten * 0.2f;
+                float t = 0;
+                while (t < 0.25f)
+                {
+                    t += Time.deltaTime;
+                    lightSource.intensity = Mathf.Lerp(originalInten, targetInten, t / 0.25f);
+                    yield return null;
+                }
+                yield return new WaitForSeconds(0.1f);
                 HandleBrightness();
             }
         }
     }
 
-    public bool IsBeamHittingEnemy(Transform enemy)
+    public bool IsBeamHittingEnemy(Transform enemyTransform)
     {
-        if (!IsTorchOn || battery <= 0f || flashlight == null) return false;
-        Vector3 origin = flashlight.position;
-        Vector3 direction = lastFlashlightDir.normalized;
-        RaycastHit[] hits = Physics.RaycastAll(origin, direction, beamDistance, beamBlockMask | enemyMask);
-        if (hits.Length == 0) return false;
-        System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
-        foreach (var hit in hits)
+        if (!isTorchOn || battery <= 0f) return false;
+        Ray ray = new Ray(flashlight.position, lastFlashlightDir.normalized);
+        RaycastHit hit;
+        if (Physics.Raycast(ray, out hit, beamDistance, beamBlockMask | enemyMask))
         {
-            int hitLayer = hit.collider.gameObject.layer;
-            if (((1 << hitLayer) & beamBlockMask) != 0) return false;
-            if (hit.transform.root == enemy.root) return true;
+            if (hit.transform == enemyTransform) return true;
         }
         return false;
     }
@@ -471,53 +498,26 @@ public class TorchlightManager : MonoBehaviour
     {
         if (player == null) return;
 
-        // --- NEW GIZMO ZONE (X-PATTERN) ---
-        Gizmos.color = Color.magenta;
+        Gizmos.color = new Color(1f, 0f, 1f, 0.5f);
         Vector3 zoneCenter = transform.position + Vector3.up * 0.1f;
         Quaternion isoInv = Quaternion.AngleAxis(-44.6f, Vector3.up);
         Vector3 line1 = isoInv * new Vector3(1, 0, 1).normalized * 3f;
         Vector3 line2 = isoInv * new Vector3(-1, 0, 1).normalized * 3f;
         Gizmos.DrawLine(zoneCenter - line1, zoneCenter + line1);
         Gizmos.DrawLine(zoneCenter - line2, zoneCenter + line2);
-        // ----------------------------------
 
-        Gizmos.color = Color.yellow;
-        Vector3 origin = transform.position;
-        Vector3 facing = player.FacingDirection;
-        if (facing.sqrMagnitude < 0.001f) facing = transform.forward;
+        if (flashlight == null) return;
 
-        Quaternion leftRot = Quaternion.AngleAxis(-freeAimRadius, Vector3.up);
-        Quaternion rightRot = Quaternion.AngleAxis(freeAimRadius, Vector3.up);
-        Vector3 leftDir = (leftRot * facing).normalized;
-        Vector3 rightDir = (rightRot * facing).normalized;
-        float length = 2.0f;
-        Gizmos.DrawRay(origin, leftDir * length);
-        Gizmos.DrawRay(origin, rightDir * length);
+        Gizmos.color = new Color(1f, 1f, 1f, 0.2f);
+        Matrix4x4 oldMatrix = Gizmos.matrix;
+        Gizmos.matrix = Matrix4x4.TRS(flashlight.position, Quaternion.LookRotation(lastFlashlightDir), Vector3.one);
+        Gizmos.DrawFrustum(Vector3.zero, baseSpotAngle, baseRange, 0.1f, 1f);
+        Gizmos.matrix = oldMatrix;
 
-        int steps = 24;
-        Vector3 prev = leftDir * length;
-        for (int i = 1; i <= steps; i++)
+        if (showBeamGizmo)
         {
-            float t = (float)i / steps;
-            float angle = Mathf.Lerp(-freeAimRadius, freeAimRadius, t);
-            Vector3 dir = Quaternion.AngleAxis(angle, Vector3.up) * facing;
-            Vector3 cur = dir.normalized * length;
-            Gizmos.DrawLine(origin + prev, origin + cur);
-            prev = cur;
-        }
-
-        Gizmos.color = Color.cyan;
-        Quaternion leftSnap = Quaternion.AngleAxis(-(freeAimRadius + snapTolerance), Vector3.up);
-        Quaternion rightSnap = Quaternion.AngleAxis((freeAimRadius + snapTolerance), Vector3.up);
-        Gizmos.DrawRay(origin, (leftSnap * facing).normalized * length * 1.1f);
-        Gizmos.DrawRay(origin, (rightSnap * facing).normalized * length * 1.1f);
-
-        if (showBeamGizmo && flashlight != null)
-        {
-            Vector3 beamOrigin = flashlight.position;
-            Vector3 beamDir = lastFlashlightDir.normalized;
-            Gizmos.color = IsTorchOn ? Color.green : Color.red;
-            Gizmos.DrawRay(beamOrigin, beamDir * beamDistance);
+            Gizmos.color = (isTorchOn && battery > 0) ? Color.yellow : Color.red;
+            Gizmos.DrawRay(flashlight.position, lastFlashlightDir.normalized * (lightSource != null ? lightSource.range : beamDistance));
         }
     }
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.InputSystem;
 
 
 //bro this script is like teachign a baby how to walk
@@ -9,6 +10,7 @@ using UnityEngine.UI;
 //hell nah overthinking is crazyyyyyy.
 public class PlayerMovement : MonoBehaviour
 {
+    [Header("World Settings")]
     public float worldRotationOffset = -44.6f;
 
     [Header("Movement Speeds")]
@@ -16,7 +18,11 @@ public class PlayerMovement : MonoBehaviour
     public float sprintSpeed = 8f;
     public float sneakSpeed = 2.5f;
 
-    [Header("Movement Keys")]
+    private Vector2 moveInputVector;
+    private bool isHoldingSprint;
+    private bool isHoldingSneak;
+
+    [Header("Movement Keys (Legacy Fallback)")]
     public KeyCode moveUpKey = KeyCode.W;
     public KeyCode moveDownKey = KeyCode.S;
     public KeyCode moveLeftKey = KeyCode.A;
@@ -28,12 +34,13 @@ public class PlayerMovement : MonoBehaviour
     public KeyCode sprintKey = KeyCode.LeftShift;
     public KeyCode sneakKey = KeyCode.LeftControl;
 
-    [Header("SFX")]
+    [Header("SFX (Multi-Sound)")]
     public AudioSource movementAudioSource;
-    public AudioClip footstepClip;
+    public AudioClip[] footstepClips; // Drag multiple clips here in the Inspector
     public float walkStepInterval = 0.5f;
     public float sprintStepInterval = 0.3f;
     private float stepTimer;
+    private int lastClipIndex = -1; // Prevents the same sound from playing twice
 
     [Header("Trap / Immobilize")]
     public bool isImmobilized = false;
@@ -74,14 +81,9 @@ public class PlayerMovement : MonoBehaviour
 
     public bool IsSneaking => isSneaking;
 
-    [Header("Facing / Backward Settings (Unused now)")]
-    [Range(0f, 1f)] public float backwardMultiplier = 0.6f;
-    [Range(0f, 180f)] public float forwardAngleForSprint = 45f;
-
     private Vector3 facingDirection = Vector3.forward;
     public Vector3 FacingDirection => facingDirection;
 
-    // --- Animation support ---
     private Vector2 lastMoveDir = Vector2.zero;
     public Vector2 GetLastMoveDirection() => lastMoveDir;
 
@@ -129,47 +131,70 @@ public class PlayerMovement : MonoBehaviour
             rb.AddForce(Physics.gravity * (gravityMultiplier - 1f), ForceMode.Acceleration);
         }
 
-        // --- NEW: FOOTSTEP LOGIC ---
+        // --- FOOTSTEP LOGIC ---
         if (isGrounded && input.sqrMagnitude > 0.01f && currentMode != MovementMode.Sneaking)
         {
             stepTimer -= Time.fixedDeltaTime;
             if (stepTimer <= 0)
             {
-                // Pitch up slightly if sprinting to make it feel "faster"
-                movementAudioSource.pitch = (currentMode == MovementMode.Sprinting) ? 1.2f : 1.0f;
-                movementAudioSource.PlayOneShot(footstepClip);
-
+                PlayDynamicFootstep();
                 stepTimer = (currentMode == MovementMode.Sprinting) ? sprintStepInterval : walkStepInterval;
             }
         }
     }
 
-    // ================= INPUT =================
+    void PlayDynamicFootstep()
+    {
+        if (footstepClips.Length == 0 || movementAudioSource == null) return;
+
+        int randomIndex = lastClipIndex;
+
+        // If we have multiple clips, make sure we don't play the same one twice
+        if (footstepClips.Length > 1)
+        {
+            while (randomIndex == lastClipIndex)
+            {
+                randomIndex = Random.Range(0, footstepClips.Length);
+            }
+        }
+        else
+        {
+            randomIndex = 0;
+        }
+
+        lastClipIndex = randomIndex;
+
+        // Apply pitch randomization for added realism
+        float basePitch = (currentMode == MovementMode.Sprinting) ? 1.2f : 1.0f;
+        movementAudioSource.pitch = basePitch + Random.Range(-0.08f, 0.08f);
+
+        movementAudioSource.PlayOneShot(footstepClips[randomIndex]);
+    }
+
     void HandleInput()
     {
-        if (isImmobilized)
-        {
-            input = Vector3.zero;
-            return;
-        }
+        if (isImmobilized) { input = Vector3.zero; return; }
 
         float x = 0f;
         float z = 0f;
-
         if (Input.GetKey(moveLeftKey)) x -= 1f;
         if (Input.GetKey(moveRightKey)) x += 1f;
         if (Input.GetKey(moveDownKey)) z -= 1f;
         if (Input.GetKey(moveUpKey)) z += 1f;
+
+        if (moveInputVector.sqrMagnitude > 0.01f)
+        {
+            x = moveInputVector.x;
+            z = moveInputVector.y;
+        }
 
         Vector3 rawInput = new Vector3(x, 0f, z);
 
         if (rawInput.sqrMagnitude > 0.01f)
         {
             rawInput.Normalize();
+            input = (moveInputVector.sqrMagnitude > 0.01f) ? rawInput : SnapTo8Directions(rawInput);
 
-            input = SnapTo8Directions(rawInput);
-
-            // ✅ FIX: Use rotated direction for animation
             Vector3 rotated = Quaternion.AngleAxis(worldRotationOffset, Vector3.up) * input;
             lastMoveDir = new Vector2(rotated.x, rotated.z);
         }
@@ -182,19 +207,17 @@ public class PlayerMovement : MonoBehaviour
         if (Input.GetKeyDown(sneakKey)) lastPressedKey = sneakKey;
     }
 
-    // ================= SPRINT / SNEAK =================
     void HandleSprintSneakLogic()
     {
         if (isImmobilized) return;
 
-        bool holdingSprint = Input.GetKey(sprintKey);
-        bool holdingSneak = Input.GetKey(sneakKey);
+        bool holdingSprint = Input.GetKey(sprintKey) || isHoldingSprint;
+        bool holdingSneak = Input.GetKey(sneakKey) || isHoldingSneak;
+
         bool isPhysicallyMoving = rb.velocity.magnitude > 0.05f;
         float drainMultiplier = GetSprintDrainMultiplier();
 
-        // ✅ SIMPLIFIED: No direction restriction
-        if (holdingSprint && (!holdingSneak || lastPressedKey == sprintKey) &&
-            sprintTimer > 0f && isPhysicallyMoving)
+        if (holdingSprint && (!holdingSneak || lastPressedKey == sprintKey) && sprintTimer > 0f && isPhysicallyMoving)
         {
             currentMode = MovementMode.Sprinting;
             sprintTimer -= Time.deltaTime * drainMultiplier;
@@ -219,28 +242,25 @@ public class PlayerMovement : MonoBehaviour
         isSneaking = currentMode == MovementMode.Sneaking;
     }
 
-    // ================= CAMERA =================
+    public void OnMoveEvent(InputValue value) => moveInputVector = value.Get<Vector2>();
+    public void OnSprintEvent(InputValue value) => isHoldingSprint = value.isPressed;
+    public void OnSneakEvent(InputValue value) => isHoldingSneak = value.isPressed;
+
     void UpdateCameraZoom()
     {
         if (mainCamera == null) return;
-
         float targetSize = isSneaking ? sneakSize : normalSize;
-        mainCamera.orthographicSize =
-            Mathf.Lerp(mainCamera.orthographicSize, targetSize, Time.deltaTime * zoomSpeed);
+        mainCamera.orthographicSize = Mathf.Lerp(mainCamera.orthographicSize, targetSize, Time.deltaTime * zoomSpeed);
     }
 
-    // ================= UI =================
     void UpdateSprintBarUI()
     {
         if (sprintBarUI == null) return;
-
         float percent = sprintTimer / sprintDuration;
         bool sprintingNow = isSprinting && rb.velocity.magnitude > 0.05f;
-
         sprintBarUI.UpdateSprintBar(percent, sprintingNow);
     }
 
-    // ================= IMMOBILIZE =================
     public IEnumerator Immobilize(float duration)
     {
         isImmobilized = true;
@@ -249,22 +269,13 @@ public class PlayerMovement : MonoBehaviour
         isImmobilized = false;
     }
 
-    public void TrapImmobilize()
-    {
-        isImmobilized = true;
-    }
+    public void TrapImmobilize() => isImmobilized = true;
+    public void TrapRelease() => isImmobilized = false;
 
-    public void TrapRelease()
-    {
-        isImmobilized = false;
-    }
-
-    // ================= HELPERS =================
     float GetSprintDrainMultiplier()
     {
         float highestMultiplier = 1f;
         GameObject[] enemies = GameObject.FindGameObjectsWithTag(enemyTag);
-
         foreach (GameObject enemy in enemies)
         {
             float dist = Vector3.Distance(transform.position, enemy.transform.position);
@@ -282,10 +293,8 @@ public class PlayerMovement : MonoBehaviour
     {
         if (isSneaking) return;
         if (newFacing.sqrMagnitude <= 0.001f) return;
-
         newFacing.y = 0f;
         facingDirection = newFacing.normalized;
-
         transform.forward = facingDirection;
     }
 
@@ -294,7 +303,6 @@ public class PlayerMovement : MonoBehaviour
         float angle = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg;
         float snapped = Mathf.Round(angle / 45f) * 45f;
         float rad = snapped * Mathf.Deg2Rad;
-
         return new Vector3(Mathf.Sin(rad), 0, Mathf.Cos(rad)).normalized;
     }
 
@@ -302,7 +310,6 @@ public class PlayerMovement : MonoBehaviour
     {
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, mediumDangerRadius);
-
         if (groundCheck != null)
         {
             Gizmos.color = Color.green;
