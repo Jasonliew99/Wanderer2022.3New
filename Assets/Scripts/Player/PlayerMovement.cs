@@ -57,7 +57,11 @@ public class PlayerMovement : MonoBehaviour
     public float zoomSpeed = 5f;
 
     [Header("UI")]
-    public SprintBarUI sprintBarUI;
+    public SprintBarUI sprintBarUI; // The old sprint bar
+
+    [Header("UI")]
+    public FishUISprint fishSprintUI;     // The new fish bar
+    public bool useFishUI = true;         // Toggle between the two
 
     [Header("Ground Check")]
     public Transform groundCheck;
@@ -255,10 +259,19 @@ public class PlayerMovement : MonoBehaviour
 
     void UpdateSprintBarUI()
     {
-        if (sprintBarUI == null) return;
-        float percent = sprintTimer / sprintDuration;
-        bool sprintingNow = isSprinting && rb.velocity.magnitude > 0.05f;
-        sprintBarUI.UpdateSprintBar(percent, sprintingNow);
+        // 1. Check the toggle and the new script reference
+        if (useFishUI && fishSprintUI != null)
+        {
+            // We MUST add 'isSprinting' here so the fish knows when to fade in/out!
+            fishSprintUI.UpdateSprintBar(sprintTimer, sprintDuration, isSprinting);
+        }
+        // 2. Fallback to old UI if toggle is off
+        else if (sprintBarUI != null)
+        {
+            float percent = sprintTimer / sprintDuration;
+            bool sprintingNow = isSprinting && rb.velocity.magnitude > 0.05f;
+            sprintBarUI.UpdateSprintBar(percent, sprintingNow);
+        }
     }
 
     public IEnumerator Immobilize(float duration)
