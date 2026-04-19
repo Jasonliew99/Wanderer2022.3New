@@ -7,15 +7,11 @@ using UnityEngine.UI;
 
 public class LevelController : MonoBehaviour
 {
-    // ===========================
     // CORE ARRAYS (AREAS)
-    // ===========================
     [Header("Level Configuration")]
     public List<LevelBlock> levels = new List<LevelBlock>();
 
-    // ===========================
     // ESCAPE MODE STATE
-    // ===========================
     public bool EscapeMode { get; private set; } = false;
     public System.Action OnEscapeMode;
 
@@ -26,9 +22,14 @@ public class LevelController : MonoBehaviour
     public GameObject[] escapeEnemies;
 
     [Header("Escape Lighting")]
-    public List<Light> lightsToChange = new List<Light>(); // Drag lights here in Inspector
+    public List<Light> lightsToChange = new List<Light>();
     public Color escapeColor = Color.red;
     public float escapeIntensity = 1.5f;
+
+    [Header("Escape Audio")]
+    public AudioSource escapeMusicSource;
+    public float musicFadeDuration = 2.0f;
+    public float maxMusicVolume = 1.0f;
 
     [Space(10)]
     public string[] escapeDialogues = {
@@ -89,10 +90,9 @@ public class LevelController : MonoBehaviour
 
     [HideInInspector] public int currentLevelIndex = -1;
     private Coroutine uiRoutine;
+    private Coroutine musicRoutine; // Reference to track audio fading
 
-    // ===========================
     // INITIAL SETUP
-    // ===========================
     void Start()
     {
         for (int i = 0; i < levels.Count; i++)
@@ -101,18 +101,9 @@ public class LevelController : MonoBehaviour
             SetActive(lvl.enemies, false);
             SetActive(lvl.coins, false);
 
-            if (i == 0)
-            {
-                OpenDoor(lvl.entranceDoor);
-            }
-            else if (lvl.entranceDoor != null && lvl.entranceDoor.startOpened)
-            {
-                OpenDoor(lvl.entranceDoor);
-            }
-            else
-            {
-                CloseDoor(lvl.entranceDoor);
-            }
+            if (i == 0) OpenDoor(lvl.entranceDoor);
+            else if (lvl.entranceDoor != null && lvl.entranceDoor.startOpened) OpenDoor(lvl.entranceDoor);
+            else CloseDoor(lvl.entranceDoor);
 
             CloseDoor(lvl.exitDoor);
         }
@@ -121,6 +112,14 @@ public class LevelController : MonoBehaviour
             levels[0].activator.SetActive(true);
 
         if (objectiveText != null) objectiveText.alpha = 0;
+
+        // Initialize Audio
+        if (escapeMusicSource != null)
+        {
+            escapeMusicSource.volume = 0;
+            escapeMusicSource.loop = true;
+            escapeMusicSource.Stop();
+        }
     }
 
     private void SyncLevelObjects(int activeID)
@@ -138,16 +137,12 @@ public class LevelController : MonoBehaviour
 
             if (isCurrent && !EscapeMode)
             {
-                if (activeID == 0)
-                {
-                    CloseDoor(lvl.entranceDoor);
-                }
+                if (activeID == 0) CloseDoor(lvl.entranceDoor);
                 else
                 {
                     if (lvl.entranceDoor.startOpened) OpenDoor(lvl.entranceDoor);
                     else CloseDoor(lvl.entranceDoor);
                 }
-
                 CloseDoor(lvl.exitDoor);
             }
         }
@@ -173,12 +168,12 @@ public class LevelController : MonoBehaviour
 
     public void ResetEnemiesForRespawn()
     {
+        StopAllCoroutines();
+        if (objectiveText != null) objectiveText.alpha = 0;
+
         if (EscapeMode)
         {
-            for (int i = 0; i < levels.Count; i++)
-            {
-                ResetSpecificLevelEnemies(i);
-            }
+            for (int i = 0; i < levels.Count; i++) ResetSpecificLevelEnemies(i);
         }
         else
         {
@@ -211,15 +206,8 @@ public class LevelController : MonoBehaviour
             enemy.transform.rotation = availablePoints[pointIndex].rotation;
 
             EnemyStateReset resetScript = enemy.GetComponent<EnemyStateReset>();
-            if (resetScript != null)
-            {
-                resetScript.ResetToDefaultState();
-            }
-            else
-            {
-                enemy.SetActive(false);
-                enemy.SetActive(true);
-            }
+            if (resetScript != null) resetScript.ResetToDefaultState();
+            else { enemy.SetActive(false); enemy.SetActive(true); }
         }
     }
 
@@ -253,33 +241,21 @@ public class LevelController : MonoBehaviour
         bool allDone = true;
 
         foreach (var item in lvl.fragmentItems)
-            if (item.collected < item.TotalRequired)
-                allDone = false;
+            if (item.collected < item.TotalRequired) allDone = false;
 
         if (allDone)
         {
             ShowObjective(lvl.secondObjective);
             OpenDoor(lvl.exitDoor);
 
-            if (currentLevelIndex == levels.Count - 1)
-            {
-                StartEscapeMode();
-            }
-            else
-            {
-                SetActive(lvl.deactivator, true);
-            }
+            if (currentLevelIndex == levels.Count - 1) StartEscapeMode();
+            else SetActive(lvl.deactivator, true);
         }
     }
 
     public void EndLevel(int id)
     {
-        if (EscapeMode && id == levels.Count - 1)
-        {
-            WinGame();
-            return;
-        }
-
+        if (EscapeMode && id == levels.Count - 1) { WinGame(); return; }
         if (EscapeMode) return;
         if (id != currentLevelIndex) return;
 
@@ -292,8 +268,7 @@ public class LevelController : MonoBehaviour
         {
             LevelBlock nextLvl = levels[id + 1];
             OpenDoor(nextLvl.entranceDoor);
-            if (nextLvl.activator != null)
-                nextLvl.activator.SetActive(true);
+            if (nextLvl.activator != null) nextLvl.activator.SetActive(true);
         }
     }
 
@@ -302,8 +277,11 @@ public class LevelController : MonoBehaviour
         if (EscapeMode) return;
         EscapeMode = true;
 
-        // --- LIGHTING CHANGE ---
         ChangeManualLights(escapeColor, escapeIntensity);
+
+        // Music Fade In
+        if (musicRoutine != null) StopCoroutine(musicRoutine);
+        musicRoutine = StartCoroutine(FadeMusic(maxMusicVolume));
 
         if (respawnController != null)
             respawnController.ResetLivesToFull();
@@ -324,7 +302,6 @@ public class LevelController : MonoBehaviour
                 ResetSpecificLevelEnemies(i);
                 if (lvl.deactivator) lvl.deactivator.SetActive(false);
             }
-
             if (lvl.activator) lvl.activator.SetActive(false);
         }
 
@@ -340,11 +317,7 @@ public class LevelController : MonoBehaviour
     {
         foreach (Light l in lightsToChange)
         {
-            if (l != null)
-            {
-                l.color = targetColor;
-                l.intensity = targetIntensity;
-            }
+            if (l != null) { l.color = targetColor; l.intensity = targetIntensity; }
         }
     }
 
@@ -352,8 +325,11 @@ public class LevelController : MonoBehaviour
     {
         if (uiRoutine != null) StopCoroutine(uiRoutine);
 
-        // --- RESET LIGHTS TO NORMAL ---
         ChangeManualLights(Color.white, 1.0f);
+
+        // Music Fade Out
+        if (musicRoutine != null) StopCoroutine(musicRoutine);
+        musicRoutine = StartCoroutine(FadeMusic(0f));
 
         SetActive(escapeEnemies, false);
         SetActive(objectsToEnableOnEscape, false);
@@ -365,6 +341,27 @@ public class LevelController : MonoBehaviour
             CloseDoor(lvl.exitDoor);
         }
         uiRoutine = StartCoroutine(SequenceRoutine(winDialogues));
+    }
+
+    private IEnumerator FadeMusic(float targetVolume)
+    {
+        if (escapeMusicSource == null) yield break;
+
+        // If starting music
+        if (targetVolume > 0 && !escapeMusicSource.isPlaying) escapeMusicSource.Play();
+
+        float startVolume = escapeMusicSource.volume;
+        float elapsed = 0;
+
+        while (elapsed < musicFadeDuration)
+        {
+            elapsed += Time.deltaTime;
+            escapeMusicSource.volume = Mathf.Lerp(startVolume, targetVolume, elapsed / musicFadeDuration);
+            yield return null;
+        }
+
+        escapeMusicSource.volume = targetVolume;
+        if (targetVolume <= 0) escapeMusicSource.Stop();
     }
 
     private IEnumerator SequenceRoutine(string[] dialogueList)

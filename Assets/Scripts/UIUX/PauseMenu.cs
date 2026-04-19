@@ -5,24 +5,23 @@ using UnityEngine.SceneManagement;
 
 public class PauseMenu : MonoBehaviour
 {
-    public GameObject pauseMenuUI; //pausepanel here
-    public KeyCode pauseKey = KeyCode.Escape; //the button that triggers
+    public GameObject pauseMenuUI;
+    public KeyCode pauseKey = KeyCode.Escape;
 
     private bool isPaused = false;
 
     [Header("Scene Settings")]
-    public string mainMenuSceneName = "MainMenu"; // scene to load when exiting
+    public string mainMenuSceneName = "MainMenu";
 
     void Update()
     {
-        if (Input.GetKeyDown(pauseKey)) //toggle when pressed
+        if (Input.GetKeyDown(pauseKey))
         {
             if (isPaused) Resume();
             else Pause();
         }
     }
 
-    // Call this from Resume button OnClick
     public void Resume()
     {
         pauseMenuUI.SetActive(false); // Hide pause menu
@@ -37,14 +36,10 @@ public class PauseMenu : MonoBehaviour
         isPaused = true;
     }
 
-    // ---------------------------
-    // NEW FUNCTIONS BELOW
-    // ---------------------------
-
     // Restart the current scene
     public void RestartLevel()
     {
-        Time.timeScale = 1f; // important so the new scene isn't frozen
+        Time.timeScale = 1f;
         Scene current = SceneManager.GetActiveScene();
         SceneManager.LoadScene(current.name);
     }
@@ -52,7 +47,7 @@ public class PauseMenu : MonoBehaviour
     // Exit to Main Menu scene
     public void ExitToMainMenu()
     {
-        Time.timeScale = 1f; // reset timescale
+        Time.timeScale = 1f;
         SceneManager.LoadScene(mainMenuSceneName);
     }
 }

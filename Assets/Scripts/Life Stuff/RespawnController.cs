@@ -170,7 +170,12 @@ public class RespawnController : MonoBehaviour
     private IEnumerator ReEnableMovement(PlayerMovement movement)
     {
         yield return null;
-        if (movement != null) movement.enabled = true;
+        yield return null;
+
+        if (movement != null)
+        {
+            movement.enabled = true;
+        }
     }
 
     public void RetryLevel()

@@ -1275,7 +1275,7 @@ CanvasGroup:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1260715788}
   m_Enabled: 1
-  m_Alpha: 1
+  m_Alpha: 0
   m_Interactable: 1
   m_BlocksRaycasts: 1
   m_IgnoreParentGroups: 0
@@ -1821,6 +1821,7 @@ GameObject:
   - component: {fileID: 1654697336}
   - component: {fileID: 1654697335}
   - component: {fileID: 1654697337}
+  - component: {fileID: 1654697338}
   m_Layer: 0
   m_Name: Cutscene Controller
   m_TagString: Untagged
@@ -1876,6 +1877,25 @@ MonoBehaviour:
   fadeSpeed: 1.5
   minAlpha: 0.2
   maxAlpha: 1
+--- !u!114 &1654697338
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1654697334}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ba43c4d9b39ed87429dc1ad37a0006d4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  customCursor: {fileID: 2800000, guid: 89c98c82af85f034daf13a7c1d998e5c, type: 3}
+  hotspot: {x: 0, y: 0}
+  cursorMode: 0
+  showHotspotGizmo: 1
+  gizmoColor: {r: 1, g: 0, b: 0, a: 1}
+  gizmoBaseSize: 0.25
+  hotspotVisualScale: 1
 --- !u!1 &1755058431
 GameObject:
   m_ObjectHideFlags: 0

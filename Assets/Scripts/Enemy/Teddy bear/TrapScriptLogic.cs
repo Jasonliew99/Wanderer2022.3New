@@ -1,6 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.InputSystem;
+
 
 public class TrapScriptLogic : MonoBehaviour
 {
@@ -9,6 +12,13 @@ public class TrapScriptLogic : MonoBehaviour
     public float shakePowerMultiplier = 0.8f;
     public float maxContributionPerShake = 8f;
     public float decayRate = 25f;
+
+    [Header("Audio")]
+    public AudioSource trapAudioSource;
+    public AudioClip trapTriggerSound;
+    public AudioClip wiggleLoopSound;
+    public AudioClip escapeSound;
+    public float wiggleFadeSpeed = 5f;
 
     [Header("Visibility Settings")]
     [Range(0f, 1f)] public float idleAlpha = 0.3f;
@@ -29,30 +39,33 @@ public class TrapScriptLogic : MonoBehaviour
 
     private float lastMouseX;
     private float lastShakeDirection;
-
+    private float targetWiggleVolume = 0f;
     private bool isFading = false;
 
     // ---------------- SETUP ----------------
     public void Init(TeddyBearController trapper)
     {
         owner = trapper;
-        Debug.Log("[Trap] Owner set: " + trapper.name);
     }
 
     void Awake()
     {
-        if (spriteRenderer == null)
-            spriteRenderer = GetComponent<SpriteRenderer>();
+        if (spriteRenderer == null) spriteRenderer = GetComponent<SpriteRenderer>();
+        if (trapAudioSource == null) trapAudioSource = GetComponent<AudioSource>();
+
+        if (trapAudioSource != null)
+        {
+            trapAudioSource.loop = true;
+            trapAudioSource.playOnAwake = false;
+            trapAudioSource.volume = 0;
+        }
     }
 
     void Start()
     {
-        Debug.Log("[Trap] Spawned at: " + transform.position);
-
         if (spriteRenderer != null && idleSprite != null)
         {
             spriteRenderer.sprite = idleSprite;
-
             Color c = spriteRenderer.color;
             c.a = idleAlpha;
             spriteRenderer.color = c;
@@ -64,48 +77,61 @@ public class TrapScriptLogic : MonoBehaviour
     {
         if (trappingPlayer || isFading) return;
 
-        if (other.GetComponent<TeddyBearController>() != null)
-            return;
+        // Ignore the enemy if they walk over it
+        if (other.GetComponent<TeddyBearController>() != null) return;
 
         PlayerMovement player = other.GetComponentInParent<PlayerMovement>();
-        if (player == null)
-            return;
+        if (player == null) return;
 
         trappingPlayer = true;
         trappedPlayer = player;
-
         trappedPlayer.TrapImmobilize();
+
+        if (trapAudioSource != null && trapTriggerSound != null)
+            trapAudioSource.PlayOneShot(trapTriggerSound);
+
+        if (trapAudioSource != null && wiggleLoopSound != null)
+        {
+            trapAudioSource.clip = wiggleLoopSound;
+            trapAudioSource.volume = 0;
+            trapAudioSource.Play();
+        }
 
         escapeProgress = 0f;
         lastMouseX = Input.mousePosition.x;
         lastShakeDirection = 0f;
 
-        TrapEscapeUI.Instance.Show();
+        // UI check
+        if (TrapEscapeUI.Instance != null) TrapEscapeUI.Instance.Show();
 
-        // Make fully visible when triggered
+        // VISUALS check
         if (spriteRenderer != null)
         {
             Color c = spriteRenderer.color;
             c.a = 1f;
             spriteRenderer.color = c;
-
             if (triggeredSprite != null)
                 spriteRenderer.sprite = triggeredSprite;
         }
-
-        Debug.Log("[Trap] Player trapped → fully visible");
     }
 
-    // ---------------- UPDATE ----------------
     void Update()
     {
         if (!trappingPlayer || trappedPlayer == null)
             return;
 
         HandleShakeEscape();
+        HandleDynamicAudio();
     }
 
-    // ---------------- ESCAPE LOGIC ----------------
+    void HandleDynamicAudio()
+    {
+        if (trapAudioSource == null || trapAudioSource.clip == null) return;
+
+        trapAudioSource.volume = Mathf.MoveTowards(trapAudioSource.volume, targetWiggleVolume, wiggleFadeSpeed * Time.deltaTime);
+        targetWiggleVolume = Mathf.MoveTowards(targetWiggleVolume, 0f, wiggleFadeSpeed * Time.deltaTime);
+    }
+
     void HandleShakeEscape()
     {
         float currentMouseX = Input.mousePosition.x;
@@ -121,12 +147,15 @@ public class TrapScriptLogic : MonoBehaviour
 
             escapeProgress += contribution;
             lastShakeDirection = direction;
+
+            targetWiggleVolume = 1.0f;
         }
 
         escapeProgress -= decayRate * Time.deltaTime;
         escapeProgress = Mathf.Clamp(escapeProgress, 0f, escapeThreshold);
 
-        TrapEscapeUI.Instance.SetProgress(escapeProgress / escapeThreshold);
+        if (TrapEscapeUI.Instance != null)
+            TrapEscapeUI.Instance.SetProgress(escapeProgress / escapeThreshold);
 
         lastMouseX = currentMouseX;
 
@@ -136,12 +165,17 @@ public class TrapScriptLogic : MonoBehaviour
         }
     }
 
-    // ---------------- ESCAPE SUCCESS ----------------
     void EscapeTrap()
     {
-        Debug.Log("[Trap] Player escaped");
-
         trappingPlayer = false;
+        targetWiggleVolume = 0;
+
+        if (trapAudioSource != null)
+        {
+            trapAudioSource.Stop();
+            if (escapeSound != null)
+                trapAudioSource.PlayOneShot(escapeSound);
+        }
 
         if (trappedPlayer != null)
         {
@@ -149,49 +183,50 @@ public class TrapScriptLogic : MonoBehaviour
             trappedPlayer = null;
         }
 
-        TrapEscapeUI.Instance.Hide();
-
+        if (TrapEscapeUI.Instance != null) TrapEscapeUI.Instance.Hide();
         owner?.OnTrapTriggered(transform.position, gameObject);
 
-        // 🔥 Start fade instead of instant destroy
-        if (!isFading)
-        {
-            StartCoroutine(FadeAndDestroy());
-        }
+        if (!isFading) StartCoroutine(FadeAndDestroy());
     }
 
-    // ---------------- FADE LOGIC ----------------
+    public void ForceRelease()
+    {
+        trappingPlayer = false;
+        if (trapAudioSource != null) trapAudioSource.Stop();
+
+        if (trappedPlayer != null)
+        {
+            trappedPlayer.TrapRelease();
+            trappedPlayer = null;
+        }
+
+        if (TrapEscapeUI.Instance != null) TrapEscapeUI.Instance.Hide();
+
+        Destroy(gameObject);
+    }
+
     IEnumerator FadeAndDestroy()
     {
         isFading = true;
-
         float time = 0f;
-        Color originalColor = spriteRenderer.color;
 
+        if (spriteRenderer == null)
+        {
+            Destroy(gameObject);
+            yield break;
+        }
+
+        Color originalColor = spriteRenderer.color;
         while (time < fadeDuration)
         {
+            if (spriteRenderer == null) break;
+
             float t = time / fadeDuration;
-
             float alpha = Mathf.Lerp(1f, 0f, t);
-
-            spriteRenderer.color = new Color(
-                originalColor.r,
-                originalColor.g,
-                originalColor.b,
-                alpha
-            );
-
+            spriteRenderer.color = new Color(originalColor.r, originalColor.g, originalColor.b, alpha);
             time += Time.deltaTime;
             yield return null;
         }
-
-        // Ensure fully transparent at end
-        spriteRenderer.color = new Color(
-            originalColor.r,
-            originalColor.g,
-            originalColor.b,
-            0f
-        );
 
         Destroy(gameObject);
     }

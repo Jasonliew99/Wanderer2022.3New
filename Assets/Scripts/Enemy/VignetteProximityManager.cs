@@ -6,95 +6,79 @@ using UnityEngine.Rendering.Universal;
 public class VignetteProximityManager : MonoBehaviour
 {
     [Header("References")]
+    [Tooltip("Drag your Player transform here!")]
     public Transform player;
     public Volume postProcessVolume;
 
-    [Header("Vignette Settings")]
+    [Header("Distance Settings")]
+    public float maxDistance = 15f;
+    public float minDistance = 2f;
+
+    [Header("Vignette Intensity")]
     public float baseIntensity = 0.25f;
-    public float maxExtraIntensity = 0.35f;
-    public float minDistance = 2f;   // distance at which vignette is max
-    public float maxDistance = 12f;  // distance at which vignette is back to baseline
-    public float smoothSpeed = 3f;   // smoothing for intensity
-    public float centerSmoothSpeed = 3f; // smoothing for vignette center
+    public float maxIntensity = 0.75f;
+
+    [Header("Dynamic Pulse")]
+    public float pulseSpeed = 7f;
+    public float pulseAmount = 0.08f;
 
     private Vignette vignette;
-    private Camera mainCam;
-    private float currentIntensity;
-    private Vector2 currentCenter;
+    private float currentLerpedIntensity;
 
     void Start()
     {
-        if (postProcessVolume == null)
+        if (postProcessVolume != null && postProcessVolume.profile.TryGet(out vignette))
         {
-            Debug.LogError("Missing Post Process Volume!");
-            enabled = false;
-            return;
+            vignette.intensity.overrideState = true;
+            vignette.color.overrideState = true;
+            vignette.center.value = new Vector2(0.5f, 0.5f);
         }
-
-        postProcessVolume.profile.TryGet(out vignette);
-        mainCam = Camera.main;
-
-        currentIntensity = baseIntensity;
-        currentCenter = new Vector2(0.5f, 0.5f); // default center
-        vignette.intensity.value = currentIntensity;
-        vignette.center.value = currentCenter;
+        else
+        {
+            Debug.LogError("Vignette not found in Post Process Volume Profile!");
+        }
     }
 
     void Update()
     {
         if (player == null || vignette == null) return;
 
-        PlayerTracker[] enemies = FindObjectsOfType<PlayerTracker>();
+        float closestDist = GetClosestEnemyDistance();
 
-        Transform closestEnemy = null;
-        float closestDist = float.MaxValue;
+        float panicFactor = 1f - Mathf.InverseLerp(minDistance, maxDistance, closestDist);
 
-        // Find closest enemy
-        foreach (var enemy in enemies)
-        {
-            if (enemy == null) continue;
-            float dist = Vector3.Distance(player.position, enemy.transform.position);
-            if (dist < closestDist)
-            {
-                closestDist = dist;
-                closestEnemy = enemy.transform;
-            }
-        }
+        float pulse = Mathf.Pow(Mathf.Sin(Time.time * pulseSpeed), 4) * pulseAmount * panicFactor;
 
-        // Calculate target intensity
-        float targetIntensity = baseIntensity;
+        float targetIntensity = Mathf.Lerp(baseIntensity, maxIntensity, panicFactor) + pulse;
 
-        if (closestEnemy != null && closestDist <= maxDistance)
-        {
-            float t = Mathf.InverseLerp(maxDistance, minDistance, closestDist);
-            t = Mathf.Clamp01(t); // clamp so it never goes beyond 0–1
-            targetIntensity = baseIntensity + maxExtraIntensity * t;
-        }
+        currentLerpedIntensity = Mathf.Lerp(currentLerpedIntensity, targetIntensity, Time.deltaTime * 4f);
+        vignette.intensity.value = Mathf.Clamp01(currentLerpedIntensity);
 
-        // Smoothly interpolate intensity
-        currentIntensity = Mathf.Lerp(currentIntensity, targetIntensity, Time.deltaTime * smoothSpeed);
-        vignette.intensity.value = currentIntensity;
-
-        // Smoothly update vignette center
-        Vector2 targetCenter = new Vector2(0.5f, 0.5f);
-        if (closestEnemy != null && mainCam != null)
-        {
-            Vector3 screenPos = mainCam.WorldToViewportPoint(closestEnemy.position);
-            targetCenter = new Vector2(screenPos.x, screenPos.y);
-        }
-
-        currentCenter = Vector2.Lerp(currentCenter, targetCenter, Time.deltaTime * centerSmoothSpeed);
-        vignette.center.value = currentCenter;
+        vignette.color.value = Color.Lerp(Color.black, new Color(0.4f, 0.05f, 0.05f), panicFactor);
     }
 
-    // --- Gizmos to visualize min/max radius ---
-    private void OnDrawGizmosSelected()
+    float GetClosestEnemyDistance()
+    {
+        GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
+        float min = Mathf.Infinity;
+
+        if (enemies.Length == 0) return Mathf.Infinity;
+
+        foreach (GameObject e in enemies)
+        {
+            float d = Vector3.Distance(player.position, e.transform.position);
+            if (d < min) min = d;
+        }
+        return min;
+    }
+
+    private void OnDrawGizmos()
     {
         if (player == null) return;
 
         Gizmos.color = Color.green;
-        Gizmos.DrawWireSphere(player.position, maxDistance); // max distance (baseline)
+        Gizmos.DrawWireSphere(player.position, maxDistance);
         Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(player.position, minDistance); // min distance (max vignette)
+        Gizmos.DrawWireSphere(player.position, minDistance);
     }
 }

@@ -8,20 +8,21 @@ public class SceneChanger : MonoBehaviour
 {
     public CanvasGroup fader;
     [Range(0.1f, 5f)]
-    public float fadeSpeed = 1.0f; // Lower is slower/more cinematic
-
-    private static SceneChanger instance;
+    public float fadeSpeed = 1.0f;
+    public static SceneChanger Instance { get; private set; }
 
     void Awake()
     {
-        // Prevents having two managers if you go back to the menu
-        if (instance == null)
+        if (Instance == null)
         {
-            instance = this;
+            Instance = this;
             DontDestroyOnLoad(gameObject);
 
-            // Start invisible
-            if (fader != null) fader.alpha = 0;
+            if (fader != null)
+            {
+                fader.alpha = 0;
+                fader.blocksRaycasts = false;
+            }
         }
         else
         {
@@ -36,21 +37,28 @@ public class SceneChanger : MonoBehaviour
 
     IEnumerator LoadSequence(string sceneName)
     {
-        // 1. Fade OUT to Black
+        if (fader != null) fader.blocksRaycasts = true;
+
+        float startVolume = AudioListener.volume;
+
+        //Fades out Visuals and Audio
         while (fader.alpha < 1)
         {
-            fader.alpha += Time.deltaTime * fadeSpeed;
+            float delta = Time.unscaledDeltaTime * fadeSpeed;
+            fader.alpha += delta;
+
+            // Lowers the master volume of the whole game
+            AudioListener.volume = Mathf.Max(0, AudioListener.volume - delta);
+
             yield return null;
         }
 
-        // Optional: Stay black for a split second to breathe
-        yield return new WaitForSeconds(0.2f);
+        yield return new WaitForSecondsRealtime(0.2f);
+        AudioListener.volume = 0; // silence during load
 
-        // 2. Load the scene
         AsyncOperation op = SceneManager.LoadSceneAsync(sceneName);
         while (!op.isDone) yield return null;
 
-        // 3. Prepare the Video
         VideoPlayer vp = FindObjectOfType<VideoPlayer>();
         if (vp != null)
         {
@@ -59,11 +67,19 @@ public class SceneChanger : MonoBehaviour
             vp.Play();
         }
 
-        // 4. Fade IN to the new scene
+        // fades in Visuals and Audio
         while (fader.alpha > 0)
         {
-            fader.alpha -= Time.deltaTime * fadeSpeed;
+            float delta = Time.unscaledDeltaTime * fadeSpeed;
+            fader.alpha -= delta;
+
+            // Brings the master volume back up
+            AudioListener.volume = Mathf.Min(startVolume, AudioListener.volume + delta);
+
             yield return null;
         }
+
+        AudioListener.volume = startVolume;
+        if (fader != null) fader.blocksRaycasts = false;
     }
 }
