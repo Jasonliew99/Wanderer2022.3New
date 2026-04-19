@@ -25,6 +25,11 @@ public class LevelController : MonoBehaviour
     public GameObject[] objectsToDisableOnEscape;
     public GameObject[] escapeEnemies;
 
+    [Header("Escape Lighting")]
+    public List<Light> lightsToChange = new List<Light>(); // Drag lights here in Inspector
+    public Color escapeColor = Color.red;
+    public float escapeIntensity = 1.5f;
+
     [Space(10)]
     public string[] escapeDialogues = {
         "All fragments collected!",
@@ -96,7 +101,6 @@ public class LevelController : MonoBehaviour
             SetActive(lvl.enemies, false);
             SetActive(lvl.coins, false);
 
-            // FORCE Level 1 Entrance to be Open at the very start of the game
             if (i == 0)
             {
                 OpenDoor(lvl.entranceDoor);
@@ -113,7 +117,6 @@ public class LevelController : MonoBehaviour
             CloseDoor(lvl.exitDoor);
         }
 
-        // Only enable the first level's trigger
         if (levels.Count > 0 && levels[0].activator != null)
             levels[0].activator.SetActive(true);
 
@@ -135,17 +138,12 @@ public class LevelController : MonoBehaviour
 
             if (isCurrent && !EscapeMode)
             {
-                // THE SWAP FIX:
-                // If this is Level 1 (Index 0), we want the door to CLOSE now 
-                // because the player has entered and the level has officially started.
                 if (activeID == 0)
                 {
-                    // This forces the 'Open' door to hide and 'Closed' door to show
                     CloseDoor(lvl.entranceDoor);
                 }
                 else
                 {
-                    // For other levels, respect the toggle
                     if (lvl.entranceDoor.startOpened) OpenDoor(lvl.entranceDoor);
                     else CloseDoor(lvl.entranceDoor);
                 }
@@ -194,7 +192,6 @@ public class LevelController : MonoBehaviour
         LevelBlock lvl = levels[id];
         if (lvl.enemies == null || lvl.enemies.Length == 0) return;
 
-        // 1. Shuffle points to ensure no two enemies are in the same spot
         List<Transform> availablePoints = new List<Transform>(lvl.enemyResetPoints);
         for (int i = 0; i < availablePoints.Count; i++)
         {
@@ -204,19 +201,15 @@ public class LevelController : MonoBehaviour
             availablePoints[randomIndex] = temp;
         }
 
-        // 2. Loop through enemies and apply the State Reset
         for (int i = 0; i < lvl.enemies.Length; i++)
         {
             GameObject enemy = lvl.enemies[i];
             if (enemy == null) continue;
 
-            // Move to unique point
             int pointIndex = i % availablePoints.Count;
             enemy.transform.position = availablePoints[pointIndex].position;
             enemy.transform.rotation = availablePoints[pointIndex].rotation;
 
-            // 3. TRIGGER THE STATE DETERMINATION
-            // This checks your 'DefaultState' enum and runs the correct behavior
             EnemyStateReset resetScript = enemy.GetComponent<EnemyStateReset>();
             if (resetScript != null)
             {
@@ -224,7 +217,6 @@ public class LevelController : MonoBehaviour
             }
             else
             {
-                // Fallback for enemies without the script
                 enemy.SetActive(false);
                 enemy.SetActive(true);
             }
@@ -267,18 +259,14 @@ public class LevelController : MonoBehaviour
         if (allDone)
         {
             ShowObjective(lvl.secondObjective);
-
-            // Open the exit door for the current level
             OpenDoor(lvl.exitDoor);
 
-            // If we are in the FINAL level (Level 3), start escape mode immediately
             if (currentLevelIndex == levels.Count - 1)
             {
                 StartEscapeMode();
             }
             else
             {
-                // Just enable the deactivator (exit trigger) for normal levels
                 SetActive(lvl.deactivator, true);
             }
         }
@@ -292,9 +280,7 @@ public class LevelController : MonoBehaviour
             return;
         }
 
-        // Prevents old level triggers from firing during the escape
         if (EscapeMode) return;
-
         if (id != currentLevelIndex) return;
 
         LevelBlock lvl = levels[id];
@@ -316,6 +302,9 @@ public class LevelController : MonoBehaviour
         if (EscapeMode) return;
         EscapeMode = true;
 
+        // --- LIGHTING CHANGE ---
+        ChangeManualLights(escapeColor, escapeIntensity);
+
         if (respawnController != null)
             respawnController.ResetLivesToFull();
 
@@ -333,15 +322,12 @@ public class LevelController : MonoBehaviour
             {
                 SetActive(lvl.enemies, true);
                 ResetSpecificLevelEnemies(i);
-
-                // IMPORTANT: Turn off Lvl 1 & 2 deactivators so they don't block the path
                 if (lvl.deactivator) lvl.deactivator.SetActive(false);
             }
 
             if (lvl.activator) lvl.activator.SetActive(false);
         }
 
-        // Ensure only the Finale Trigger (Level 3 Deactivator) is active
         if (levels[levels.Count - 1].deactivator)
             levels[levels.Count - 1].deactivator.SetActive(true);
 
@@ -350,9 +336,25 @@ public class LevelController : MonoBehaviour
         OnEscapeMode?.Invoke();
     }
 
+    private void ChangeManualLights(Color targetColor, float targetIntensity)
+    {
+        foreach (Light l in lightsToChange)
+        {
+            if (l != null)
+            {
+                l.color = targetColor;
+                l.intensity = targetIntensity;
+            }
+        }
+    }
+
     private void WinGame()
     {
         if (uiRoutine != null) StopCoroutine(uiRoutine);
+
+        // --- RESET LIGHTS TO NORMAL ---
+        ChangeManualLights(Color.white, 1.0f);
+
         SetActive(escapeEnemies, false);
         SetActive(objectsToEnableOnEscape, false);
 
