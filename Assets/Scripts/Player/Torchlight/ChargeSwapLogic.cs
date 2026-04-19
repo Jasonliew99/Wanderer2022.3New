@@ -11,6 +11,11 @@ public class ChargeSwapLogic : MonoBehaviour
     public float chargeValue = 0f;
     public bool isCharged = false;
 
+    [Header("Audio")]
+    public AudioClip collectSound;
+    [Range(0f, 1f)]
+    public float volume = 1.0f;
+
     [Header("Fragment Item")]
     public string itemID;
     public LevelController levelController;
@@ -103,13 +108,22 @@ public class ChargeSwapLogic : MonoBehaviour
             isBeingShined = false;
     }
 
+    public void PlayCollectSound()
+    {
+        if (collectSound != null)
+        {
+            // Plays at position and survives the destruction of this object
+            AudioSource.PlayClipAtPoint(collectSound, transform.position, volume);
+        }
+    }
+
     private void RevealObject()
     {
         if (particleEffect != null)
             particleEffect.Stop(true, ParticleSystemStopBehavior.StopEmitting);
 
-        Sprite next =
-        levelController.RequestNextFragment(itemID);
+        // Fetch the sprite from your controller
+        Sprite next = levelController.RequestNextFragment(itemID);
 
         if (next != null)
         {

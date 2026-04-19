@@ -63,6 +63,11 @@ public class LevelController : MonoBehaviour
         public GameObject open;
         public GameObject closed;
         public bool startOpened = false;
+
+        [Header("Door Audio Settings")]
+        public AudioSource doorSource; // Assign the 3D AudioSource on the gate
+        public AudioClip openClip;
+        public AudioClip closeClip;
     }
 
     [System.Serializable]
@@ -90,7 +95,7 @@ public class LevelController : MonoBehaviour
 
     [HideInInspector] public int currentLevelIndex = -1;
     private Coroutine uiRoutine;
-    private Coroutine musicRoutine; // Reference to track audio fading
+    private Coroutine musicRoutine;
 
     // INITIAL SETUP
     void Start()
@@ -101,11 +106,12 @@ public class LevelController : MonoBehaviour
             SetActive(lvl.enemies, false);
             SetActive(lvl.coins, false);
 
-            if (i == 0) OpenDoor(lvl.entranceDoor);
-            else if (lvl.entranceDoor != null && lvl.entranceDoor.startOpened) OpenDoor(lvl.entranceDoor);
-            else CloseDoor(lvl.entranceDoor);
+            // Initial setup is silent (playSound = false)
+            if (i == 0) OpenDoor(lvl.entranceDoor, false);
+            else if (lvl.entranceDoor != null && lvl.entranceDoor.startOpened) OpenDoor(lvl.entranceDoor, false);
+            else CloseDoor(lvl.entranceDoor, false);
 
-            CloseDoor(lvl.exitDoor);
+            CloseDoor(lvl.exitDoor, false);
         }
 
         if (levels.Count > 0 && levels[0].activator != null)
@@ -113,7 +119,6 @@ public class LevelController : MonoBehaviour
 
         if (objectiveText != null) objectiveText.alpha = 0;
 
-        // Initialize Audio
         if (escapeMusicSource != null)
         {
             escapeMusicSource.volume = 0;
@@ -137,16 +142,51 @@ public class LevelController : MonoBehaviour
 
             if (isCurrent && !EscapeMode)
             {
-                if (activeID == 0) CloseDoor(lvl.entranceDoor);
+                // Trigger the door sound when you hit the activator to start a level
+                if (activeID == 0) CloseDoor(lvl.entranceDoor, true);
                 else
                 {
-                    if (lvl.entranceDoor.startOpened) OpenDoor(lvl.entranceDoor);
-                    else CloseDoor(lvl.entranceDoor);
+                    if (lvl.entranceDoor.startOpened) OpenDoor(lvl.entranceDoor, true);
+                    else CloseDoor(lvl.entranceDoor, true);
                 }
-                CloseDoor(lvl.exitDoor);
+                CloseDoor(lvl.exitDoor, false); // Keep exit silent as it's likely already closed
             }
         }
     }
+
+    // --- ENHANCED DOOR METHODS WITH SOUND ---
+
+    private void OpenDoor(DoorPair door, bool playSound = true)
+    {
+        if (door == null) return;
+
+        // Only trigger if state is changing to prevent sound looping
+        if (door.open != null && !door.open.activeSelf)
+        {
+            door.open.SetActive(true);
+            if (door.closed) door.closed.SetActive(false);
+
+            if (playSound && door.doorSource != null && door.openClip != null)
+                door.doorSource.PlayOneShot(door.openClip);
+        }
+    }
+
+    private void CloseDoor(DoorPair door, bool playSound = true)
+    {
+        if (door == null) return;
+
+        // Only trigger if state is changing
+        if (door.closed != null && !door.closed.activeSelf)
+        {
+            door.closed.SetActive(true);
+            if (door.open) door.open.SetActive(false);
+
+            if (playSound && door.doorSource != null && door.closeClip != null)
+                door.doorSource.PlayOneShot(door.closeClip);
+        }
+    }
+
+    // --- GAMEPLAY FLOW ---
 
     public void StartLevel(int id)
     {
@@ -165,6 +205,123 @@ public class LevelController : MonoBehaviour
         if (respawnController != null)
             respawnController.OnLevelStarted(levels[id].respawnPoints);
     }
+
+    public void FragmentCollected(string itemID)
+    {
+        if (currentLevelIndex < 0) return;
+        LevelBlock lvl = levels[currentLevelIndex];
+        FragmentItemData item = lvl.fragmentItems.Find(i => i.itemID == itemID);
+        if (item == null) return;
+
+        item.collected++;
+        StartCoroutine(CheckItemsComplete());
+    }
+
+    private IEnumerator CheckItemsComplete()
+    {
+        yield return new WaitForEndOfFrame();
+        LevelBlock lvl = levels[currentLevelIndex];
+        bool allDone = true;
+
+        foreach (var item in lvl.fragmentItems)
+            if (item.collected < item.TotalRequired) allDone = false;
+
+        if (allDone)
+        {
+            ShowObjective(lvl.secondObjective);
+
+            // Success sound trigger: Area exit opens
+            OpenDoor(lvl.exitDoor, true);
+
+            if (currentLevelIndex == levels.Count - 1) StartEscapeMode();
+            else SetActive(lvl.deactivator, true);
+        }
+    }
+
+    public void EndLevel(int id)
+    {
+        if (EscapeMode && id == levels.Count - 1) { WinGame(); return; }
+        if (EscapeMode) return;
+        if (id != currentLevelIndex) return;
+
+        LevelBlock lvl = levels[id];
+        SetActive(lvl.enemies, false);
+        SetActive(lvl.coins, false);
+        SetActive(lvl.deactivator, false);
+
+        if (id < levels.Count - 1)
+        {
+            LevelBlock nextLvl = levels[id + 1];
+            // Sound trigger: Next entrance door opens for the player
+            OpenDoor(nextLvl.entranceDoor, true);
+            if (nextLvl.activator != null) nextLvl.activator.SetActive(true);
+        }
+    }
+
+    private void StartEscapeMode()
+    {
+        if (EscapeMode) return;
+        EscapeMode = true;
+
+        ChangeManualLights(escapeColor, escapeIntensity);
+
+        if (musicRoutine != null) StopCoroutine(musicRoutine);
+        musicRoutine = StartCoroutine(FadeMusic(maxMusicVolume));
+
+        if (respawnController != null)
+            respawnController.ResetLivesToFull();
+
+        SetActive(objectsToEnableOnEscape, true);
+        SetActive(objectsToDisableOnEscape, false);
+        SetActive(escapeEnemies, true);
+
+        for (int i = 0; i < levels.Count; i++)
+        {
+            LevelBlock lvl = levels[i];
+            // Open everything for backtracking (Plays multiple sounds)
+            OpenDoor(lvl.entranceDoor, true);
+            OpenDoor(lvl.exitDoor, true);
+
+            if (i < levels.Count - 1)
+            {
+                SetActive(lvl.enemies, true);
+                ResetSpecificLevelEnemies(i);
+                if (lvl.deactivator) lvl.deactivator.SetActive(false);
+            }
+            if (lvl.activator) lvl.activator.SetActive(false);
+        }
+
+        if (levels[levels.Count - 1].deactivator)
+            levels[levels.Count - 1].deactivator.SetActive(true);
+
+        if (uiRoutine != null) StopCoroutine(uiRoutine);
+        uiRoutine = StartCoroutine(SequenceRoutine(escapeDialogues));
+        OnEscapeMode?.Invoke();
+    }
+
+    private void WinGame()
+    {
+        if (uiRoutine != null) StopCoroutine(uiRoutine);
+
+        ChangeManualLights(Color.white, 1.0f);
+
+        if (musicRoutine != null) StopCoroutine(musicRoutine);
+        musicRoutine = StartCoroutine(FadeMusic(0f));
+
+        SetActive(escapeEnemies, false);
+        SetActive(objectsToEnableOnEscape, false);
+
+        foreach (var lvl in levels)
+        {
+            SetActive(lvl.enemies, false);
+            // Silent lockdown
+            CloseDoor(lvl.entranceDoor, false);
+            CloseDoor(lvl.exitDoor, false);
+        }
+        uiRoutine = StartCoroutine(SequenceRoutine(winDialogues));
+    }
+
+    // --- OTHER CORE LOGIC ---
 
     public void ResetEnemiesForRespawn()
     {
@@ -223,96 +380,6 @@ public class LevelController : MonoBehaviour
         return next;
     }
 
-    public void FragmentCollected(string itemID)
-    {
-        if (currentLevelIndex < 0) return;
-        LevelBlock lvl = levels[currentLevelIndex];
-        FragmentItemData item = lvl.fragmentItems.Find(i => i.itemID == itemID);
-        if (item == null) return;
-
-        item.collected++;
-        StartCoroutine(CheckItemsComplete());
-    }
-
-    private IEnumerator CheckItemsComplete()
-    {
-        yield return new WaitForEndOfFrame();
-        LevelBlock lvl = levels[currentLevelIndex];
-        bool allDone = true;
-
-        foreach (var item in lvl.fragmentItems)
-            if (item.collected < item.TotalRequired) allDone = false;
-
-        if (allDone)
-        {
-            ShowObjective(lvl.secondObjective);
-            OpenDoor(lvl.exitDoor);
-
-            if (currentLevelIndex == levels.Count - 1) StartEscapeMode();
-            else SetActive(lvl.deactivator, true);
-        }
-    }
-
-    public void EndLevel(int id)
-    {
-        if (EscapeMode && id == levels.Count - 1) { WinGame(); return; }
-        if (EscapeMode) return;
-        if (id != currentLevelIndex) return;
-
-        LevelBlock lvl = levels[id];
-        SetActive(lvl.enemies, false);
-        SetActive(lvl.coins, false);
-        SetActive(lvl.deactivator, false);
-
-        if (id < levels.Count - 1)
-        {
-            LevelBlock nextLvl = levels[id + 1];
-            OpenDoor(nextLvl.entranceDoor);
-            if (nextLvl.activator != null) nextLvl.activator.SetActive(true);
-        }
-    }
-
-    private void StartEscapeMode()
-    {
-        if (EscapeMode) return;
-        EscapeMode = true;
-
-        ChangeManualLights(escapeColor, escapeIntensity);
-
-        // Music Fade In
-        if (musicRoutine != null) StopCoroutine(musicRoutine);
-        musicRoutine = StartCoroutine(FadeMusic(maxMusicVolume));
-
-        if (respawnController != null)
-            respawnController.ResetLivesToFull();
-
-        SetActive(objectsToEnableOnEscape, true);
-        SetActive(objectsToDisableOnEscape, false);
-        SetActive(escapeEnemies, true);
-
-        for (int i = 0; i < levels.Count; i++)
-        {
-            LevelBlock lvl = levels[i];
-            OpenDoor(lvl.entranceDoor);
-            OpenDoor(lvl.exitDoor);
-
-            if (i < levels.Count - 1)
-            {
-                SetActive(lvl.enemies, true);
-                ResetSpecificLevelEnemies(i);
-                if (lvl.deactivator) lvl.deactivator.SetActive(false);
-            }
-            if (lvl.activator) lvl.activator.SetActive(false);
-        }
-
-        if (levels[levels.Count - 1].deactivator)
-            levels[levels.Count - 1].deactivator.SetActive(true);
-
-        if (uiRoutine != null) StopCoroutine(uiRoutine);
-        uiRoutine = StartCoroutine(SequenceRoutine(escapeDialogues));
-        OnEscapeMode?.Invoke();
-    }
-
     private void ChangeManualLights(Color targetColor, float targetIntensity)
     {
         foreach (Light l in lightsToChange)
@@ -321,33 +388,9 @@ public class LevelController : MonoBehaviour
         }
     }
 
-    private void WinGame()
-    {
-        if (uiRoutine != null) StopCoroutine(uiRoutine);
-
-        ChangeManualLights(Color.white, 1.0f);
-
-        // Music Fade Out
-        if (musicRoutine != null) StopCoroutine(musicRoutine);
-        musicRoutine = StartCoroutine(FadeMusic(0f));
-
-        SetActive(escapeEnemies, false);
-        SetActive(objectsToEnableOnEscape, false);
-
-        foreach (var lvl in levels)
-        {
-            SetActive(lvl.enemies, false);
-            CloseDoor(lvl.entranceDoor);
-            CloseDoor(lvl.exitDoor);
-        }
-        uiRoutine = StartCoroutine(SequenceRoutine(winDialogues));
-    }
-
     private IEnumerator FadeMusic(float targetVolume)
     {
         if (escapeMusicSource == null) yield break;
-
-        // If starting music
         if (targetVolume > 0 && !escapeMusicSource.isPlaying) escapeMusicSource.Play();
 
         float startVolume = escapeMusicSource.volume;
@@ -368,20 +411,6 @@ public class LevelController : MonoBehaviour
     {
         foreach (string msg in dialogueList)
             yield return StartCoroutine(ObjectiveRoutine(msg, displayTime));
-    }
-
-    private void OpenDoor(DoorPair door)
-    {
-        if (door == null) return;
-        if (door.open) door.open.SetActive(true);
-        if (door.closed) door.closed.SetActive(false);
-    }
-
-    private void CloseDoor(DoorPair door)
-    {
-        if (door == null) return;
-        if (door.open) door.open.SetActive(false);
-        if (door.closed) door.closed.SetActive(true);
     }
 
     private void SetActive(GameObject[] arr, bool state)

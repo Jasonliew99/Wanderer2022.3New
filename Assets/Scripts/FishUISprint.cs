@@ -23,17 +23,13 @@ public class FishUISprint : MonoBehaviour
 
     public void UpdateSprintBar(float currentSprint, float maxSprint, bool isSprinting)
     {
-        // 1. Calculate percentage
         float percent = Mathf.Clamp01(currentSprint / maxSprint);
 
-        // 2. The Width Math
-        // 0% stamina = minWidth (touching) | 100% stamina = maxWidth (full bar)
         float targetWidth = Mathf.Lerp(minWidth, maxWidth, percent);
         maskContainer.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, targetWidth);
 
         if (canvasGroup == null) return;
 
-        // 3. Fading Logic (Acting like the old script)
         bool staminaNotFull = percent < 0.999f;
 
         if (isSprinting || staminaNotFull)
@@ -49,7 +45,6 @@ public class FishUISprint : MonoBehaviour
         }
         else
         {
-            // Count delay once sprinting stops AND stamina is full
             fadeTimer += Time.deltaTime;
 
             if (fadeTimer >= fadeOutDelay && !isFading && canvasGroup.alpha > 0f)

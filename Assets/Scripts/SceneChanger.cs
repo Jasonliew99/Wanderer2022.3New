@@ -41,20 +41,18 @@ public class SceneChanger : MonoBehaviour
 
         float startVolume = AudioListener.volume;
 
-        //Fades out Visuals and Audio
         while (fader.alpha < 1)
         {
             float delta = Time.unscaledDeltaTime * fadeSpeed;
             fader.alpha += delta;
 
-            // Lowers the master volume of the whole game
             AudioListener.volume = Mathf.Max(0, AudioListener.volume - delta);
 
             yield return null;
         }
 
         yield return new WaitForSecondsRealtime(0.2f);
-        AudioListener.volume = 0; // silence during load
+        AudioListener.volume = 0;
 
         AsyncOperation op = SceneManager.LoadSceneAsync(sceneName);
         while (!op.isDone) yield return null;
@@ -67,13 +65,11 @@ public class SceneChanger : MonoBehaviour
             vp.Play();
         }
 
-        // fades in Visuals and Audio
         while (fader.alpha > 0)
         {
             float delta = Time.unscaledDeltaTime * fadeSpeed;
             fader.alpha -= delta;
 
-            // Brings the master volume back up
             AudioListener.volume = Mathf.Min(startVolume, AudioListener.volume + delta);
 
             yield return null;

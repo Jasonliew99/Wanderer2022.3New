@@ -10,7 +10,6 @@ public class SpriteBillboard : MonoBehaviour
 
     void LateUpdate()
     {
-        // Auto-find main camera if not cached
         if (cameraTransform == null)
         {
             Camera cam = Camera.main;

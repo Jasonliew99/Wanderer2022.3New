@@ -8,7 +8,7 @@ public class PostGameManager : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private VideoPlayer videoPlayer;
-    [SerializeField] private CanvasGroup buttonCanvasGroup; // Use CanvasGroup instead of GameObject
+    [SerializeField] private CanvasGroup buttonCanvasGroup;
     [SerializeField] private string mainMenuSceneName = "MainMenu";
 
     [Header("Settings")]
@@ -19,7 +19,6 @@ public class PostGameManager : MonoBehaviour
 
     void Start()
     {
-        // 1. Setup the button to be invisible but ready
         if (buttonCanvasGroup != null)
         {
             buttonCanvasGroup.alpha = 0;
@@ -27,7 +26,6 @@ public class PostGameManager : MonoBehaviour
             buttonCanvasGroup.blocksRaycasts = false;
         }
 
-        // 2. Start sequences
         StartCoroutine(ShowButtonAfterDelay());
 
         if (videoPlayer != null)
@@ -46,7 +44,6 @@ public class PostGameManager : MonoBehaviour
             yield return null;
         }
 
-        // Clickable only once it's visible
         buttonCanvasGroup.interactable = true;
         buttonCanvasGroup.blocksRaycasts = true;
     }
