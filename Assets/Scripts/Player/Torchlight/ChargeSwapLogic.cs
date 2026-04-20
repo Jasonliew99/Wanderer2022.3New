@@ -1,6 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+    using System.Collections;
+    using System.Collections.Generic;
+    using UnityEngine;
 
 public class ChargeSwapLogic : MonoBehaviour
 {
@@ -110,9 +110,17 @@ public class ChargeSwapLogic : MonoBehaviour
 
     public void PlayCollectSound()
     {
-        if (collectSound != null)
+        if (levelController != null && levelController.pageFlipSounds.Length > 0)
         {
-            // Plays at position and survives the destruction of this object
+            AudioClip clip = levelController.pageFlipSounds[Random.Range(0, levelController.pageFlipSounds.Length)];
+
+            if (levelController.uiAudioSource != null)
+            {
+                levelController.uiAudioSource.PlayOneShot(clip, volume);
+            }
+        }
+        else if (collectSound != null)
+        {
             AudioSource.PlayClipAtPoint(collectSound, transform.position, volume);
         }
     }
@@ -122,7 +130,7 @@ public class ChargeSwapLogic : MonoBehaviour
         if (particleEffect != null)
             particleEffect.Stop(true, ParticleSystemStopBehavior.StopEmitting);
 
-        // Fetch the sprite from your controller
+        // FIX: Change GetPhysicalSprite back to RequestNextFragment
         Sprite next = levelController.RequestNextFragment(itemID);
 
         if (next != null)
@@ -139,3 +147,6 @@ public class ChargeSwapLogic : MonoBehaviour
             pickupCollider.enabled = true;
     }
 }
+
+
+

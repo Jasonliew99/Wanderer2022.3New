@@ -24,15 +24,15 @@ public class PauseMenu : MonoBehaviour
 
     public void Resume()
     {
-        pauseMenuUI.SetActive(false); // Hide pause menu
-        Time.timeScale = 1f;          // Resume game
+        pauseMenuUI.SetActive(false);
+        Time.timeScale = 1f; 
         isPaused = false;
     }
 
     void Pause()
     {
-        pauseMenuUI.SetActive(true);  // Show pause menu
-        Time.timeScale = 0f;          // pause everything
+        pauseMenuUI.SetActive(true);
+        Time.timeScale = 0f; 
         isPaused = true;
     }
 
@@ -40,14 +40,29 @@ public class PauseMenu : MonoBehaviour
     public void RestartLevel()
     {
         Time.timeScale = 1f;
-        Scene current = SceneManager.GetActiveScene();
-        SceneManager.LoadScene(current.name);
+        string currentScene = SceneManager.GetActiveScene().name;
+
+        if (SceneChanger.Instance != null)
+        {
+            SceneChanger.Instance.GoToCutscene(currentScene);
+        }
+        else
+        {
+            SceneManager.LoadScene(currentScene);
+        }
     }
 
-    // Exit to Main Menu scene
     public void ExitToMainMenu()
     {
         Time.timeScale = 1f;
-        SceneManager.LoadScene(mainMenuSceneName);
+
+        if (SceneChanger.Instance != null)
+        {
+            SceneChanger.Instance.GoToCutscene(mainMenuSceneName);
+        }
+        else
+        {
+            SceneManager.LoadScene(mainMenuSceneName);
+        }
     }
 }

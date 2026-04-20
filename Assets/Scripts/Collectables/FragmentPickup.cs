@@ -18,21 +18,26 @@ public class FragmentPickup : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
- 
             ChargeSwapLogic swapLogic = GetComponentInParent<ChargeSwapLogic>();
 
             if (swapLogic != null)
             {
                 swapLogic.PlayCollectSound();
+
+                if (swapLogic.spriteRenderer != null) swapLogic.spriteRenderer.enabled = false;
             }
+
             playerCoinCollector.ShowItemPopup(itemID);
-
             levelController.FragmentCollected(itemID);
-
             spawnPoint.isCollected = true;
 
+            Collider col = GetComponent<Collider>();
+            if (col != null) col.enabled = false;
 
-            gameObject.SetActive(false);
+
+            Destroy(transform.parent.gameObject, 1.0f);
+
+
         }
     }
 }

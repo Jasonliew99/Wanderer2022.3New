@@ -152,7 +152,6 @@ public class PlayerTracker : MonoBehaviour
 
         if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
         {
-            Debug.Log(currentCoroutine);
 
             if (currentCoroutine == null) 
             {

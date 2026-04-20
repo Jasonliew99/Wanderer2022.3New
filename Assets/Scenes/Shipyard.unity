@@ -14587,7 +14587,6 @@ MonoBehaviour:
   - {fileID: 252485472}
   - {fileID: 151579339}
   - {fileID: 2074698384}
-  - {fileID: 682820206}
   - {fileID: 87062099}
   - {fileID: 1978721397}
   - {fileID: 145452121}
@@ -52809,8 +52808,10 @@ MonoBehaviour:
   minDistance: 6.46
   baseIntensity: 0.087
   maxIntensity: 0.7
+  baseAbberation: 0.242
+  maxExtraAbberation: 0.6
   pulseSpeed: 6
-  pulseAmount: 0.08
+  pulseAmount: 1
 --- !u!4 &210688198
 Transform:
   m_ObjectHideFlags: 0
@@ -96572,7 +96573,7 @@ RectTransform:
   m_GameObject: {fileID: 402804024}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1.7187, y: 1.7187, z: 1.7187}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2047140424}
@@ -96602,7 +96603,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 5b10347c156e23949ab6c7253d2449ac, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 57f5476e43a2ae14e9f50d508295b31a, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -145736,6 +145737,8 @@ MonoBehaviour:
   - You made it out...
   - The facility is now locked down.
   - Thank you for playing!
+  objectsToRemoveAfterEscape: []
+  objectsToSpawnAfterEscape: []
   respawnController: {fileID: 0}
   objectiveText: {fileID: 0}
   fadeDuration: 0.5
@@ -179151,50 +179154,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 2, y: 0.47668573, z: 2}
   m_Center: {x: 0, y: 0, z: -0.0000038146973}
---- !u!1 &682820205
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 682820206}
-  - component: {fileID: 682820207}
-  m_Layer: 11
-  m_Name: Position (5)
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &682820206
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 682820205}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -105.8, y: -3.3, z: -14.5}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1098973534}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &682820207
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 682820205}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1c0fa8b06bf46704882e15eb2e0fd9ba, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &683483951 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 3e2b75a96c3d0114d982933f395d4243, type: 3}
@@ -181513,7 +181472,7 @@ Transform:
   m_GameObject: {fileID: 690853594}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 54.8, y: -0.14752948, z: 21.9}
+  m_LocalPosition: {x: 60.5, y: -0.14752948, z: 64.1}
   m_LocalScale: {x: 1.7049415, y: 1.704941, z: 1.7049415}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -181620,13 +181579,13 @@ MonoBehaviour:
   - {fileID: 686849872}
   - {fileID: 1092528905}
   - {fileID: 1082425876}
-  patrolSpeed: 11
+  patrolSpeed: 15
   patrolWaitTime: 2.5
   visionRadius: 4.59
-  visionConeAngle: 159.1
-  visionConeRange: 32.3
+  visionConeAngle: 170
+  visionConeRange: 49
   aimTime: 0.5
-  chargeSpeed: 30
+  chargeSpeed: 35
   overshootPercent: 0.6
   minOvershootDistance: 1.2
   maxOvershootDistance: 3
@@ -197639,7 +197598,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &767226738
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -197726,7 +197685,7 @@ MonoBehaviour:
   m_margin: {x: 242.46574, y: -3.10701, z: -1397.0935, w: -36.215454}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
-  m_hasFontAssetChanged: 1
+  m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
 --- !u!222 &767226739
@@ -250254,7 +250213,7 @@ Transform:
   m_GameObject: {fileID: 963194225}
   serializedVersion: 2
   m_LocalRotation: {x: 0.28206345, y: -0.36139238, z: 0.11568261, w: 0.8811659}
-  m_LocalPosition: {x: -544, y: 68.1, z: -427}
+  m_LocalPosition: {x: -624.7, y: 89.4, z: -485.2}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -255351,7 +255310,6 @@ GameObject:
   m_Component:
   - component: {fileID: 982993625}
   - component: {fileID: 982993626}
-  - component: {fileID: 982993627}
   m_Layer: 0
   m_Name: SHIPYARD (THE GAME)
   m_TagString: Untagged
@@ -255457,7 +255415,7 @@ MonoBehaviour:
     - {fileID: 252485472}
     - {fileID: 151579339}
     - {fileID: 2074698384}
-    - {fileID: 682820206}
+    - {fileID: 0}
     - {fileID: 87062099}
     - {fileID: 1978721397}
     - {fileID: 145452121}
@@ -255570,9 +255528,13 @@ MonoBehaviour:
     deactivator: {fileID: 835808303}
     firstObjective: The last pieces are here....
     secondObjective: 
-  uiAudioSource: {fileID: 0}
-  pageFlipSounds: []
-  drawingSounds: []
+  uiAudioSource: {fileID: 1166476534}
+  pageFlipSounds:
+  - {fileID: 8300000, guid: 744034e0af7aa7f4ea284fb250959066, type: 3}
+  - {fileID: 8300000, guid: ed15d9374fd1f70449fbb0652e50b366, type: 3}
+  - {fileID: 8300000, guid: c62a776b47c81694cb25aa1cf8ca85c8, type: 3}
+  drawingSounds:
+  - {fileID: 8300000, guid: d7e0031363c082045bf8a867add25113, type: 3}
   objectsToEnableOnEscape:
   - {fileID: 581330738}
   - {fileID: 830703991}
@@ -255642,23 +255604,14 @@ MonoBehaviour:
   - I made it out...
   - I need to go to the forest.....
   - So i can go home.........
+  objectsToRemoveAfterEscape:
+  - {fileID: 590248982}
+  objectsToSpawnAfterEscape: []
   respawnController: {fileID: 1766797481}
   objectiveText: {fileID: 767226738}
   fadeDuration: 0.3
   displayTime: 6
   currentLevelIndex: -1
---- !u!114 &982993627
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 982993624}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f3c666f678c327c41a5a3adf39c09fd0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &983229360 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 3e2b75a96c3d0114d982933f395d4243, type: 3}
@@ -260521,7 +260474,7 @@ MonoBehaviour:
   popupDisplayDuration: 2
   currentImage: {fileID: 1164971001}
   fadeImage: {fileID: 1392155575}
-  fragmentFadeDuration: 0.25
+  fragmentFadeDuration: 0.5
   coinText: {fileID: 2034115699}
   levelController: {fileID: 982993626}
 --- !u!114 &1000885601
@@ -274555,7 +274508,6 @@ MonoBehaviour:
   - {fileID: 252485472}
   - {fileID: 151579339}
   - {fileID: 2074698384}
-  - {fileID: 682820206}
   - {fileID: 87062099}
   - {fileID: 1978721397}
   - {fileID: 145452121}
@@ -280820,7 +280772,6 @@ Transform:
   - {fileID: 252485472}
   - {fileID: 151579339}
   - {fileID: 2074698384}
-  - {fileID: 682820206}
   - {fileID: 87062099}
   - {fileID: 1978721397}
   - {fileID: 145452121}
@@ -299471,7 +299422,7 @@ AudioSource:
   m_Enabled: 1
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
-  m_audioClip: {fileID: 8300000, guid: c0095817b89ba2143a27ceadbe71d150, type: 3}
+  m_audioClip: {fileID: 8300000, guid: 90f5c9f3d8c02e742af86bbc20f2714d, type: 3}
   m_PlayOnAwake: 1
   m_Volume: 0.5
   m_Pitch: 1
@@ -326212,14 +326163,14 @@ RectTransform:
   m_GameObject: {fileID: 1284627409}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1.169, y: 1.169, z: 1.169}
+  m_LocalScale: {x: 0.9279661, y: 0.9279661, z: 0.9279661}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2047140424}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -112, y: -374}
+  m_AnchoredPosition: {x: -112, y: -290}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1284627411
@@ -377340,7 +377291,7 @@ MonoBehaviour:
   - {fileID: 1994239259}
   - {fileID: 410502007}
   playerTag: Player
-  soundRadius: 10
+  soundRadius: 26
   obstructionMask:
     serializedVersion: 2
     m_Bits: 72
@@ -414516,6 +414467,8 @@ MonoBehaviour:
   - You made it out...
   - The facility is now locked down.
   - Thank you for playing!
+  objectsToRemoveAfterEscape: []
+  objectsToSpawnAfterEscape: []
   respawnController: {fileID: 0}
   objectiveText: {fileID: 767226738}
   fadeDuration: 0.5
@@ -464658,7 +464611,6 @@ MonoBehaviour:
   - {fileID: 252485472}
   - {fileID: 151579339}
   - {fileID: 2074698384}
-  - {fileID: 682820206}
   - {fileID: 87062099}
   - {fileID: 1978721397}
   - {fileID: 145452121}
@@ -476270,10 +476222,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_UiScaleMode: 0
+  m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 800, y: 600}
+  m_ReferenceResolution: {x: 1920, y: 1080}
   m_ScreenMatchMode: 0
   m_MatchWidthOrHeight: 0
   m_PhysicalUnit: 3
@@ -510507,8 +510459,8 @@ Transform:
   m_GameObject: {fileID: 2011292190}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -834, y: 4.131384, z: -424.1}
-  m_LocalScale: {x: 23.421873, y: 7.841109, z: 10.781983}
+  m_LocalPosition: {x: -828.2, y: 1.58, z: -407.3}
+  m_LocalScale: {x: 23.421873, y: 7.841109, z: 28.991674}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 669634135}
@@ -522243,7 +522195,7 @@ Transform:
   m_GameObject: {fileID: 2037893985}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -607.34, y: 0, z: -362.05}
+  m_LocalPosition: {x: -705.6, y: 0, z: -402.2}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -524852,7 +524804,6 @@ MonoBehaviour:
   - {fileID: 252485472}
   - {fileID: 151579339}
   - {fileID: 2074698384}
-  - {fileID: 682820206}
   - {fileID: 87062099}
   - {fileID: 1978721397}
   - {fileID: 145452121}

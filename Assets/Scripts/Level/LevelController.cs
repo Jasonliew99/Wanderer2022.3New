@@ -15,8 +15,8 @@ public class LevelController : MonoBehaviour
     public bool EscapeMode { get; private set; } = false;
     public System.Action OnEscapeMode;
 
-    [Header("Fragment Audio (Randomized)")]
-    public AudioSource uiAudioSource;
+    [Header("Audio Implementation")]
+    public AudioSource uiAudioSource; // Ensure "Ignore Listener Pause" is checked
     public AudioClip[] pageFlipSounds;
     public AudioClip[] drawingSounds;
 
@@ -43,12 +43,16 @@ public class LevelController : MonoBehaviour
         "ESCAPE TO THE ENTRANCE!"
     };
 
-    [Header("Win Settings (After Reaching Entrance)")]
+    [Header("Win Settings")]
     public string[] winDialogues = {
         "You made it out...",
         "The facility is now locked down.",
         "Thank you for playing!"
     };
+
+    [Header("Post-Game Shipyard Escape")]
+    public GameObject[] objectsToRemoveAfterEscape;
+    public GameObject[] objectsToSpawnAfterEscape;
 
     [System.Serializable]
     public class FragmentItemData
@@ -69,8 +73,8 @@ public class LevelController : MonoBehaviour
         public GameObject closed;
         public bool startOpened = false;
 
-        [Header("Door Audio Settings")]
-        public AudioSource doorSource; // Assign the 3D AudioSource on the gate
+        [Header("Door Audio")]
+        public AudioSource doorSource;
         public AudioClip openClip;
         public AudioClip closeClip;
     }
@@ -111,7 +115,6 @@ public class LevelController : MonoBehaviour
             SetActive(lvl.enemies, false);
             SetActive(lvl.coins, false);
 
-            // Initial setup is silent (playSound = false)
             if (i == 0) OpenDoor(lvl.entranceDoor, false);
             else if (lvl.entranceDoor != null && lvl.entranceDoor.startOpened) OpenDoor(lvl.entranceDoor, false);
             else CloseDoor(lvl.entranceDoor, false);
@@ -147,68 +150,22 @@ public class LevelController : MonoBehaviour
 
             if (isCurrent && !EscapeMode)
             {
-                // Trigger the door sound when you hit the activator to start a level
                 if (activeID == 0) CloseDoor(lvl.entranceDoor, true);
                 else
                 {
                     if (lvl.entranceDoor.startOpened) OpenDoor(lvl.entranceDoor, true);
                     else CloseDoor(lvl.entranceDoor, true);
                 }
-                CloseDoor(lvl.exitDoor, false); // Keep exit silent as it's likely already closed
+                CloseDoor(lvl.exitDoor, false);
             }
         }
     }
-
-    // --- ENHANCED DOOR METHODS WITH SOUND ---
-
-    private void OpenDoor(DoorPair door, bool playSound = true)
-    {
-        if (door == null) return;
-
-        // Only trigger if state is changing to prevent sound looping
-        if (door.open != null && !door.open.activeSelf)
-        {
-            door.open.SetActive(true);
-            if (door.closed) door.closed.SetActive(false);
-
-            if (playSound && door.doorSource != null && door.openClip != null)
-                door.doorSource.PlayOneShot(door.openClip);
-        }
-    }
-
-    private void CloseDoor(DoorPair door, bool playSound = true)
-    {
-        if (door == null) return;
-
-        if (door.closed != null && !door.closed.activeSelf)
-        {
-            Debug.Log($"<color=green>Door Logic: Closing {door.closed.name}</color>");
-            door.closed.SetActive(true);
-            if (door.open) door.open.SetActive(false);
-
-            if (playSound)
-            {
-                if (door.doorSource != null && door.closeClip != null)
-                {
-                    Debug.Log("<color=cyan>Audio Logic: Playing Close Clip!</color>");
-                    door.doorSource.PlayOneShot(door.closeClip);
-                }
-                else
-                {
-                    Debug.LogWarning("Audio Logic: Missing AudioSource or Clip on this door!");
-                }
-            }
-        }
-    }
-
-    // --- GAMEPLAY FLOW ---
 
     public void StartLevel(int id)
     {
         if (EscapeMode) return;
         if (id <= currentLevelIndex && currentLevelIndex != -1) return;
 
-        Debug.Log($"<color=orange>LevelController: Starting Level {id}</color>");
         currentLevelIndex = id;
         SyncLevelObjects(id);
 
@@ -219,6 +176,76 @@ public class LevelController : MonoBehaviour
 
         if (respawnController != null)
             respawnController.OnLevelStarted(levels[id].respawnPoints);
+    }
+
+    public void ResetEnemiesForRespawn()
+    {
+        StopAllCoroutines();
+        if (objectiveText != null) objectiveText.alpha = 0;
+
+        if (EscapeMode)
+        {
+            for (int i = 0; i < levels.Count; i++) ResetSpecificLevelEnemies(i);
+        }
+        else
+        {
+            if (currentLevelIndex < 0 || currentLevelIndex >= levels.Count) return;
+            ResetSpecificLevelEnemies(currentLevelIndex);
+        }
+    }
+
+    private void ResetSpecificLevelEnemies(int id)
+    {
+        LevelBlock lvl = levels[id];
+        if (lvl.enemies == null || lvl.enemies.Length == 0) return;
+
+        List<Transform> availablePoints = new List<Transform>(lvl.enemyResetPoints);
+        // Shuffle points
+        for (int i = 0; i < availablePoints.Count; i++)
+        {
+            Transform temp = availablePoints[i];
+            int randomIndex = Random.Range(i, availablePoints.Count);
+            availablePoints[i] = availablePoints[randomIndex];
+            availablePoints[randomIndex] = temp;
+        }
+
+        for (int i = 0; i < lvl.enemies.Length; i++)
+        {
+            GameObject enemy = lvl.enemies[i];
+            if (enemy == null) continue;
+
+            int pointIndex = i % availablePoints.Count;
+            enemy.transform.position = availablePoints[pointIndex].position;
+            enemy.transform.rotation = availablePoints[pointIndex].rotation;
+
+            EnemyStateReset resetScript = enemy.GetComponent<EnemyStateReset>();
+            if (resetScript != null) resetScript.ResetToDefaultState();
+            else { enemy.SetActive(false); enemy.SetActive(true); }
+        }
+    }
+
+    public Sprite RequestNextFragment(string itemID)
+    {
+        if (currentLevelIndex < 0) return null;
+        LevelBlock lvl = levels[currentLevelIndex];
+        FragmentItemData item = lvl.fragmentItems.Find(i => i.itemID == itemID);
+        if (item == null || item.revealed >= item.revealOrder.Length) return null;
+
+        Sprite next = item.revealOrder[item.revealed];
+        item.revealed++;
+
+        return next;
+    }
+
+    public void PlayRandomSFX(AudioClip[] clips)
+    {
+        if (uiAudioSource == null || clips == null || clips.Length == 0) return;
+
+        uiAudioSource.ignoreListenerPause = true;
+
+        uiAudioSource.spatialBlend = 0f;
+
+        uiAudioSource.PlayOneShot(clips[Random.Range(0, clips.Length)]);
     }
 
     public void FragmentCollected(string itemID)
@@ -244,8 +271,6 @@ public class LevelController : MonoBehaviour
         if (allDone)
         {
             ShowObjective(lvl.secondObjective);
-
-            // Success sound trigger: Area exit opens
             OpenDoor(lvl.exitDoor, true);
 
             if (currentLevelIndex == levels.Count - 1) StartEscapeMode();
@@ -267,7 +292,6 @@ public class LevelController : MonoBehaviour
         if (id < levels.Count - 1)
         {
             LevelBlock nextLvl = levels[id + 1];
-            // Sound trigger: Next entrance door opens for the player
             OpenDoor(nextLvl.entranceDoor, true);
             if (nextLvl.activator != null) nextLvl.activator.SetActive(true);
         }
@@ -293,7 +317,6 @@ public class LevelController : MonoBehaviour
         for (int i = 0; i < levels.Count; i++)
         {
             LevelBlock lvl = levels[i];
-            // Open everything for backtracking (Plays multiple sounds)
             OpenDoor(lvl.entranceDoor, true);
             OpenDoor(lvl.exitDoor, true);
 
@@ -329,98 +352,37 @@ public class LevelController : MonoBehaviour
         foreach (var lvl in levels)
         {
             SetActive(lvl.enemies, false);
-            // Silent lockdown
-            CloseDoor(lvl.entranceDoor, false);
-            CloseDoor(lvl.exitDoor, false);
+            CloseDoor(lvl.entranceDoor, true);
+            CloseDoor(lvl.exitDoor, true);
         }
+
+        SetActive(objectsToRemoveAfterEscape, false);
+
+        SetActive(objectsToSpawnAfterEscape, true);
+
         uiRoutine = StartCoroutine(SequenceRoutine(winDialogues));
     }
 
-    // --- OTHER CORE LOGIC ---
-
-    public void ResetEnemiesForRespawn()
+    private void OpenDoor(DoorPair door, bool playSound = true)
     {
-        StopAllCoroutines();
-        if (objectiveText != null) objectiveText.alpha = 0;
-
-        if (EscapeMode)
-        {
-            for (int i = 0; i < levels.Count; i++) ResetSpecificLevelEnemies(i);
-        }
-        else
-        {
-            if (currentLevelIndex < 0 || currentLevelIndex >= levels.Count) return;
-            ResetSpecificLevelEnemies(currentLevelIndex);
-        }
+        if (door == null) return;
+        if (door.open) door.open.SetActive(true);
+        if (door.closed) door.closed.SetActive(false);
+        if (playSound && door.doorSource && door.openClip) door.doorSource.PlayOneShot(door.openClip);
     }
 
-    private void ResetSpecificLevelEnemies(int id)
+    private void CloseDoor(DoorPair door, bool playSound = true)
     {
-        LevelBlock lvl = levels[id];
-        if (lvl.enemies == null || lvl.enemies.Length == 0) return;
-
-        List<Transform> availablePoints = new List<Transform>(lvl.enemyResetPoints);
-        for (int i = 0; i < availablePoints.Count; i++)
-        {
-            Transform temp = availablePoints[i];
-            int randomIndex = Random.Range(i, availablePoints.Count);
-            availablePoints[i] = availablePoints[randomIndex];
-            availablePoints[randomIndex] = temp;
-        }
-
-        for (int i = 0; i < lvl.enemies.Length; i++)
-        {
-            GameObject enemy = lvl.enemies[i];
-            if (enemy == null) continue;
-
-            int pointIndex = i % availablePoints.Count;
-            enemy.transform.position = availablePoints[pointIndex].position;
-            enemy.transform.rotation = availablePoints[pointIndex].rotation;
-
-            EnemyStateReset resetScript = enemy.GetComponent<EnemyStateReset>();
-            if (resetScript != null) resetScript.ResetToDefaultState();
-            else { enemy.SetActive(false); enemy.SetActive(true); }
-        }
-
-        for (int i = 0; i < lvl.enemies.Length; i++)
-        {
-            GameObject enemy = lvl.enemies[i];
-            if (enemy == null) continue;
-
-            int pointIndex = i % availablePoints.Count;
-            enemy.transform.position = availablePoints[pointIndex].position;
-            enemy.transform.rotation = availablePoints[pointIndex].rotation;
-
-            TeddyBearController bear = enemy.GetComponent<TeddyBearController>();
-            if (bear != null)
-            {
-                bear.ResetToPatrolState();
-            }
-
-            EnemyStateReset resetScript = enemy.GetComponent<EnemyStateReset>();
-            if (resetScript != null) resetScript.ResetToDefaultState();
-            else { enemy.SetActive(false); enemy.SetActive(true); }
-        }
-    }
-
-    public Sprite RequestNextFragment(string itemID)
-    {
-        if (currentLevelIndex < 0) return null;
-        LevelBlock lvl = levels[currentLevelIndex];
-        FragmentItemData item = lvl.fragmentItems.Find(i => i.itemID == itemID);
-        if (item == null || item.revealed >= item.revealOrder.Length) return null;
-
-        Sprite next = item.revealOrder[item.revealed];
-        item.revealed++;
-        return next;
+        if (door == null) return;
+        if (door.open) door.open.SetActive(false);
+        if (door.closed) door.closed.SetActive(true);
+        if (playSound && door.doorSource && door.closeClip) door.doorSource.PlayOneShot(door.closeClip);
     }
 
     private void ChangeManualLights(Color targetColor, float targetIntensity)
     {
         foreach (Light l in lightsToChange)
-        {
             if (l != null) { l.color = targetColor; l.intensity = targetIntensity; }
-        }
     }
 
     private IEnumerator FadeMusic(float targetVolume)
@@ -430,14 +392,12 @@ public class LevelController : MonoBehaviour
 
         float startVolume = escapeMusicSource.volume;
         float elapsed = 0;
-
         while (elapsed < musicFadeDuration)
         {
             elapsed += Time.deltaTime;
             escapeMusicSource.volume = Mathf.Lerp(startVolume, targetVolume, elapsed / musicFadeDuration);
             yield return null;
         }
-
         escapeMusicSource.volume = targetVolume;
         if (targetVolume <= 0) escapeMusicSource.Stop();
     }
@@ -458,6 +418,7 @@ public class LevelController : MonoBehaviour
 
     private void ShowObjective(string msg)
     {
+        if (objectiveText == null) return;
         objectiveText.gameObject.SetActive(true);
         if (uiRoutine != null) StopCoroutine(uiRoutine);
         uiRoutine = StartCoroutine(ObjectiveRoutine(msg, displayTime));

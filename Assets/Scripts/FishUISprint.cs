@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Net.NetworkInformation;
 using Unity.Burst.CompilerServices;
 using UnityEngine;
-using static UnityEditor.ShaderData;
 
 public class FishUISprint : MonoBehaviour
 {

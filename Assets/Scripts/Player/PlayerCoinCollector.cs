@@ -29,50 +29,31 @@ public class PlayerCoinCollector : MonoBehaviour
         fragmentPopupUI.gameObject.SetActive(false);
     }
 
-    // ==============================
-    // SHOW PREVIOUS → FADE → CURRENT
-    // ==============================
     public void ShowItemPopup(string itemID)
     {
         currentPopupItemID = itemID;
-
-        LevelController.LevelBlock lvl =
-        levelController.levels[levelController.currentLevelIndex];
-
-        var item =
-        lvl.fragmentItems.Find(i => i.itemID == itemID);
-
+        LevelController.LevelBlock lvl = levelController.levels[levelController.currentLevelIndex];
+        var item = lvl.fragmentItems.Find(i => i.itemID == itemID);
         if (item == null) return;
 
         int prev = item.collected;
         int next = prev + 1;
 
-        // SHOW PREVIOUS FIRST
         currentImage.sprite = item.progressSprites[prev];
+        coinText.text = prev.ToString("00") + " / " + item.TotalRequired.ToString("00");
 
-        coinText.text =
-        prev.ToString("00")
-        + " / " +
-        item.TotalRequired.ToString("00");
-
-        // PREPARE NEXT
         fadeImage.color = new Color(1, 1, 1, 0);
         fadeImage.sprite = item.progressSprites[next];
 
-        StartCoroutine(ShowFragmentProgressPopup());
+        StartCoroutine(ShowFragmentProgressPopup(next, item.TotalRequired));
     }
 
-    IEnumerator ShowFragmentProgressPopup()
+    IEnumerator ShowFragmentProgressPopup(int nextValue, int total)
     {
-        bool wePausedGame = false;
-
-        if (Time.timeScale > 0f)
-        {
-            Time.timeScale = 0f;
-            wePausedGame = true;
-        }
-
+        if (Time.timeScale > 0f) Time.timeScale = 0f;
         fragmentPopupUI.gameObject.SetActive(true);
+
+        if (levelController != null) levelController.PlayRandomSFX(levelController.pageFlipSounds);
 
         float t = 0f;
         while (t < popupFadeDuration)
@@ -81,12 +62,13 @@ public class PlayerCoinCollector : MonoBehaviour
             fragmentPopupUI.alpha = Mathf.Lerp(0f, 1f, t / popupFadeDuration);
             yield return null;
         }
-
         fragmentPopupUI.alpha = 1f;
 
-        yield return StartCoroutine(CrossFadeFragmentProgress());
+        yield return StartCoroutine(CrossFadeFragmentProgress(nextValue, total));
 
         yield return new WaitForSecondsRealtime(popupDisplayDuration);
+
+        if (levelController != null) levelController.PlayRandomSFX(levelController.pageFlipSounds);
 
         t = 0f;
         while (t < popupFadeDuration)
@@ -98,42 +80,24 @@ public class PlayerCoinCollector : MonoBehaviour
 
         fragmentPopupUI.alpha = 0f;
         fragmentPopupUI.gameObject.SetActive(false);
-
-        if (wePausedGame)
-            Time.timeScale = 1f;
+        Time.timeScale = 1f;
     }
 
-    IEnumerator CrossFadeFragmentProgress()
+    IEnumerator CrossFadeFragmentProgress(int nextValue, int total)
     {
+        if (levelController != null)
+            levelController.PlayRandomSFX(levelController.drawingSounds);
+
+        coinText.text = nextValue.ToString("00") + " / " + total.ToString("00");
+
         float t = 0f;
-
         fadeImage.color = new Color(1, 1, 1, 0);
-
         while (t < fragmentFadeDuration)
         {
             t += Time.unscaledDeltaTime;
-            float alpha = Mathf.Lerp(0f, 1f, t / fragmentFadeDuration);
-            fadeImage.color = new Color(1, 1, 1, alpha);
+            fadeImage.color = new Color(1, 1, 1, Mathf.Lerp(0f, 1f, t / fragmentFadeDuration));
             yield return null;
         }
-
-        fadeImage.color = new Color(1, 1, 1, 1);
-
-        // UPDATE CURRENT IMAGE
         currentImage.sprite = fadeImage.sprite;
-
-        // NOW update number AFTER fade
-        LevelController.LevelBlock lvl =
-        levelController.levels[levelController.currentLevelIndex];
-
-        var item =
-        lvl.fragmentItems.Find(i => i.itemID == currentPopupItemID);
-
-        coinText.text =
-        item.collected.ToString("00")
-        + " / " +
-        item.TotalRequired.ToString("00");
-
-        fadeImage.color = new Color(1, 1, 1, 0);
     }
 }
