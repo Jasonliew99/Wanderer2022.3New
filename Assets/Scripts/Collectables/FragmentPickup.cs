@@ -18,13 +18,20 @@ public class FragmentPickup : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-            // notify PlayerCoinCollector to show popup
+ 
+            ChargeSwapLogic swapLogic = GetComponentInParent<ChargeSwapLogic>();
+
+            if (swapLogic != null)
+            {
+                swapLogic.PlayCollectSound();
+            }
             playerCoinCollector.ShowItemPopup(itemID);
 
-            //notify LevelController to update progress
             levelController.FragmentCollected(itemID);
 
             spawnPoint.isCollected = true;
+
+
             gameObject.SetActive(false);
         }
     }

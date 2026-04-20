@@ -15,6 +15,11 @@ public class LevelController : MonoBehaviour
     public bool EscapeMode { get; private set; } = false;
     public System.Action OnEscapeMode;
 
+    [Header("Fragment Audio (Randomized)")]
+    public AudioSource uiAudioSource;
+    public AudioClip[] pageFlipSounds;
+    public AudioClip[] drawingSounds;
+
     [Space(20)]
     [Header("--- ESCAPE MODE SETTINGS ---")]
     public GameObject[] objectsToEnableOnEscape;
@@ -175,14 +180,24 @@ public class LevelController : MonoBehaviour
     {
         if (door == null) return;
 
-        // Only trigger if state is changing
         if (door.closed != null && !door.closed.activeSelf)
         {
+            Debug.Log($"<color=green>Door Logic: Closing {door.closed.name}</color>");
             door.closed.SetActive(true);
             if (door.open) door.open.SetActive(false);
 
-            if (playSound && door.doorSource != null && door.closeClip != null)
-                door.doorSource.PlayOneShot(door.closeClip);
+            if (playSound)
+            {
+                if (door.doorSource != null && door.closeClip != null)
+                {
+                    Debug.Log("<color=cyan>Audio Logic: Playing Close Clip!</color>");
+                    door.doorSource.PlayOneShot(door.closeClip);
+                }
+                else
+                {
+                    Debug.LogWarning("Audio Logic: Missing AudioSource or Clip on this door!");
+                }
+            }
         }
     }
 
@@ -361,6 +376,26 @@ public class LevelController : MonoBehaviour
             int pointIndex = i % availablePoints.Count;
             enemy.transform.position = availablePoints[pointIndex].position;
             enemy.transform.rotation = availablePoints[pointIndex].rotation;
+
+            EnemyStateReset resetScript = enemy.GetComponent<EnemyStateReset>();
+            if (resetScript != null) resetScript.ResetToDefaultState();
+            else { enemy.SetActive(false); enemy.SetActive(true); }
+        }
+
+        for (int i = 0; i < lvl.enemies.Length; i++)
+        {
+            GameObject enemy = lvl.enemies[i];
+            if (enemy == null) continue;
+
+            int pointIndex = i % availablePoints.Count;
+            enemy.transform.position = availablePoints[pointIndex].position;
+            enemy.transform.rotation = availablePoints[pointIndex].rotation;
+
+            TeddyBearController bear = enemy.GetComponent<TeddyBearController>();
+            if (bear != null)
+            {
+                bear.ResetToPatrolState();
+            }
 
             EnemyStateReset resetScript = enemy.GetComponent<EnemyStateReset>();
             if (resetScript != null) resetScript.ResetToDefaultState();

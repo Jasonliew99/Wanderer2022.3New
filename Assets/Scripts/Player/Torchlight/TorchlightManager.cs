@@ -496,8 +496,9 @@ public class TorchlightManager : MonoBehaviour
 
     void OnDrawGizmosSelected()
     {
-        if (player == null) return;
+        if (player == null || flashlight == null) return;
 
+        // 1. Draw the Zone Lines
         Gizmos.color = new Color(1f, 0f, 1f, 0.5f);
         Vector3 zoneCenter = transform.position + Vector3.up * 0.1f;
         Quaternion isoInv = Quaternion.AngleAxis(-44.6f, Vector3.up);
@@ -506,18 +507,21 @@ public class TorchlightManager : MonoBehaviour
         Gizmos.DrawLine(zoneCenter - line1, zoneCenter + line1);
         Gizmos.DrawLine(zoneCenter - line2, zoneCenter + line2);
 
-        if (flashlight == null) return;
-
-        Gizmos.color = new Color(1f, 1f, 1f, 0.2f);
-        Matrix4x4 oldMatrix = Gizmos.matrix;
-        Gizmos.matrix = Matrix4x4.TRS(flashlight.position, Quaternion.LookRotation(lastFlashlightDir), Vector3.one);
-        Gizmos.DrawFrustum(Vector3.zero, baseSpotAngle, baseRange, 0.1f, 1f);
-        Gizmos.matrix = oldMatrix;
-
-        if (showBeamGizmo)
+        if (lastFlashlightDir != Vector3.zero)
         {
-            Gizmos.color = (isTorchOn && battery > 0) ? Color.yellow : Color.red;
-            Gizmos.DrawRay(flashlight.position, lastFlashlightDir.normalized * (lightSource != null ? lightSource.range : beamDistance));
+            Gizmos.color = new Color(1f, 1f, 1f, 0.2f);
+            Matrix4x4 oldMatrix = Gizmos.matrix;
+
+            Gizmos.matrix = Matrix4x4.TRS(flashlight.position, Quaternion.LookRotation(lastFlashlightDir), Vector3.one);
+            Gizmos.DrawFrustum(Vector3.zero, baseSpotAngle, baseRange, 0.1f, 1f);
+
+            Gizmos.matrix = oldMatrix;
+
+            if (showBeamGizmo)
+            {
+                Gizmos.color = (isTorchOn && battery > 0) ? Color.yellow : Color.red;
+                Gizmos.DrawRay(flashlight.position, lastFlashlightDir.normalized * (lightSource != null ? lightSource.range : beamDistance));
+            }
         }
     }
 }

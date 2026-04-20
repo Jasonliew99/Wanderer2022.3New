@@ -26,8 +26,8 @@ public class TeddyBearController : MonoBehaviour
 
     [Header("Detection")]
     public string playerTag = "Player";
-    public float soundRadius = 8f; // The circular "hearing" range
-    public LayerMask obstructionMask; // Set this to your 'World' or 'Obstacle' layer
+    public float soundRadius = 8f;
+    public LayerMask obstructionMask;
 
     [Header("Trap Prefab")]
     public GameObject trapPrefab;
@@ -45,7 +45,6 @@ public class TeddyBearController : MonoBehaviour
     public float placeTrapPause = 0.4f;
     public float investigateTrapTime = 1.2f;
 
-    // -------- INTERNAL --------
     private State currentState = State.Patrol;
     private Transform player;
 
@@ -56,14 +55,12 @@ public class TeddyBearController : MonoBehaviour
     private Vector3 currentPlacePoint;
     private int trapsLeftToPlace;
 
-    // -------- UNITY --------
     void Start()
     {
-        // Find player by tag as before
         GameObject playerObj = GameObject.FindGameObjectWithTag(playerTag);
         if (playerObj != null) player = playerObj.transform;
 
-        agent.updateRotation = true; // Changed to true usually for 3D, set to false if 2D
+        agent.updateRotation = true;
         agent.speed = patrolSpeed;
 
         if (patrolPoints.Length > 0)
@@ -75,11 +72,8 @@ public class TeddyBearController : MonoBehaviour
 
     void Update()
     {
-        // 1. Detection always runs
         DetectPlayerBySound();
 
-        // 2. Only run the state machine if we AREN'T chasing
-        // This prevents Patrol or Trap logic from "fighting" the Chase
         if (currentState == State.Chase)
         {
             ChasePlayer();
@@ -94,14 +88,11 @@ public class TeddyBearController : MonoBehaviour
             case State.MovingToPlaceTrap:
                 CheckReachedPlacementPoint();
                 break;
-            // Adding the missing states to the switch for safety
             case State.InvestigateTrap:
-                // Logic handled by Coroutine, do nothing here
                 break;
         }
     }
 
-    // -------- DETECTION (NEW SOUND RADIUS WAY) --------
     void DetectPlayerBySound()
     {
         if (player == null) return;
@@ -116,12 +107,10 @@ public class TeddyBearController : MonoBehaviour
                 busy = false;
                 currentState = State.Chase;
 
-                // --- INSTANT SPEED BOOST ---
                 agent.isStopped = true;
                 agent.velocity = Vector3.zero;
                 agent.isStopped = false;
                 agent.speed = chaseSpeed;
-                // ---------------------------
             }
 
             agent.SetDestination(player.position);
@@ -157,18 +146,14 @@ public class TeddyBearController : MonoBehaviour
         agent.SetDestination(player.position);
     }
 
-    // -------- TRIGGER (NOW ONLY FOR TRAP ZONES) --------
     void OnTriggerEnter(Collider other)
     {
-        // 1. KILL LOGIC: Check if it's the player
-        // We use the playerTag string defined at the top of your script ("Player")
+
         if (other.CompareTag(playerTag))
         {
             ExecuteDeath();
-            return; // Stop here so we don't look for traps if we just killed the player
         }
 
-        // 2. TRAP ZONE LOGIC: (Your original code)
         TrapPlacementZone zone = other.GetComponent<TrapPlacementZone>();
         if (zone != null && currentState == State.Patrol)
         {
@@ -193,7 +178,7 @@ public class TeddyBearController : MonoBehaviour
         }
     }
 
-    // -------- TRAP LOGIC (UNTOUCHED) --------
+    // -------- TRAP LOGIC--------
     void TryStartTrapPlacement(TrapPlacementZone zone)
     {
         if (busy) return;
@@ -277,7 +262,6 @@ public class TeddyBearController : MonoBehaviour
         ResumePatrol();
     }
 
-    // -------- TRAP CALLBACK (UNTOUCHED) --------
     public void OnTrapTriggered(Vector3 trapPosition, GameObject trap)
     {
         if (activeTraps.Contains(trap))
@@ -305,17 +289,13 @@ public class TeddyBearController : MonoBehaviour
         agent.isStopped = true;
         agent.ResetPath();
 
-        // 1. Set the high speed first
         agent.speed = trapRushSpeed;
 
-        // 2. FORCE the velocity to be the max speed toward the trap
-        // This removes the "slow start" entirely
         Vector3 direction = (pos - transform.position).normalized;
         agent.velocity = direction * trapRushSpeed;
 
         agent.SetDestination(pos);
         agent.isStopped = false;
-        // ------------------------------
 
         while (agent.pathPending || agent.remainingDistance > 0.5f)
         {
@@ -330,14 +310,12 @@ public class TeddyBearController : MonoBehaviour
         ResumePatrol();
     }
 
-    // -------- HELPERS --------
     void ResumePatrol()
     {
         if (patrolPoints.Length == 0) return;
         agent.SetDestination(patrolPoints[patrolIndex].position);
     }
 
-    // Visualizes the "Sound" range in the editor
     void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.yellow;
@@ -346,7 +324,7 @@ public class TeddyBearController : MonoBehaviour
 
     public void ResetToPatrolState()
     {
-        StopAllCoroutines(); // Stops the "Placing Trap" or "Investigating" timers
+        StopAllCoroutines();
         busy = false;
         currentState = State.Patrol;
 
@@ -354,10 +332,20 @@ public class TeddyBearController : MonoBehaviour
         agent.speed = patrolSpeed;
         agent.velocity = Vector3.zero;
 
-        // CLEANUP: Destroy old traps so the level isn't a mess on respawn
-        foreach (GameObject trap in activeTraps)
+        foreach (GameObject trapObj in activeTraps)
         {
-            if (trap != null) Destroy(trap);
+            if (trapObj != null)
+            {
+                TrapScriptLogic trapScript = trapObj.GetComponent<TrapScriptLogic>();
+                if (trapScript != null)
+                {
+                    trapScript.ForceRelease();
+                }
+                else
+                {
+                    Destroy(trapObj);
+                }
+            }
         }
         activeTraps.Clear();
 
