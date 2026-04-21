@@ -7,9 +7,7 @@ using UnityEngine.SceneManagement;
 
 //this script allows an enemy to patrol, chase the player, search for the player, and charge at the player
 //it has been herer since day 1 but it is the most diaboical of scripts, mother of all scripts
-//i want to quit man fuck coding
 //this shit is so ass man
-//fuck codes
 
 public class PlayerTracker : MonoBehaviour
 {

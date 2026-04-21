@@ -33,7 +33,7 @@ public class WeepingStatueMovement : MonoBehaviour
     [Header("Activation Settings")]
     public float activationRadius = 5f;
     public float postTriggerDelay = 0.05f;
-    public float wakeAnimationLength = 0.4f; // Set this to animation length
+    public float wakeAnimationLength = 0.4f;
 
     [Header("Movement")]
     public float chaseSpeed = 3.5f;
@@ -58,10 +58,8 @@ public class WeepingStatueMovement : MonoBehaviour
     private bool isUnfreezeDelayed = false;
 
     private Coroutine unfreezeRoutine;
-
     private Vector3 initialPosition;
     private Quaternion initialRotation;
-
     private Dictionary<Transform, bool> standbyOccupied = new Dictionary<Transform, bool>();
     private Transform reservedStandbyPoint = null;
 
@@ -77,24 +75,19 @@ public class WeepingStatueMovement : MonoBehaviour
         initialRotation = transform.rotation;
 
         agent.speed = chaseSpeed;
-        agent.stoppingDistance = 0f;
+        agent.stoppingDistance = 0.1f;
         agent.isStopped = true;
 
-        rb.isKinematic = false;
+        rb.isKinematic = true;
         rb.useGravity = false;
-        rb.constraints = RigidbodyConstraints.FreezeRotation;
+        rb.constraints = RigidbodyConstraints.FreezeAll;
 
-        if (anim != null)
-            anim.enabled = false;
+        if (anim != null) anim.enabled = false;
 
         foreach (var p in standbyPoints)
-        {
-            if (!standbyOccupied.ContainsKey(p))
-                standbyOccupied[p] = false;
-        }
+            if (p != null) standbyOccupied[p] = false;
 
-        if (inactiveSprite != null)
-            spriteRenderer.sprite = inactiveSprite;
+        if (inactiveSprite != null) spriteRenderer.sprite = inactiveSprite;
 
         if (torchDetector != null)
         {
@@ -117,8 +110,7 @@ public class WeepingStatueMovement : MonoBehaviour
         switch (currentState)
         {
             case StatueState.Inactive:
-                if (!hasTriggered && !isActivating &&
-                    Vector3.Distance(transform.position, player.position) <= activationRadius)
+                if (!hasTriggered && !isActivating && Vector3.Distance(transform.position, player.position) <= activationRadius)
                 {
                     hasTriggered = true;
                     isActivating = true;
@@ -148,144 +140,80 @@ public class WeepingStatueMovement : MonoBehaviour
     {
         currentState = StatueState.Active;
 
+        isIlluminated = false;
+        isUnfreezeDelayed = false;
+        isTransitionPlaying = true;
+
+        if (agent != null)
+        {
+            agent.enabled = true;
+            if (agent.isOnNavMesh)
+            {
+                agent.isStopped = false;
+                agent.SetDestination(player.position);
+            }
+        }
+
         if (anim != null)
         {
             anim.enabled = true;
             anim.SetTrigger("WakeUp");
-            isTransitionPlaying = true;
             StartCoroutine(FinishTransition());
-        }
-
-        if (!isIlluminated)
-        {
-            agent.isStopped = false;
-            agent.SetDestination(player.position);
         }
     }
 
     IEnumerator FinishTransition()
     {
         yield return new WaitForSeconds(wakeAnimationLength);
-
-        if (anim != null)
-            anim.enabled = false;
-
-        if (activeSprite != null)
-            spriteRenderer.sprite = activeSprite;
-
+        if (anim != null) anim.enabled = false;
+        if (activeSprite != null) spriteRenderer.sprite = activeSprite;
         isTransitionPlaying = false;
     }
 
     void ActiveMovement()
     {
-        if (isIlluminated || isUnfreezeDelayed)
+        if (isIlluminated || isUnfreezeDelayed || isTransitionPlaying)
         {
             StopMovement();
             return;
         }
 
-        if (!agent.isOnNavMesh) return;
+        if (!agent.isOnNavMesh || !agent.isActiveAndEnabled) return;
 
         agent.isStopped = false;
+
         agent.SetDestination(player.position);
 
-        float dist = Vector3.Distance(transform.position, player.position);
-        if (dist > activationRadius * 3f)
+        if (Vector3.Distance(transform.position, player.position) > activationRadius * 4f)
             StartReturnToStandby();
     }
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (currentState != StatueState.Active) return;
+        if (currentState != StatueState.Active || isTransitionPlaying) return;
         if (isIlluminated || isUnfreezeDelayed) return;
 
-        PlayerMovement pm = collision.collider.GetComponentInParent<PlayerMovement>();
-
-        if (pm != null && respawnController != null)
+        if (collision.gameObject.CompareTag("Player"))
         {
-            respawnController.HandlePlayerDeath();
-        }
-    }
-
-    void StartReturnToStandby()
-    {
-        if (reservedStandbyPoint == null)
-            reservedStandbyPoint = GetFreeStandby();
-
-        if (reservedStandbyPoint == null) return;
-
-        currentState = StatueState.Returning;
-
-        agent.isStopped = false;
-        agent.speed = chaseSpeed * 0.7f;
-        agent.SetDestination(reservedStandbyPoint.position);
-    }
-
-    Transform GetFreeStandby()
-    {
-        foreach (var p in standbyPoints)
-        {
-            if (!standbyOccupied[p])
-            {
-                standbyOccupied[p] = true;
-                return p;
-            }
-        }
-        return null;
-    }
-
-    void ReturnToStandby()
-    {
-        if (!agent.pathPending && agent.remainingDistance < 0.3f)
-        {
-            standbyOccupied[reservedStandbyPoint] = false;
-            reservedStandbyPoint = null;
-            currentState = StatueState.Inactive;
-            hasTriggered = false;
-
-            if (anim != null)
-                anim.enabled = false;
-
-            if (inactiveSprite != null && !isTransitionPlaying)
-                spriteRenderer.sprite = inactiveSprite;
-
             StopMovement();
+            if (agent != null) agent.enabled = false;
+            Time.timeScale = 1f;
+
+            if (respawnController != null)
+                respawnController.HandlePlayerDeath();
         }
     }
 
-    void StopMovement()
-    {
-        agent.isStopped = true;
-        agent.ResetPath();
-    }
-
-    void TorchEnter(Collider col)
+    // --- TORCH LOGIC ---
+    void TorchEnter(Collider col) { isIlluminated = true; StopMovement(); }
+    void TorchStay(Collider col) { isIlluminated = true; }
+    void TorchExit(Collider col)
     {
         if (currentState != StatueState.Active) return;
-        isIlluminated = true;
-        StopMovement();
-    }
-
-    void TorchStay(Collider col)
-    {
-        if (currentState != StatueState.Active) return;
-        isIlluminated = true;
-    }
-
-    void TorchExit(Collider col)    
-    {
-        if (currentState != StatueState.Active) return;
-
-        bool beamStillHits = false;
-
-        if (torch != null)
-            beamStillHits = torch.IsBeamHittingEnemy(transform);
-
-        // ONLY unfreeze if beam also misses
+        bool beamStillHits = (torch != null) && torch.IsBeamHittingEnemy(transform);
         if (!beamStillHits)
         {
             isIlluminated = false;
-
             if (unfreezeRoutine != null) StopCoroutine(unfreezeRoutine);
             unfreezeRoutine = StartCoroutine(UnfreezeDelayRoutine());
         }
@@ -298,26 +226,51 @@ public class WeepingStatueMovement : MonoBehaviour
         isUnfreezeDelayed = false;
     }
 
+    // --- STANDBY & RESET LOGIC ---
+    void StartReturnToStandby()
+    {
+        if (reservedStandbyPoint == null) reservedStandbyPoint = GetFreeStandby();
+        if (reservedStandbyPoint == null) return;
+
+        currentState = StatueState.Returning;
+        agent.isStopped = false;
+        agent.speed = chaseSpeed * 0.7f;
+        agent.SetDestination(reservedStandbyPoint.position);
+    }
+
+    Transform GetFreeStandby()
+    {
+        foreach (var p in standbyPoints)
+            if (p != null && !standbyOccupied[p]) { standbyOccupied[p] = true; return p; }
+        return null;
+    }
+
+    void ReturnToStandby()
+    {
+        if (!agent.pathPending && agent.remainingDistance < 0.3f)
+        {
+            if (reservedStandbyPoint != null) standbyOccupied[reservedStandbyPoint] = false;
+            reservedStandbyPoint = null;
+            currentState = StatueState.Inactive;
+            hasTriggered = false;
+            if (inactiveSprite != null) spriteRenderer.sprite = inactiveSprite;
+            StopMovement();
+        }
+    }
+
+    void StopMovement() { if (agent.isActiveAndEnabled && agent.isOnNavMesh) { agent.isStopped = true; agent.ResetPath(); } }
+
     void ResetToInitial()
     {
         StopAllCoroutines();
         hasTriggered = false;
         isActivating = false;
         isTransitionPlaying = false;
-
-        if (anim != null)
-            anim.enabled = false;
-
-        currentState = StatueState.Inactive;
         isIlluminated = false;
         isUnfreezeDelayed = false;
-
         transform.position = initialPosition;
         transform.rotation = initialRotation;
-
-        if (inactiveSprite != null)
-            spriteRenderer.sprite = inactiveSprite;
-
+        currentState = StatueState.Inactive;
         StopMovement();
     }
 
@@ -327,23 +280,11 @@ public class WeepingStatueMovement : MonoBehaviour
         hasTriggered = false;
         isActivating = false;
         isTransitionPlaying = false;
-
-        if (anim != null)
-            anim.enabled = false;
-
-        currentState = StatueState.Inactive;
         isIlluminated = false;
         isUnfreezeDelayed = false;
-
-        if (agent != null)
-        {
-            agent.ResetPath();
-            agent.velocity = Vector3.zero;
-            agent.isStopped = true;
-        }
-
-        if (inactiveSprite != null)
-            spriteRenderer.sprite = inactiveSprite;
+        reservedStandbyPoint = null;
+        currentState = StatueState.Inactive;
+        if (agent != null) { agent.enabled = true; if (agent.isOnNavMesh) { agent.ResetPath(); agent.isStopped = true; } }
     }
 
     private void OnDrawGizmosSelected()

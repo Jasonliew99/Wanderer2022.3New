@@ -13,6 +13,7 @@ public class PlayerMovement : MonoBehaviour
     [Header("World Settings")]
     public float worldRotationOffset = -44.6f;
 
+    //walk
     [Header("Movement Speeds")]
     public float moveSpeed = 5f;
     public float sprintSpeed = 8f;
@@ -28,6 +29,7 @@ public class PlayerMovement : MonoBehaviour
     public KeyCode moveLeftKey = KeyCode.A;
     public KeyCode moveRightKey = KeyCode.D;
 
+    //fast walk
     [Header("Sprint Settings")]
     public float sprintDuration = 3f;
     public float sprintCooldown = 2f;

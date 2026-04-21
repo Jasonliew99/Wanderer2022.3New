@@ -117,7 +117,6 @@ public class TeddyBearController : MonoBehaviour
             return;
         }
 
-        // 2. If player escapes the radius, go back to patrolling
         if (currentState == State.Chase)
         {
             currentState = State.Patrol;

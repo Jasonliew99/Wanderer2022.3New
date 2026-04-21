@@ -58,7 +58,6 @@ public class EnemyStunLogic : MonoBehaviour
         cam = Camera.main;
         if (agent == null) agent = GetComponent<NavMeshAgent>();
 
-        // Setup sprite references
         if (spriteTransform == null && transform.childCount > 0)
             spriteTransform = transform.GetChild(0);
 
@@ -71,7 +70,6 @@ public class EnemyStunLogic : MonoBehaviour
         if (spriteRenderer != null)
             spriteOriginalColor = spriteRenderer.color;
 
-        // Subscribe to detector
         if (torchLightDetector != null)
         {
             torchLightDetector.onStay += OnDetectorStay;
@@ -161,9 +159,6 @@ public class EnemyStunLogic : MonoBehaviour
 
         yield return new WaitForSeconds(stunDuration);
 
-        // --- FIXED BATTERY DRAIN ---
-        // Instead of SetBatteryPercent, we use the internal battery variable 
-        // since the torch handles its own UI updates in its Update loop.
         if (torchlightManager != null)
         {
             torchlightManager.battery = 0f; // This kills the battery

@@ -11,7 +11,7 @@ public class EnemySpriteAnimation : MonoBehaviour
     [Header("References")]
     public Animator animator;
     public SpriteRenderer spriteRenderer;
-    public Transform meshTransform; // reference to the actual mesh
+    public Transform meshTransform;
 
     [Header("Animation Clips")]
     public AnimationClip frontRightClip; // SE (front)
@@ -22,7 +22,7 @@ public class EnemySpriteAnimation : MonoBehaviour
     void Start()
     {
         if (meshTransform == null)
-            meshTransform = transform; // default to player object
+            meshTransform = transform;
     }
 
     void Update()

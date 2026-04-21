@@ -12,8 +12,7 @@ public class PlayerSpriteAnimation : MonoBehaviour
     public SpriteRenderer spriteRenderer;
     public Transform meshTransform;
     public Rigidbody rb;
-    public TorchlightManager torchManager; // ASSIGN THIS IN INSPECTOR
-
+    public TorchlightManager torchManager;
     [Header("Settings")]
     public float idleThreshold = 0.05f;
 
@@ -34,7 +33,6 @@ public class PlayerSpriteAnimation : MonoBehaviour
     {
         if (torchManager == null) return;
 
-        // READ DIRECTLY FROM THE NEW GIZMO ZONE LOGIC
         int zone = torchManager.CurrentSpriteZone;
 
         string anim = "";

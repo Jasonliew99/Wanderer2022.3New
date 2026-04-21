@@ -9,18 +9,16 @@ public class CutsceneController : MonoBehaviour
     public VideoPlayer videoPlayer;
 
     [Header("Tutorial UI Settings")]
-    public CanvasGroup tutorialCanvasGroup; // Add a Canvas Group to your Tutorial Panel
-    public GameObject readyButton;          // Drag your button here
-    public float fadeSpeed = 1.5f;          // How fast the panel fades in
-    public float waitTime = 3.0f;           // How long before the button appears
+    public CanvasGroup tutorialCanvasGroup;
+    public GameObject readyButton;
+    public float fadeSpeed = 1.5f;
+    public float waitTime = 3.0f;
 
     void Start()
     {
-        // 1. Ensure everything starts hidden
         if (tutorialCanvasGroup != null) tutorialCanvasGroup.alpha = 0;
         if (readyButton != null) readyButton.SetActive(false);
 
-        // 2. Listen for the video ending
         if (videoPlayer != null)
             videoPlayer.loopPointReached += OnCutsceneEnd;
     }
@@ -34,17 +32,14 @@ public class CutsceneController : MonoBehaviour
 
     IEnumerator ShowTutorialSequence()
     {
-        // Step 1: Fade in the Tutorial Panel
         while (tutorialCanvasGroup.alpha < 1)
         {
             tutorialCanvasGroup.alpha += Time.deltaTime * fadeSpeed;
             yield return null;
         }
 
-        // Step 2: Wait for the specified timer (e.g., 3 seconds)
         yield return new WaitForSeconds(waitTime);
 
-        // Step 3: Make the READY button appear
         if (readyButton != null)
         {
             readyButton.SetActive(true);

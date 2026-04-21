@@ -51,6 +51,12 @@ public class TorchLightDetector : MonoBehaviour
 
         for (int i = objectsInside.Count - 1; i >= 0; i--)
         {
+            if (objectsInside[i] == null)
+            {
+                objectsInside.RemoveAt(i);
+                continue;
+            }
+
             if (!currentFrame.Contains(objectsInside[i]))
             {
                 onExit?.Invoke(objectsInside[i]);
@@ -63,7 +69,10 @@ public class TorchLightDetector : MonoBehaviour
     {
         for (int i = objectsInside.Count - 1; i >= 0; i--)
         {
-            onExit?.Invoke(objectsInside[i]);
+            if (objectsInside[i] != null)
+            {
+                onExit?.Invoke(objectsInside[i]);
+            }
         }
         objectsInside.Clear();
     }

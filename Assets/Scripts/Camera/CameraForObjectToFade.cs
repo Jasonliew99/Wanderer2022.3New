@@ -7,8 +7,8 @@ public class CameraForObjectToFade : MonoBehaviour
     public GameObject player;
     private FaderForObjects _fader;
 
-    public Color rayColor = Color.red; // Color of the gizmo ray
-    public float maxRayDistance = 100f; // Optional max distance
+    public Color rayColor = Color.red;
+    public float maxRayDistance = 100f;
 
     void Update()
     {
@@ -18,7 +18,6 @@ public class CameraForObjectToFade : MonoBehaviour
         Ray ray = new Ray(transform.position, dir);
         RaycastHit hit;
 
-        // Draw the ray for visualization
         Debug.DrawRay(transform.position, dir.normalized * maxRayDistance, rayColor);
 
         if (Physics.Raycast(ray, out hit, maxRayDistance))

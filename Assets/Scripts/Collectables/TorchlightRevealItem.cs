@@ -10,8 +10,8 @@ public class TorchlightRevealItem : MonoBehaviour
     public bool staysVisibleAfterRevealed = false;
 
     [Header("References")]
-    public SpriteRenderer spriteRenderer;  // assign child sprite here
-    public TorchLightDetector torchLightDetector; // optional, drag here
+    public SpriteRenderer spriteRenderer;
+    public TorchLightDetector torchLightDetector;
 
     private float targetAlpha = 0f;
     private Color baseColor;
@@ -23,9 +23,8 @@ public class TorchlightRevealItem : MonoBehaviour
 
         baseColor = spriteRenderer.color;
 
-        SetAlpha(0f); // start hidden
+        SetAlpha(0f);
 
-        // Subscribe to modular detector if assigned
         if (torchLightDetector != null)
         {
             torchLightDetector.onEnter += OnDetectorEnter;
@@ -49,19 +48,17 @@ public class TorchlightRevealItem : MonoBehaviour
         spriteRenderer.color = c;
     }
 
-    // ITorchlightDetectable interface
     public void OnTorchlightEnter()
     {
-        targetAlpha = 1f; // fade in
+        targetAlpha = 1f;
     }
 
     public void OnTorchlightExit()
     {
         if (!staysVisibleAfterRevealed)
-            targetAlpha = 0f; // fade out
+            targetAlpha = 0f;
     }
 
-    // helper called by detector
     private void OnDetectorEnter(Collider col)
     {
         if (col == GetComponent<Collider>())
@@ -74,7 +71,6 @@ public class TorchlightRevealItem : MonoBehaviour
             OnTorchlightExit();
     }
 
-    // Check if item can be collected
     public bool CanBeCollected()
     {
         return spriteRenderer.color.a > 0.1f;
