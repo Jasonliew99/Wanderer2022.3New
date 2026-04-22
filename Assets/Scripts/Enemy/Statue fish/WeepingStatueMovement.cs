@@ -195,12 +195,26 @@ public class WeepingStatueMovement : MonoBehaviour
 
         if (collision.gameObject.CompareTag("Player"))
         {
+
             StopMovement();
-            if (agent != null) agent.enabled = false;
+            if (agent != null)
+            {
+                agent.isStopped = true;
+                agent.enabled = false;
+            }
+
+            currentState = StatueState.Inactive;
+            StopAllCoroutines();
+
             Time.timeScale = 1f;
 
+            Cursor.visible = true;
+            Cursor.lockState = CursorLockMode.None;
+
             if (respawnController != null)
+            {
                 respawnController.HandlePlayerDeath();
+            }
         }
     }
 
